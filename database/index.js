@@ -14,13 +14,16 @@ if (config.use_env_variable) {
 
 // Récupération des models
 const modelList = [
-
+  require('./models/civilization'),
+  require('./models/role'),
+  require('./models/server'),
+  require('./models/unittype'),
+  require('./models/user'),
+  require('./models/village'),
 ];
-
 
 // Déclaration des models a sequelize
 modelList.forEach(model  => model(sequelize, Sequelize.DataTypes));
-
 
 // Déclaration des associations
 Object.values(sequelize.models)

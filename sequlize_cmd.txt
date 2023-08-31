@@ -1,0 +1,15 @@
+*********************
+Génération des models
+*********************
+npx sequelize-cli model:generate --name User --attributes username:string,email:string,password:string
+npx sequelize-cli model:generate --name Role --attributes name:string
+npx sequelize-cli model:generate --name Server --attributes name:string
+npx sequelize-cli model:generate --name UnitType --attributes type:string
+
+npx sequelize-cli db:migrate
+
+**********************
+Génération des seeders
+**********************
+npx sequelize-cli seed:generate --name base-roles
+npx sequelize-cli seed:generate --name base-users
