@@ -1,4 +1,9 @@
 *********************
+Création de la db
+*********************
+npx sequelize-cli db:create
+
+*********************
 Génération des models
 *********************
 npx sequelize-cli model:generate --name User --attributes username:string,email:string,password:string
@@ -13,3 +18,17 @@ Génération des seeders
 **********************
 npx sequelize-cli seed:generate --name base-roles
 npx sequelize-cli seed:generate --name base-users
+
+*******************************************
+Génération des migrations pour associations
+*******************************************
+npx sequelize-cli migration:generate --name role_user_association
+
+*******************************************
+génération des seeders
+*******************************************
+npx sequelize-cli db:seed --seed 20230831135605-base-users.js
+npx sequelize-cli db:seed:all
+
+npx sequelize-cli db:seed:undo:all
+npx sequelize-cli db:seed:undo --seed name-of-seeder.js

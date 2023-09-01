@@ -1,12 +1,17 @@
 const { server }   = require('../server');
 const config    = require('../config/index');
-const database  = require('../database/index');
-
-
+const { sequelize }  = require('../database/index');
 
 // Connect to Sequelize and start Express server
-database.sequelize.sync()
-.then(() => console.log('Connexion réussi'))
+sequelize.sync()
+.then(() => {
+    console.log('Connexion réussi')
+    // User.create({
+    //     username: 'admin',
+    //     email: 'admin@admin.fr',
+    //     password: 'admin'
+    // })
+})
 .catch((err) => console.error(err))
 
 server.listen(config.port, () => {

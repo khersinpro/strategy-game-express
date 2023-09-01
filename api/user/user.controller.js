@@ -4,7 +4,6 @@ const userService = require("./user.service");
 const jwt = require('jsonwebtoken');
 const config = require('../../config/index');
 
-
 class UserController {
 
     /**
@@ -57,7 +56,6 @@ class UserController {
         try 
         {
             const user = await userService.create(req.body);
-            user.password = undefined;
             res.status(201).json(user);
         }
         catch (error)
@@ -76,7 +74,6 @@ class UserController {
             const id = req.params.id;
             const data = req.body;
             const userUpdated = await userService.update(id, data);
-            userUpdated.password = undefined;
             res.status(200).json(userUpdated);
         }
         catch (error)
