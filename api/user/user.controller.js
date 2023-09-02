@@ -33,7 +33,7 @@ class UserController {
         {
             const id = req.params.id;
             // Récupération de l'utilisateur
-            const user = await userService.get(id);
+            const user = await userService.getById(id);
 
             if (!user)
             {
@@ -74,7 +74,13 @@ class UserController {
             const id = req.params.id;
             const data = req.body;
             const userUpdated = await userService.update(id, data);
-            res.status(200).json(userUpdated);
+
+            if (!userUpdated)
+            {
+                throw new NotFoundError('Utilisateur introuvable pour mise à jour');
+            }
+
+            res.status(200).json("Utilisateur mis à jour");
         }
         catch (error)
         {
@@ -108,16 +114,21 @@ class UserController {
                 throw new UnauthorizedError('Email et mot de passe requis');
             }
 
-            const user = await userService.checkUserPassword(email, password);
+            const user = await userService.getByEmail(email);
 
             if (!user)
             {
                 throw new UnauthorizedError('Email ou mot de passe incorrect');
             }
-            user.password = undefined;
-            const token = jwt.sign({id: user._id}, config.jwtSecret, {expiresIn: '7d'});
 
-            res.status(200).json({user: user._id, token});
+            if (!user.checkPassword(password))
+            {
+                throw new UnauthorizedError('Email ou mot de passe incorrect');
+            }
+
+            const token = jwt.sign({id: user.id}, config.jwtSecret, {expiresIn: '7d'});
+
+            res.status(200).json({user: user.id, token});
         }
         catch (error)
         {
@@ -137,7 +148,7 @@ class UserController {
                 throw new UnauthorizedError('Token invalide');
             }
 
-            const user = await userService.get(id);
+            const user = await userService.getById(id);
 
             if (!user)
             {

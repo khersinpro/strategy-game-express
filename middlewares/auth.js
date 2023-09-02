@@ -5,13 +5,16 @@ const jwt = require('jsonwebtoken');
 module.exports = (req, res, next) => {
     try
     {
-        const token = req.headers['x-access-token'];
+        const token = req.headers['authorization'];
+
         if (!token)
         {
             throw new UnauthorizedError('Token manquant');
         }
 
-        const decodedToken = jwt.verify(token, config.jwtSecret);
+        const extractedToken = token.split(' ')[1];
+
+        const decodedToken = jwt.verify(extractedToken, config.jwtSecret);
         if (!decodedToken)
         {
             throw new UnauthorizedError('Token invalide');

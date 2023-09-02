@@ -1,8 +1,8 @@
-const bcrypt = require('bcrypt');
-const { User } = require('../../database/index');
+const { User } = require('../../database/index').models;
 
 class UserService {
     /**
+     * Récupérer tous les utilisateurs
      * @returns {Promise<Array<User>>} - tous les utilisateurs
      */
     getAll() {
@@ -14,10 +14,11 @@ class UserService {
     }
 
     /**
-     * @param {string} id 
+     * Récupérer un utilisateur par son id
+     * @param {String} id id de l'utilisateur
      * @returns {Promise<User>} - un utilisateur
      */
-    get(id) {
+    getById(id) {
         return User.findByPk(id, {
             attributes: {
                 exclude: ['password']
@@ -26,8 +27,21 @@ class UserService {
     }
 
     /**
-     * 
-     * @param {Object} data 
+     * Récupérer un utilisateur par son email
+     * @param {String} email email fournit par l'utilisateur 
+     * @returns {Promise<User>} - un utilisateur
+     */
+    getByEmail(email) {
+        return User.findOne({
+            where: {
+                email
+            }
+        });
+    }  
+
+    /**
+     * Créer un utilisateur
+     * @param {Object} data données de l'utilisateur
      * @returns {Promise<User>} - un utilisateur
      */
     create(data) {
@@ -35,9 +49,9 @@ class UserService {
     }
 
     /**
-     * 
-     * @param {string} id 
-     * @param {Object} data 
+     * Mettre à jour un utilisateur
+     * @param {String} id  id de l'utilisateur
+     * @param {Object} data  données de l'utilisateur
      * @returns {Promise<User>} - un utilisateur
      */
     update(id, data) {
@@ -49,7 +63,9 @@ class UserService {
     }   
 
     /**
-     * @param {string} id
+     * Mettre à jour le mot de passe d'un utilisateur
+     * @param {String} id id de l'utilisateur
+     * @returns {Promise} 
      */
     delete(id) {
         return User.destroy({
