@@ -27,12 +27,18 @@ describe('Test for users crud functuionality', () => {
         email: 'test@test.fr'
     }
 
+    const updatedUser = {
+        id: 1,
+        username: 'newusername',
+        email: 'test@test.fr'
+    }
 
     beforeEach(() => {   
         token = jwt.sign({id: mockId}, config.jwtSecret, {expiresIn: '7d'});
         User.findAll = jest.fn().mockResolvedValue(mockUsersList);
         User.findByPk = jest.fn().mockResolvedValue(mockUsersList[0]);
         User.create = jest.fn().mockResolvedValue(createdUser);
+        User.update = jest.fn().mockResolvedValue([1]);
     })
     
     /**
@@ -60,6 +66,14 @@ describe('Test for users crud functuionality', () => {
         
         expect(response.statusCode).toBe(200);
         expect(response.body).toEqual(mockUsersList[0]);
+    })
+
+    test('[get]request with id who doesn\'t match should return 404 and error message', async () => {
+        User.findByPk = jest.fn().mockResolvedValue(null);
+        const response = await request(app).get('/api/user/1').set('Authorization', `Bearer ${token}`);
+        
+        expect(response.statusCode).toBe(404);
+        expect(response.body.error).toEqual('Utilisateur introuvable');
     })
 
     test('[get] request without valid id should return 400 code', async () => {
@@ -136,5 +150,98 @@ describe('Test for users crud functuionality', () => {
     /**
      * Test for update user
      */
+    test('[update]request with valid body should return 200 and one message', async () => {
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({username: 'newusername'})
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual("Utilisateur mis à jour");
+    })
+
+    test('[update]request with id who doesn\'t match should return 404 and error message', async () => {
+        User.update = jest.fn().mockResolvedValue([0]);
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({username: 'newusername'})
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body.error).toEqual('Utilisateur introuvable pour mise à jour');
+    })
+
+    test('[update]request with no id should return 404 and error message', async () => {
+        const response = await request(app)
+        .put('/api/user/')
+        .set('Authorization', `Bearer ${token}`)
+        .send({username: 'newusername'})
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body.error).toEqual("Ressource introuvable");
+    })
+
+    test('[update]request with string id should return 400 and error message', async () => {
+        const response = await request(app)
+        .put('/api/user/badid')
+        .set('Authorization', `Bearer ${token}`)
+        .send({username: 'newusername'})
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toEqual('Id invalide');
+    })
+
+    test('[update]request with incorrect username should return 400 and error message', async () => {
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({username: ''})
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.errors.username.msg).toEqual('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.');
+    })
+
+    test('[update]request with incorrect username should return 400 and error message', async () => {
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({username: ''})
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.errors.username.msg).toEqual('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.');
+    })
+
+    test('[update]request with incorrect email should return 400 and error message', async () => {
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({email: 'wrongemail'})
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.errors.email.msg).toEqual('L\'email est incorrect.');
+    })
+
+    test('[update]request with incorrect password should return 400 and error message', async () => {
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({password: 'aaa'})
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.errors.password.msg).toEqual('Le mot de passe doit contenir entre 5 et 20 caractères');
+    })
+
+    test('[update]request with empty body should return 200 and message', async () => {
+        const response = await request(app)
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send({})
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual('Utilisateur mis à jour');
+    })
+
+
+
 
 })
