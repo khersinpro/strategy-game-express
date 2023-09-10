@@ -6,11 +6,6 @@ const { sequelize }  = require('../database/index');
 sequelize.sync()
 .then(() => {
     console.log('Connexion réussi')
-    // User.create({
-    //     username: 'admin',
-    //     email: 'admin@admin.fr',
-    //     password: 'admin'
-    // })
 })
 .catch((err) => console.error(err))
 
