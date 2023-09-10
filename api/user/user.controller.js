@@ -3,6 +3,8 @@ const UnauthorizedError = require("../../errors/unauthorized");
 const userService = require("./user.service");
 const jwt = require('jsonwebtoken');
 const config = require('../../config/index');
+const user = require("../../database/models/user");
+const BadRequestError = require("../../errors/bad-request");
 
 class UserController {
 
@@ -13,7 +15,6 @@ class UserController {
     {
         try 
         {
-            // Récupération de tous les utilisateurs sans le mot de passe
             const users = await userService.getAll();
             res.status(200).json(users);
         }
@@ -25,13 +26,18 @@ class UserController {
 
     /**
      * Récupération d'un utilisateur par son id
-     * @reqparam {string} id - id de l'utilisateur
      */
     async get(req, res, next)
     {
         try
         {
             const id = req.params.id;
+
+            if (!id || isNaN(parseInt(id)))
+            {
+                throw new BadRequestError('Id invalide');
+            }
+
             // Récupération de l'utilisateur
             const user = await userService.getById(id);
 
@@ -55,7 +61,8 @@ class UserController {
     {
         try 
         {
-            const user = await userService.create(req.body);
+            const { username, email, password } = req.body;
+            const user = await userService.create({ username, email, password });
             res.status(201).json(user);
         }
         catch (error)
@@ -72,15 +79,21 @@ class UserController {
         try
         {
             const id = req.params.id;
+
+            if (!id || isNaN(parseInt(id)))
+            {
+                throw new BadRequestError('Id invalide');
+            }
+
             const data = req.body;
             const userUpdated = await userService.update(id, data);
 
-            if (!userUpdated)
+            if (userUpdated == 0 || !userUpdated )
             {
                 throw new NotFoundError('Utilisateur introuvable pour mise à jour');
             }
 
-            res.status(200).json("Utilisateur mis à jour");
+            res.status(200).json('Utilisateur mis à jour');
         }
         catch (error)
         {
@@ -88,11 +101,20 @@ class UserController {
         }
     }    
 
+    /**
+     * Suppression d'un utilisateur
+     */
     async delete (req, res, next) 
     {
         try 
         {
             const id = req.params.id;
+
+            if (!id || isNaN(parseInt(id)))
+            {
+                throw new BadRequestError('Id invalide');
+            }
+
             await userService.delete(id);
             req.io.emit('user:delete', {id})
             res.status(204).send();
@@ -103,6 +125,9 @@ class UserController {
         }
     }
 
+    /**
+     * Connexion d'un utilisateur
+     */
     async login (req, res, next)
     {
         try 

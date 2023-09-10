@@ -7,6 +7,7 @@ const cors = require('cors');
 const usersRouter = require('./api/user/user.router');
 const usersController = require('./api/user/user.controller');
 const authMiddleware = require('./middlewares/auth');
+const { loginSanitization } = require('./api/user/user.sanitization');
 
 
 // Déclaratioon du serveur et configuration de socket.io
@@ -30,7 +31,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/user', authMiddleware, usersRouter);
-app.post('/api/login', usersController.login)
+app.post('/api/login', loginSanitization, usersController.login)
 
 app.use(express.static('public'));
 
@@ -46,7 +47,11 @@ app.use((req, res, next) => {
  */
 app.use((error, req, res, next) => {
     const status = error.status || 500;
-    const message = error.message || 'Erreur interne au serveur';
+    let message = error.message || 'Erreur interne au serveur';
+    if (process.env.NODE_ENV === 'production')
+    {
+        message = 'Erreur interne au serveur';
+    }
     res.status(status).json({ error: message });
 })
 
