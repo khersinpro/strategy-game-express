@@ -1,11 +1,12 @@
 const request   = require('supertest'); // simule une requette http
-const {app}     = require('../../server');
+const { app }   = require('../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../config');
 const { User }  = require('../../database/index').models;
 
 describe('Test for users crud functuionality', () => {
     let token
+
     const mockId = 1
 
     const mockUsersList = [
@@ -39,6 +40,7 @@ describe('Test for users crud functuionality', () => {
         User.findByPk = jest.fn().mockResolvedValue(mockUsersList[0]);
         User.create = jest.fn().mockResolvedValue(createdUser);
         User.update = jest.fn().mockResolvedValue([1]);
+        User.destroy = jest.fn().mockResolvedValue(1);
     })
     
     /**
@@ -241,7 +243,62 @@ describe('Test for users crud functuionality', () => {
         expect(response.body).toEqual('Utilisateur mis à jour');
     })
 
+    test('[update]request without token should return 401', async () => {
+        const response = await request(app).put('/api/user/1');
 
+        expect(response.statusCode).toBe(401);
+    })
 
+    /**
+     * Test for delete user
+     */
+    test('[delete] request with valid id should return 204', async () => {
+        const response = await request(app).delete('/api/user/1').set('Authorization', `Bearer ${token}`);
 
+        expect(response.statusCode).toBe(204);
+    })
+
+    test('[delete] request with invalid id should return 400', async () => {
+        const response = await request(app).delete('/api/user/mauvaisid').set('Authorization', `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toEqual('Id invalide');
+    })
+
+    test('[delete] request with no id should return 404', async () => {
+        const response = await request(app).delete('/api/user/').set('Authorization', `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body.error).toEqual('Ressource introuvable');
+    })
+
+    test('[delete] request with no token should return 401', async () => {
+        const response = await request(app).delete('/api/user/1');
+
+        expect(response.statusCode).toBe(401);
+    })
+
+    /**
+     * me route
+     */
+    test('[me] request with valid token should return 200 and user', async () => {
+        const response = await request(app).get('/api/user/me').set('Authorization', `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual(mockUsersList[0]);
+    })
+
+    test('[me] request with invalid jwt token id should return 404', async () => {
+        User.findByPk = jest.fn().mockResolvedValue(null);
+        const response = await request(app).get('/api/user/me').set('Authorization', `Bearer ${jwt.sign({id: 2}, config.jwtSecret, {expiresIn: '7d'})}`);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body.error).toEqual('Utilisateur introuvable');
+    })
+
+    test('[me] request with invalid token should return 401', async () => {
+        const response = await request(app).get('/api/user/me');
+
+        expect(response.statusCode).toBe(401);
+    })
 })
