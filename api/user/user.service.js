@@ -1,9 +1,10 @@
+const NotFoundError = require('../../errors/not-found');
 const { User } = require('../../database/index').models;
 
 class UserService {
     /**
-     * Récupérer tous les utilisateurs
-     * @returns {Promise<Array<User>>} - tous les utilisateurs
+     * Returns all users
+     * @returns {Promise<Array<User>>} - all users
      */
     getAll() {
         return User.findAll({
@@ -14,9 +15,9 @@ class UserService {
     }
 
     /**
-     * Récupérer un utilisateur par son id
-     * @param {String} id id de l'utilisateur
-     * @returns {Promise<User>} - un utilisateur
+     * get a user by its id
+     * @param {String} id user id
+     * @returns {Promise<User>} - a user
      */
     getById(id) {
         return User.findByPk(id, {
@@ -27,9 +28,9 @@ class UserService {
     }
 
     /**
-     * Récupérer un utilisateur par son email
-     * @param {String} email email fournit par l'utilisateur 
-     * @returns {Promise<User>} - un utilisateur
+     * get a user by its email
+     * @param {String} email user email
+     * @returns {Promise<User>} - a user
      */
     getByEmail(email) {
         return User.findOne({
@@ -40,39 +41,47 @@ class UserService {
     }  
 
     /**
-     * Créer un utilisateur
-     * @param {Object} data données de l'utilisateur
-     * @returns {Promise<User>} - un utilisateur
+     * Create a user
+     * @param {Object} data user data
+     * @returns {Promise<User>} - a user
      */
     create(data) {
         return User.create(data);
     }
 
     /**
-     * Mettre à jour un utilisateur
-     * @param {String} id  id de l'utilisateur
-     * @param {Object} data  données de l'utilisateur
-     * @returns {Promise<User>} - un utilisateur
+     * Update a user
+     * @param {String} id  user id
+     * @param {Object} data  user data
+     * @throws {NotFoundError} if the user does not exist
+     * @returns {Promise<User>} - a user
      */
-    update(id, data) {
-        return User.update(data, {
-            where: {
-                id
-            }
-        });
+    async update(id, data) {
+        const user = await this.getById(id);
+
+        if (!user) 
+        {
+            throw new NotFoundError(`User with primary key ${id} not found`);
+        }
+
+        return user.update(data);
     }   
 
     /**
-     * Mettre à jour le mot de passe d'un utilisateur
-     * @param {String} id id de l'utilisateur
-     * @returns {Promise} 
+     * Delete a user
+     * @param {String} id user id
+     * @throws {NotFoundError} if the user does not exist
+     * @returns {Promise<User>} - a delete user 
      */
-    delete(id) {
-        return User.destroy({
-            where: {
-                id
-            }
-        });
+    async delete(id) {
+        const user = await this.getById(id);
+
+        if (!user) 
+        {
+            throw new NotFoundError(`User with primary key ${id} not found`);
+        }
+
+        return user.destroy();
     }
 }
 

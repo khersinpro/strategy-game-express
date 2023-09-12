@@ -3,13 +3,12 @@ const UnauthorizedError = require("../../errors/unauthorized");
 const userService = require("./user.service");
 const jwt = require('jsonwebtoken');
 const config = require('../../config/index');
-const user = require("../../database/models/user");
 const BadRequestError = require("../../errors/bad-request");
 
 class UserController {
 
     /**
-     * Récupération de tous les utilisateurs
+     * Get all users
      */
     async getAll(req, res, next) 
     {
@@ -25,7 +24,7 @@ class UserController {
     }
 
     /**
-     * Récupération d'un utilisateur par son id
+     * Get user by its id
      */
     async get(req, res, next)
     {

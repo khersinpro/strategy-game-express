@@ -34,6 +34,9 @@ describe('Test for users crud functuionality', () => {
         email: 'test@test.fr'
     }
 
+    /**
+     * Mocking sequelize methods
+     */
     beforeEach(() => {   
         token = jwt.sign({id: mockId}, config.jwtSecret, {expiresIn: '7d'});
         User.findAll = jest.fn().mockResolvedValue(mockUsersList);
