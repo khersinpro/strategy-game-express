@@ -1,43 +1,36 @@
-const { check, validationResult } = require('express-validator');
-const BadRequestError = require('../../errors/bad-request');
-
-
-const errorhandler = (req, res, next) => {
-    const errors = !validationResult(req).isEmpty() ? validationResult(req).mapped() : null;
-
-    if (errors !== null) 
-    { 
-        return res.status(400).json({ errors });
-    };
-    
-    next();
-}
-
+const { body, param } = require('express-validator');
+const validationHandler = require('../../utils/validationHandler'); 
 /**
  * Sanitization of user creation
  */
 exports.createSanitization = [
-    check('username').trim().escape().isLength({min: 3, max: 30}).withMessage('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.'),
-    check('email').isEmail().withMessage('L\'email est incorrect.'),
-    check('password').trim().escape().isLength({min: 5, max: 20}).withMessage('Le mot de passe doit contenir entre 5 et 20 caractères'),
-    errorhandler,
+    body('username').trim().escape().isAlpha().isLength({min: 3, max: 30}).withMessage('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.'),
+    body('email').isEmail().withMessage('L\'email est incorrect.'),
+    body('password').trim().escape().isLength({min: 5, max: 20}).withMessage('Le mot de passe doit contenir entre 5 et 20 caractères'),
+    validationHandler.errorhandler,
 ] 
 
 /**
  * Sanitization of user login
  */
 exports.loginSanitization = [
-    check('email').trim().escape().isLength({min: 3, max: 30}).withMessage('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.'),
-    check('password').trim().escape().isLength({min: 5, max: 20}).withMessage('Le mot de passe doit contenir entre 5 et 20 caractères'),
-    errorhandler
+    body('email').trim().escape().isLength({min: 3, max: 30}).withMessage('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.'),
+    body('password').trim().escape().isLength({min: 5, max: 20}).withMessage('Le mot de passe doit contenir entre 5 et 20 caractères'),
+    validationHandler.errorhandler
 ]
 
 /**
  * Sanitization of user update
  */
-exports.updateSanitization = [
-    check('username').trim().escape().isLength({min: 3, max: 30}).withMessage('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.').optional(),
-    check('email').isEmail().withMessage('L\'email est incorrect.').optional(),
-    check('password').trim().escape().isLength({min: 5, max: 20}).withMessage('Le mot de passe doit contenir entre 5 et 20 caractères').optional(),
-    errorhandler
+exports.updateSanitization = [    
+    param('id').trim().escape().isInt().withMessage('Invalid id type.'),
+    body('username').trim().escape().isAlpha().isLength({min: 3, max: 30}).withMessage('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.').optional(),
+    body('email').isEmail().withMessage('L\'email est incorrect.').optional(),
+    body('password').trim().escape().isLength({min: 5, max: 20}).withMessage('Le mot de passe doit contenir entre 5 et 20 caractères').optional(),
+    validationHandler.errorhandler
+]
+
+exports.idParamSanitization = [
+    param('id').trim().escape().isInt().withMessage('Invalid id type.'),
+    validationHandler.errorhandler
 ]

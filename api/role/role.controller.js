@@ -1,4 +1,3 @@
-const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
 const RoleService = require('./role.service'); 
  
@@ -10,7 +9,7 @@ class UserController {
     async getAll(req, res, next) {
         try
         {
-            const roles = RoleService.getAll()
+            const roles = await RoleService.getAll()
             res.status(200).json(roles)
         }
         catch (error)
@@ -21,7 +20,6 @@ class UserController {
 
     /**
      * Get role by its id
-     * @throws {BadRequestError} if the id is not a number
      * @throws {NotFoundError} if the role does not exist
      */
     async get(req, res, next) {
@@ -29,16 +27,11 @@ class UserController {
         {
             const name = req.params.name
 
-            if (!name || typeof name !== 'string')
-            {
-                throw new BadRequestError('Name invalide')
-            }
-
             const role = await RoleService.getByName(name)
 
             if (!role)
             {
-                throw new NotFoundError('Utilisateur introuvable')
+                throw new NotFoundError('Role not found')
             }
 
             res.status(200).json(role)
@@ -67,22 +60,12 @@ class UserController {
 
     /**
      * Update a role
-     * @throws {BadRequestError} if the name is not a string    
      */
     async update(req, res, next) {
         try
         {
-            const name = req.params.name
-            
-            const { newName } = req.body
-
-            if (!name || typeof name !== 'string')
-            {
-                throw new BadRequestError('Name invalide')
-            }
-
-            const role = await RoleService.update(name, { name: newName })
-            res.status(200).json(role)
+            await RoleService.update(req.params.name, req.body)
+            res.status(204).send()
         }
         catch (error)
         {
@@ -92,20 +75,14 @@ class UserController {
 
     /**
      * Delete a role
-     * @throws {BadRequestError} if the name is not a string
      */
     async delete(req, res, next) {
         try
         {
             const name = req.params.name
 
-            if (!name || typeof name !== 'string')
-            {
-                throw new BadRequestError('Name invalide')
-            }
-
             await RoleService.delete(name)
-            //Controller si le role a bien été supprimé
+
             res.status(204).send()
         }
         catch (error)

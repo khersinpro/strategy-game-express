@@ -6,7 +6,6 @@ const { User }  = require('../../database/index').models;
 
 describe('Test for users crud functuionality', () => {
     let token
-
     const mockId = 1
 
     const mockUsersList = [
@@ -42,8 +41,7 @@ describe('Test for users crud functuionality', () => {
         User.findAll = jest.fn().mockResolvedValue(mockUsersList);
         User.findByPk = jest.fn().mockResolvedValue(mockUsersList[0]);
         User.create = jest.fn().mockResolvedValue(createdUser);
-        User.update = jest.fn().mockResolvedValue([1]);
-        User.destroy = jest.fn().mockResolvedValue(1);
+        User.findAndUpdate = jest.fn().mockResolvedValue(1);
     })
     
     /**
@@ -85,7 +83,7 @@ describe('Test for users crud functuionality', () => {
         const response = await request(app).get('/api/user/mauvaisid').set('Authorization', `Bearer ${token}`);
         
         expect(response.statusCode).toBe(400);
-        expect(response.body.error).toEqual('Id invalide');
+        expect(response.body.errors.id.msg).toEqual('Invalid id type.');
     })
 
     test('[get]request without token should return 401', async () => {
@@ -134,14 +132,14 @@ describe('Test for users crud functuionality', () => {
         .send({username: '', email: 'testtest.fr', password: 'testtesttest'});
         
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.username.msg).toEqual('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.');
+        expect(response.body.errors.username.msg).toEqual('Invalid value');
     })
     
     test('[create]request with empty body should return 400 with all errors messages', async () => {
         const response = await request(app).post('/api/user').set('Authorization', `Bearer ${token}`);
         
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.username.msg).toEqual('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.');
+        expect(response.body.errors.username.msg).toEqual('Invalid value');
         expect(response.body.errors.email.msg).toEqual('L\'email est incorrect.');
         expect(response.body.errors.password.msg).toEqual('Le mot de passe doit contenir entre 5 et 20 caractères');
     })
@@ -155,25 +153,23 @@ describe('Test for users crud functuionality', () => {
     /**
      * Test for update user
      */
-    test('[update]request with valid body should return 200 and one message', async () => {
+    test('[update]request with valid body should return 204', async () => {
         const response = await request(app)
         .put('/api/user/1')
         .set('Authorization', `Bearer ${token}`)
         .send({username: 'newusername'})
-
-        expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual("Utilisateur mis à jour");
+        expect(response.statusCode).toBe(204);
     })
 
     test('[update]request with id who doesn\'t match should return 404 and error message', async () => {
-        User.update = jest.fn().mockResolvedValue([0]);
+        User.findAndUpdate = jest.fn().mockResolvedValue(0);
         const response = await request(app)
         .put('/api/user/1')
         .set('Authorization', `Bearer ${token}`)
         .send({username: 'newusername'})
 
         expect(response.statusCode).toBe(404);
-        expect(response.body.error).toEqual('Utilisateur introuvable pour mise à jour');
+        expect(response.body.error).toEqual('User with primary key 1 not found or not modified');
     })
 
     test('[update]request with no id should return 404 and error message', async () => {
@@ -193,7 +189,7 @@ describe('Test for users crud functuionality', () => {
         .send({username: 'newusername'})
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.error).toEqual('Id invalide');
+        expect(response.body.errors.id.msg).toEqual('Invalid id type.');
     })
 
     test('[update]request with incorrect username should return 400 and error message', async () => {
@@ -203,7 +199,7 @@ describe('Test for users crud functuionality', () => {
         .send({username: ''})
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.username.msg).toEqual('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.');
+        expect(response.body.errors.username.msg).toEqual('Invalid value');
     })
 
     test('[update]request with incorrect username should return 400 and error message', async () => {
@@ -213,7 +209,7 @@ describe('Test for users crud functuionality', () => {
         .send({username: ''})
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.username.msg).toEqual('Le nom d\'utilisateur doit faire entre 3 et 30 caractères.');
+        expect(response.body.errors.username.msg).toEqual('Invalid value');
     })
 
     test('[update]request with incorrect email should return 400 and error message', async () => {
@@ -242,8 +238,7 @@ describe('Test for users crud functuionality', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({})
 
-        expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual('Utilisateur mis à jour');
+        expect(response.statusCode).toBe(204);
     })
 
     test('[update]request without token should return 401', async () => {
@@ -256,6 +251,10 @@ describe('Test for users crud functuionality', () => {
      * Test for delete user
      */
     test('[delete] request with valid id should return 204', async () => {
+        const user = new User();
+        User.findByPk = jest.fn().mockResolvedValue(user);
+        user.destroy = jest.fn().mockResolvedValue(1);
+
         const response = await request(app).delete('/api/user/1').set('Authorization', `Bearer ${token}`);
 
         expect(response.statusCode).toBe(204);
@@ -265,7 +264,7 @@ describe('Test for users crud functuionality', () => {
         const response = await request(app).delete('/api/user/mauvaisid').set('Authorization', `Bearer ${token}`);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.error).toEqual('Id invalide');
+        expect(response.body.errors.id.msg).toEqual('Invalid id type.');
     })
 
     test('[delete] request with no id should return 404', async () => {

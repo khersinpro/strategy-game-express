@@ -32,12 +32,6 @@ class UserController {
         {
             const id = req.params.id;
 
-            if (!id || isNaN(parseInt(id)))
-            {
-                throw new BadRequestError('Id invalide');
-            }
-
-            // Récupération de l'utilisateur
             const user = await userService.getById(id);
 
             if (!user)
@@ -78,21 +72,9 @@ class UserController {
         try
         {
             const id = req.params.id;
-
-            if (!id || isNaN(parseInt(id)))
-            {
-                throw new BadRequestError('Id invalide');
-            }
-
             const data = req.body;
-            const userUpdated = await userService.update(id, data);
-
-            if (userUpdated == 0 || !userUpdated )
-            {
-                throw new NotFoundError('Utilisateur introuvable pour mise à jour');
-            }
-
-            res.status(200).json('Utilisateur mis à jour');
+            await userService.update(id, data);
+            res.status(204).send();
         }
         catch (error)
         {
@@ -108,14 +90,8 @@ class UserController {
         try 
         {
             const id = req.params.id;
-
-            if (!id || isNaN(parseInt(id)))
-            {
-                throw new BadRequestError('Id invalide');
-            }
-
             await userService.delete(id);
-            req.io.emit('user:delete', {id})
+            req.io.emit('user:delete', { id })
             res.status(204).send();
         }
         catch (error)
@@ -131,23 +107,18 @@ class UserController {
     {
         try 
         {
-            const {email, password} = req.body;
-
-            if (!email || !password || email === '' || password === '' || email === undefined || password === undefined)
-            {
-                throw new UnauthorizedError('Email et mot de passe requis');
-            }
+            const { email, password } = req.body;
 
             const user = await userService.getByEmail(email);
 
             if (!user)
             {
-                throw new UnauthorizedError('Email ou mot de passe incorrect');
+                throw new UnauthorizedError('Invalid credentials');
             }
 
             if (!user.checkPassword(password))
             {
-                throw new UnauthorizedError('Email ou mot de passe incorrect');
+                throw new UnauthorizedError('Invalid credentials');
             }
 
             const token = jwt.sign({id: user.id}, config.jwtSecret, {expiresIn: '7d'});
@@ -169,7 +140,7 @@ class UserController {
             const id = req.user.id;
 
             if (!id) {
-                throw new UnauthorizedError('Token invalide');
+                throw new UnauthorizedError('Invalid token');
             }
 
             const user = await userService.getById(id);

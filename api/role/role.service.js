@@ -1,11 +1,11 @@
-const Role = require('../../database/index').models
+const { Role } = require('../../database/index').models;
 const NotFoundError = require('../../errors/not-found');
 
 class RoleService {
 
     /**
      * Returns all roles
-     * @returns {Promise<Array<User>} all roles
+     * @returns {Promise<Array<Role>} all roles
      */
     getAll() {
         return Role.findAll();
@@ -37,14 +37,15 @@ class RoleService {
      * @returns {Promise<Role>} a role
      */
     async update (name, data) {
-        const role = await this.getByName(name);
-
-        if (!role) 
-        {
-            throw new NotFoundError(`Role with primary key ${name} not found`);
+        const res = await Role.update(data, {
+            where: { name }
+        });
+        
+        if (parseInt(res) === 0) {
+            throw new NotFoundError(`Role with primary key ${name} not found or no changes added`);
         }
-
-        return role.update(data);
+        
+        return res
     }
 
     /**
@@ -53,8 +54,8 @@ class RoleService {
      * @throws {NotFoundError} if the role does not exist
      * @returns {Promise<Role>} a role
      */
-    async delete(id) {
-        const role = await this.getById(id);
+    async delete(name) {
+        const role = await this.getByName(name);
 
         if (!role) 
         {

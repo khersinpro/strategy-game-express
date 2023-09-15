@@ -57,14 +57,18 @@ class UserService {
      * @returns {Promise<User>} - a user
      */
     async update(id, data) {
-        const user = await this.getById(id);
+        const res = await User.findAndUpdate(data,{
+            where: {
+                id
+            },
+        });
 
-        if (!user) 
+        if (parseInt(res) === 0)
         {
-            throw new NotFoundError(`User with primary key ${id} not found`);
+            throw new NotFoundError(`User with primary key ${id} not found or not modified`);
         }
 
-        return user.update(data);
+        return res
     }   
 
     /**
