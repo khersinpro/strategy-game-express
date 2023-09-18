@@ -18,6 +18,14 @@ module.exports = (sequelize, DataTypes) => {
           defaultValue: 'ROLE_USER'
         }
       })
+      this.belongsToMany(models.Server, {
+        through: 'users_servers',
+        foreignKey: 'user_id',
+        otherKey: 'server_name'
+      })
+      this.hasMany(models.Village, {
+        foreignKey: 'user_id'
+      })
     }
 
     checkPassword(password) {

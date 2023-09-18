@@ -7,7 +7,7 @@ const cors = require('cors');
 const usersRouter = require('./api/user/user.router');
 const roleRouter = require('./api/role/role.router');
 const usersController = require('./api/user/user.controller');
-const authMiddleware = require('./middlewares/auth');
+const { auth } = require('./middlewares/auth');
 const { loginSanitization } = require('./api/user/user.sanitization');
 
 
@@ -31,8 +31,8 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/user', authMiddleware, usersRouter);
-app.use('/api/role', authMiddleware, roleRouter);
+app.use('/api/user', auth, usersRouter);
+app.use('/api/role', auth, roleRouter);
 app.post('/api/login', loginSanitization, usersController.login)
 
 app.use(express.static('public'));

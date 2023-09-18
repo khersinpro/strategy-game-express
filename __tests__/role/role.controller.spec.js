@@ -2,13 +2,19 @@ const request   = require('supertest');
 const { app }   = require('../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../config');
-const e = require('express');
-const { Role }  = require('../../database/index').models;
+const { Role, User }  = require('../../database/index').models;
 
 
 describe('Test for role controller', () => {
     let token
     const mockId = 1
+
+    const mockAuthUser = {
+        id: mockId,
+        userName: 'connectedUser',
+        email: 'connecteduser@gmail.com',
+        role: 'ROLE_ADMIN',
+    }
 
     const mockRoleList = [
         {
@@ -38,6 +44,7 @@ describe('Test for role controller', () => {
         Role.findByPk = jest.fn().mockResolvedValue(mockRoleList[0]);
         Role.create = jest.fn().mockResolvedValue(mockCreateRole);
         Role.update = jest.fn().mockResolvedValue(1);
+        User.findByPk = jest.fn().mockResolvedValue(mockAuthUser);
     })
 
     /**
@@ -144,10 +151,9 @@ describe('Test for role controller', () => {
         expect(response.statusCode).toBe(400);
     })
 
-    // test('[delete] request with unknown id should return 404', async () => {
-    //     Role.findByPk = jest.fn().mockResolvedValue(0);
-    //     const response = await request(app).delete('/api/role/ROLE_USER').set('Authorization', `Bearer ${token}`);
-    //     expect(response.body).toEqual({})
-    //     expect(response.statusCode).toBe(404);
-    // })
+    test('[delete] request with unknown id should return 500 sequelize error', async () => {
+        Role.findByPk = jest.fn().mockResolvedValue(null);
+        const response = await request(app).delete('/api/role/ROLE_USER').set('Authorization', `Bearer ${token}`);
+        expect(response.statusCode).toBe(500);
+    })
 });

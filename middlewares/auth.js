@@ -1,8 +1,10 @@
 const config = require('../config');
 const UnauthorizedError = require('../errors/unauthorized');
+const userService = require('../api/user/user.service');
 const jwt = require('jsonwebtoken');
+const NotFoundError = require('../errors/not-found');
 
-module.exports = (req, res, next) => {
+exports.auth = async (req, res, next) => {
     try
     {
         const token = req.headers['authorization'];
@@ -15,12 +17,21 @@ module.exports = (req, res, next) => {
         const extractedToken = token.split(' ')[1];
 
         const decodedToken = jwt.verify(extractedToken, config.jwtSecret);
-        if (!decodedToken)
+
+        if (!decodedToken || !decodedToken.id)
         {
             throw new UnauthorizedError('Token invalide');
         }
 
-        req.user = decodedToken;
+        const user = await userService.getById(decodedToken.id);
+
+
+        if (!user)
+        {
+            throw new NotFoundError('Utilisateur introuvable');
+        }
+
+        req.user = user;
 
         next();
     }
@@ -29,3 +40,19 @@ module.exports = (req, res, next) => {
         next(error);
     }
 };
+
+exports.isAdmin = async (req, res, next) => {
+    try
+    {
+        if (req.user.role !== 'ROLE_ADMIN')
+        {
+            throw new UnauthorizedError('You are not allowed to access this resource');
+        }
+
+        next();
+    }
+    catch (error)
+    {
+        next(error);
+    }
+}

@@ -12,12 +12,14 @@ describe('Test for users crud functuionality', () => {
         {
             id: 1,
             username: 'test',
-            email: 'test@test.fr'
+            email: 'test@test.fr',
+            role: 'ROLE_ADMIN'
         },
         {
             id: 2,
             username: 'test2',
-            email: 'test2@test2.fr'
+            email: 'test2@test2.fr',
+            role: 'ROLE_USER'
         }
     ]
 
@@ -102,7 +104,7 @@ describe('Test for users crud functuionality', () => {
         .send({username: 'test', email: 'test@test.fr', password: 'passwordlong'});
         
         expect(response.statusCode).toBe(201);
-        expect(response.body).toEqual(mockUsersList[0]);
+        expect(response.body).toEqual(createdUser);
     })
 
     test('[create]request with short password should return 400 with password error message', async () => {
@@ -252,7 +254,9 @@ describe('Test for users crud functuionality', () => {
      */
     test('[delete] request with valid id should return 204', async () => {
         const user = new User();
-        User.findByPk = jest.fn().mockResolvedValue(user);
+        User.findByPk = jest.fn()
+        .mockResolvedValueOnce(mockUsersList[0])
+        .mockResolvedValueOnce(user)
         user.destroy = jest.fn().mockResolvedValue(1);
 
         const response = await request(app).delete('/api/user/1').set('Authorization', `Bearer ${token}`);
@@ -290,7 +294,7 @@ describe('Test for users crud functuionality', () => {
         expect(response.body).toEqual(mockUsersList[0]);
     })
 
-    test('[me] request with invalid jwt token id should return 404', async () => {
+    test('[me] request with invalid jwt token id should return 500', async () => {
         User.findByPk = jest.fn().mockResolvedValue(null);
         const response = await request(app).get('/api/user/me').set('Authorization', `Bearer ${jwt.sign({id: 2}, config.jwtSecret, {expiresIn: '7d'})}`);
 

@@ -3,7 +3,6 @@ const UnauthorizedError = require("../../errors/unauthorized");
 const userService = require("./user.service");
 const jwt = require('jsonwebtoken');
 const config = require('../../config/index');
-const BadRequestError = require("../../errors/bad-request");
 
 class UserController {
 
@@ -73,6 +72,12 @@ class UserController {
         {
             const id = req.params.id;
             const data = req.body;
+
+            if (data.role && req.user.role !== 'ROLE_ADMIN')
+            {
+                throw new UnauthorizedError('You are not allowed to change user role');
+            }
+
             await userService.update(id, data);
             res.status(204).send();
         }
@@ -137,20 +142,7 @@ class UserController {
     async me(req, res, next) {
         try
         {
-            const id = req.user.id;
-
-            if (!id) {
-                throw new UnauthorizedError('Invalid token');
-            }
-
-            const user = await userService.getById(id);
-
-            if (!user)
-            {
-                throw new NotFoundError('Utilisateur introuvable');
-            }
-
-            res.status(200).json(user);
+            res.status(200).json(req.user);
 
         }
         catch (error)
