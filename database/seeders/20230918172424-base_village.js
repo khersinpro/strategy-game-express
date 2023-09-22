@@ -1,35 +1,36 @@
 'use strict';
 const { faker } = require('@faker-js/faker');
-
+const { User, Server, Village } = require('../index.js').models;
 /** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up (queryInterface, Sequelize) {
-    const users = await queryInterface.sequelize.query(
-      `SELECT id from user;`
-    );
+    // get all users
+    const users = await User.findAll();
+    // get all servers
+    const servers = await Server.findAll();
 
-    const servers = await queryInterface.sequelize.query(
-      `SELECT name from server;`
-    );
+    // for each user, create a village and associate it with a random server
+    for (const user of users) {
+      const server = servers[faker.number.int({ min: 0, max: servers.length - 1 })];
 
-    // insert a random server for each user
-    users.forEach(async user => {
-      await queryInterface.insert('users_servers', {
-        user_id: user.id,
-        server_name: servers[faker.number.int({min: 0, max: servers.length - 1})].name,
+      const newVillage = new Village({
+        name: faker.person.lastName(),
         createdAt: new Date(),
-        updatedAt: new Date()
-      })
-    })
+        updatedAt: new Date(),
+        user_id: user.id,
+        server_name: server.name,
+      });
+
+      await user.addServer(server);
+
+      await newVillage.save();
+    }
         
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add commands to revert seed here.
-     *
-     * Example:
-     * await queryInterface.bulkDelete('People', null, {});
-     */
+    await queryInterface.bulkDelete('users_servers', null, {});
+    await queryInterface.bulkDelete('village', null, {});
   }
 };
