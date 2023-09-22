@@ -6,6 +6,8 @@ const app = express();
 const cors = require('cors');
 const usersRouter = require('./api/user/user.router');
 const roleRouter = require('./api/role/role.router');
+const villageRouter = require('./api/village/village.router');
+const serverRouter = require('./api/server/server.router');
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
 const { loginSanitization } = require('./api/user/user.sanitization');
@@ -17,10 +19,6 @@ const io = new Server(server);
 
 io.on('connection', (socket) => {
     console.log('a user connected');
-    // socket.on('message', (message) => {
-    //     console.log('message: ' + message);
-    // });
-    // socket.emit('message', 'Hello from server');
 });
 
 app.use((req, res, next) => {
@@ -31,8 +29,13 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
+/**
+ * Routes
+ */
 app.use('/api/user', auth, usersRouter);
 app.use('/api/role', auth, roleRouter);
+app.use('/api/village', auth, villageRouter);
+app.use('/api/server', auth, serverRouter);
 app.post('/api/login', loginSanitization, usersController.login)
 
 app.use(express.static('public'));
