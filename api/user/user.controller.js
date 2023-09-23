@@ -9,7 +9,7 @@ class UserController {
     /**
      * Get all users
      */
-    async getAll(req, res, next) 
+    async getAll (req, res, next) 
     {
         try 
         {
@@ -25,7 +25,7 @@ class UserController {
     /**
      * Get user by its id
      */
-    async get(req, res, next)
+    async get (req, res, next)
     {
         try
         {
@@ -47,9 +47,9 @@ class UserController {
     }
 
     /**
-     * Création d'un utilisateur
+     * Create a user
      */
-    async create(req, res, next) 
+    async create (req, res, next) 
     {
         try 
         {
@@ -64,9 +64,9 @@ class UserController {
     }
 
     /**
-     * Mise a jour d'un utilisateur
+     * Update a user
      */
-    async update(req, res, next) 
+    async update (req, res, next) 
     {
         try
         {
@@ -88,7 +88,7 @@ class UserController {
     }    
 
     /**
-     * Suppression d'un utilisateur
+     * Delete a user
      */
     async delete (req, res, next) 
     {
@@ -106,7 +106,7 @@ class UserController {
     }
 
     /**
-     * Connexion d'un utilisateur
+     * Login
      */
     async login (req, res, next)
     {
@@ -137,13 +137,49 @@ class UserController {
     }
 
     /**
-     * Récupération de l'utilisateur courant
+     * Get current user
      */
-    async me(req, res, next) {
+    async me (req, res, next) {
         try
         {
             res.status(200).json(req.user);
 
+        }
+        catch (error)
+        {
+            next(error);
+        }
+    }
+
+    /**
+     * Add a server to user
+     */
+    async addServer (req, res, next) {
+        try
+        {
+            const id = req.params.id;
+            const server = req.body.server;
+
+            await userService.addServer(id, server);
+            res.status(204).send();
+        }
+        catch (error)
+        {
+            next(error);
+        }
+    } 
+
+    /**
+     * Delete a server to user
+     */
+    async removeServer (req, res, next) {
+        try 
+        {
+            const id = req.params.id;
+            const serveur = req.body.server;
+
+            await userService.removeServer(id, serveur);
+            res.status(204).send();
         }
         catch (error)
         {

@@ -1,8 +1,8 @@
 const request   = require('supertest'); // simule une requette http
-const { app }   = require('../../server');
+const { app }   = require('../../../server');
 const jwt       = require('jsonwebtoken');
-const config    = require('../../config');
-const { User }  = require('../../database/index').models;
+const config    = require('../../../config');
+const { User }  = require('../../../database/index').models;
 
 describe('Test for users crud functuionality', () => {
     let token
@@ -13,13 +13,13 @@ describe('Test for users crud functuionality', () => {
             id: 1,
             username: 'test',
             email: 'test@test.fr',
-            role: 'ROLE_ADMIN'
+            role_name: 'ROLE_ADMIN'
         },
         {
             id: 2,
             username: 'test2',
             email: 'test2@test2.fr',
-            role: 'ROLE_USER'
+            role_name: 'ROLE_USER'
         }
     ]
 

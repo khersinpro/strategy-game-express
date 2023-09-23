@@ -1,5 +1,6 @@
 const NotFoundError = require('../../errors/not-found');
-const { User } = require('../../database/index').models;
+const { User, Server } = require('../../database/index').models;
+const ServerService = require('../server/server.service');
 
 class UserService {
     /**
@@ -23,7 +24,13 @@ class UserService {
         return User.findByPk(id, {
             attributes: {
                 exclude: ['password']
-            }
+            },
+            include: [
+                {
+                model: Server,
+                attributes: ['name']
+                }
+            ]
         });
     }
 
@@ -36,7 +43,17 @@ class UserService {
         return User.findOne({
             where: {
                 email
-            }
+            },
+            attributes: {
+                exclude: ['password']
+            },
+            include: [
+                {
+                model: Server,
+                as: 'servers',
+                attributes: ['name']
+                }
+            ]
         });
     }  
 
@@ -87,6 +104,56 @@ class UserService {
 
         return user.destroy();
     }
+
+    /**
+     * Add a server to a user
+     * @param {String} id user id
+     * @param {String} serverName server name
+     * @throws {NotFoundError} if the user or server does not exist
+     * @returns {Promise<User>} - a user
+     */
+    async addServer(id, serverName) {
+        const user = await this.getById(id);
+
+        if (!user) 
+        {
+            throw new NotFoundError(`User with primary key ${id} not found`);
+        }
+
+        const server = await ServerService.getByName(serverName);
+
+        if (!server) 
+        {
+            throw new NotFoundError(`Server with name ${serverName} not found`);
+        }
+
+        return user.addServer(server);
+    }
+
+    /**
+     * Remove a server from a user
+     * @param {String} id user id
+     * @param {String} serverName server name
+     * @throws {NotFoundError} if the user or server does not exist
+     * @returns {Promise<User>} - a user
+     */
+    async removeServer(id, serverName) {
+        const user = await this.getById(id);
+
+        if (!user) 
+        {
+            throw new NotFoundError(`User with primary key ${id} not found`);
+        }
+
+        const server = await ServerService.getByName(serverName);
+
+        if (!server) 
+        {
+            throw new NotFoundError(`Server with name ${serverName} not found`);
+        }
+
+        return user.removeServer(server);
+    } 
 }
 
 module.exports = new UserService();

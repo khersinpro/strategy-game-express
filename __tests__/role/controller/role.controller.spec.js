@@ -1,8 +1,8 @@
 const request   = require('supertest');
-const { app }   = require('../../server');
+const { app }   = require('../../../server');
 const jwt       = require('jsonwebtoken');
-const config    = require('../../config');
-const { Role, User }  = require('../../database/index').models;
+const config    = require('../../../config');
+const { Role, User }  = require('../../../database/index').models;
 
 
 describe('Test for role controller', () => {
@@ -13,7 +13,7 @@ describe('Test for role controller', () => {
         id: mockId,
         userName: 'connectedUser',
         email: 'connecteduser@gmail.com',
-        role: 'ROLE_ADMIN',
+        role_name: 'ROLE_ADMIN',
     }
 
     const mockRoleList = [

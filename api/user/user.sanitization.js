@@ -34,3 +34,8 @@ exports.idParamSanitization = [
     param('id').trim().escape().isInt().withMessage('Invalid id type.'),
     validationHandler.errorhandler
 ]
+
+exports.serveurNameSanitization = [
+    body('server').trim().escape().isString().isLength({min: 3, max: 30}).withMessage('Le nom du serveur doit faire entre 3 et 30 caractères.'),
+    validationHandler.errorhandler
+]

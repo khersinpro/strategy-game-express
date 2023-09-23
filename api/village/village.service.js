@@ -1,6 +1,8 @@
 const NotFoundError = require('../../errors/not-found');
-
 const { Village } = require('../../database').models;
+const UserService = require('../user/user.service');
+const ServerService = require('../server/server.service');
+const ForbiddenError = require('../../errors/forbidden');
  
 class VilageService {
     /**
@@ -23,9 +25,19 @@ class VilageService {
     /**
      * Creates a new village promise
      * @param {Object} data
+     * @throws {NotFoundError} if the user does not exist
      * @returns {Promise<Village>}
      */
-    create(data) {
+    async create(user, data) {
+        const server = await ServerService.getById(data.server_id);
+
+        if (!server)
+        {
+            throw new NotFoundError(`Server with id ${data.server_id} not found`);
+        }
+
+        data.user_id = user.id;
+
         return Village.create(data);
     }
 
@@ -35,7 +47,19 @@ class VilageService {
      * @param {Object} data 
      * @returns {Promise<Village>}
      */
-    update(id, data) {
+    async update(id, data, user) {
+        const village = await this.getById(id);
+
+        if (!village)
+        {
+            throw new NotFoundError(`Village with id ${id} not found`);
+        }
+
+        if (user.id !== village.user_id || user.role_name !== 'ROLE_ADMIN')
+        {
+            throw new ForbiddenError(`You are not allowed to create a village on this server`);
+        }
+
         return Village.update(data, {
             where: {
                 id: id

@@ -3,6 +3,7 @@ const UnauthorizedError = require('../errors/unauthorized');
 const userService = require('../api/user/user.service');
 const jwt = require('jsonwebtoken');
 const NotFoundError = require('../errors/not-found');
+const ForbiddenError = require('../errors/forbidden');
 
 exports.auth = async (req, res, next) => {
     try
@@ -44,9 +45,9 @@ exports.auth = async (req, res, next) => {
 exports.isAdmin = async (req, res, next) => {
     try
     {
-        if (req.user.role !== 'ROLE_ADMIN')
+        if (req.user.role_name !== 'ROLE_ADMIN')
         {
-            throw new UnauthorizedError('You are not allowed to access this resource');
+            throw new ForbiddenError('You are not allowed to access this resource');
         }
 
         next();

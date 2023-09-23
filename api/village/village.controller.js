@@ -45,7 +45,7 @@ class VillageController {
     async create(req, res, next) {
         try 
         {
-            const village = await VillageService.create(req.body);
+            const village = await VillageService.create(req.user, req.body);
             res.status(201).send(village);
         }
         catch (error)
@@ -60,7 +60,7 @@ class VillageController {
     async update(req, res, next) {
         try 
         {
-            const village = await VillageService.update(req.params.id, req.body);
+            const village = await VillageService.update(req.params.id, req.body, req.user);
             res.status(200).send(village);
         }
         catch (error)
