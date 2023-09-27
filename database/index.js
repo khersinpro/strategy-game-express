@@ -17,9 +17,15 @@ const modelList = [
   require('./models/civilization'),
   require('./models/role'),
   require('./models/server'),
-  require('./models/unittype'),
+  require('./models/unit_type'),
   require('./models/user'),
   require('./models/village'),
+  require('./models/building'),
+  require('./models/ressource_building'),
+  require('./models/special_building'),
+  require('./models/wall_building'),
+  require('./models/infrastructure_building'),
+  require('./models/military_building'),
 ];
 
 // Déclaration des models a sequelize

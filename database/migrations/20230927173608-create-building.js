@@ -2,15 +2,15 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('unit_type', {
-      id: {
+    await queryInterface.createTable('building', {
+      name: {
+        type: Sequelize.STRING,
         allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
+        primaryKey: true
       },
       type: {
-        type: Sequelize.STRING
+        type: Sequelize.ENUM('infrastructure_building', 'military_building', 'ressource_building', 'wall_building', 'special_building'),
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -23,6 +23,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('unit_type');
+    await queryInterface.dropTable('building');
   }
 };

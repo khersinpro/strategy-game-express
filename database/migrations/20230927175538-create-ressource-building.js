@@ -2,15 +2,15 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('unit_type', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
+    await queryInterface.createTable('ressource_building', {
+      name: {
+        type: Sequelize.STRING,
         primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      type: {
-        type: Sequelize.STRING
+        allowNull: false,
+        references: {
+          model: 'building',
+          key: 'name'
+        }
       },
       createdAt: {
         allowNull: false,
@@ -23,6 +23,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('unit_type');
+    await queryInterface.dropTable('ressource_building');
   }
 };
