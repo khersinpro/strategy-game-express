@@ -3,7 +3,7 @@ const {faker} = require('@faker-js/faker');
 const bcrypt = require('bcrypt')
 
 /** @type {import('sequelize-cli').Migration} */
-const users = [...Array(100)].map(user => {
+const users = [...Array(20)].map(user => {
   let salt = bcrypt.genSaltSync(12)
   let hash = bcrypt.hashSync(faker.internet.password(), salt)
   return {

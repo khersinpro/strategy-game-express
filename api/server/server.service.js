@@ -16,7 +16,11 @@ class ServerService {
      * @returns {Promise<Server>}
      */
     getByName(name) {
-        return Server.findByPk(name);
+        return Server.findOne({
+            where: {
+                name
+            }    
+        });
     }   
 
     /**

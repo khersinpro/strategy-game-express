@@ -1,6 +1,6 @@
 'use strict';
-const { faker } = require('@faker-js/faker');
-const { User, Server, Village } = require('../index.js').models;
+const { faker, fa } = require('@faker-js/faker');
+const { User, Server, Village, Civilization } = require('../index.js').models;
 /** @type {import('sequelize-cli').Migration} */
 
 module.exports = {
@@ -9,24 +9,27 @@ module.exports = {
     const users = await User.findAll();
     // get all servers
     const servers = await Server.findAll();
+    // get all civilizations
+    const civilizations = await Civilization.findAll();
 
     // for each user, create a village and associate it with a random server
     for (const user of users) {
       const server = servers[faker.number.int({ min: 0, max: servers.length - 1 })];
+      const civilization = civilizations[faker.number.int({ min: 0, max: civilizations.length - 1 })];
 
       const newVillage = new Village({
         name: faker.person.lastName(),
         createdAt: new Date(),
         updatedAt: new Date(),
         user_id: user.id,
+        civilization_type: civilization.type,
         server_name: server.name,
       });
 
       await user.addServer(server);
 
       await newVillage.save();
-    }
-        
+    } 
   },
 
   async down (queryInterface, Sequelize) {

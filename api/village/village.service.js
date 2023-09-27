@@ -29,7 +29,11 @@ class VilageService {
      * @returns {Promise<Village>}
      */
     async create(user, data) {
-        const server = await ServerService.getById(data.server_id);
+        const server = await ServerService.getByName(data.server_name);
+
+        /**
+         * TODO: Check if the user is allowed to create a village on this server
+         */
 
         if (!server)
         {
@@ -74,7 +78,7 @@ class VilageService {
      * @returns {Promise<Village>}
      */ 
     async delete(id) {
-        const Village = await Village.findByPk(id);
+        const Village = await this.getById(id);
 
         if (!Village) 
         {

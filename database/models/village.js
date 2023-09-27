@@ -16,11 +16,21 @@ module.exports = (sequelize, DataTypes) => {
           name: 'user_id',
           allowNull: false,
         }
+      }),
+      this.belongsTo(models.Civilization, {
+        foreignKey: {
+          name: 'civilization_type',
+          allowNull: false,
+        }
       })
     }
   }
   Village.init({
-    name: DataTypes.STRING
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    }
   }, {
     sequelize,
     modelName: 'Village',

@@ -14,7 +14,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   UnitType.init({
-    type: DataTypes.STRING
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      primaryKey: true,
+    }
   }, {
     sequelize,
     modelName: 'UnitType',
