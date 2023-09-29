@@ -6,7 +6,14 @@ module.exports = (sequelize, DataTypes) => {
   class Unit_type extends Model {
 
     static associate(models) {
-
+      Unit_type.hasMany(models.Unit, {
+        foreignKey: 'type',
+        as: 'unit_type'
+      });
+      Unit_type.hasMany(models.Defense_type, {
+        foreignKey: 'type',
+        as: 'defense_type'
+      });
     }
 
   }

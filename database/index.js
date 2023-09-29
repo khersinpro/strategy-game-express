@@ -26,6 +26,8 @@ const modelList = [
   require('./models/wall_building'),
   require('./models/infrastructure_building'),
   require('./models/military_building'),
+  require('./models/unit'),
+  require('./models/defense_type'),
 ];
 
 // Déclaration des models a sequelize

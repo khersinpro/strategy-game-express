@@ -18,6 +18,7 @@ npx sequelize-cli model:generate --name military_building --attributes name:stri
 npx sequelize-cli model:generate --name ressource_building --attributes name:string
 npx sequelize-cli model:generate --name wall_building --attributes name:string
 npx sequelize-cli model:generate --name special_building --attributes name:string
+npx sequelize model:generate --name unit --attributes name:string,carrying:integer
 
 npx sequelize-cli db:migrate
 
