@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('ressource_building', {
+    await queryInterface.createTable('resource_building', {
       name: {
         type: Sequelize.STRING,
         primaryKey: true,
@@ -23,6 +23,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('ressource_building');
+    await queryInterface.dropTable('resource_building');
   }
 };

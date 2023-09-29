@@ -21,7 +21,7 @@ const modelList = [
   require('./models/user'),
   require('./models/village'),
   require('./models/building'),
-  require('./models/ressource_building'),
+  require('./models/resource_building'),
   require('./models/special_building'),
   require('./models/wall_building'),
   require('./models/infrastructure_building'),

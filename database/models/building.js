@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'name',
         onDelete: 'CASCADE'
       });
-      this.hasOne(models.Ressource_building, {
+      this.hasOne(models.Resource_building, {
         foreignKey: 'name',
         onDelete: 'CASCADE'
       });

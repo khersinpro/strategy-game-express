@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Ressource_building extends Model {
+  class Resource_building extends Model {
 
     static associate(models) {
       this.belongsTo(models.Building, {
@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     }
 
   }
-  Ressource_building.init({
+  Resource_building.init({
     name: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -24,8 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     sequelize,
-    modelName: 'Ressource_building',
-    tableName: 'ressource_building'
+    modelName: 'Resource_building',
+    tableName: 'resource_building'
   });
-  return Ressource_building;
+  return Resource_building;
 };
