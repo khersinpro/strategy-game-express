@@ -8,11 +8,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Defense_type.belongsTo(models.Unit, {
         foreignKey: 'unit_name',
-        as: 'unit_name'
       });
       Defense_type.belongsTo(models.Unit_type, {
         foreignKey: 'type',
-        as: 'type'
       });
     }
   }

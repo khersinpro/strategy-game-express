@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building, {
         foreignKey: 'name'
       })
+      this.hasMany(models.Unit, {
+        foreignKey: 'military_building'
+      })
     }
     
   }

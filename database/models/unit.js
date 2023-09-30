@@ -8,11 +8,15 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Unit.belongsTo(models.Unit_type, {
         foreignKey: 'type',
-        as: 'unit_type'
       });
       Unit.hasMany(models.Defense_type, {
         foreignKey: 'unit_name',
-        as: 'defense_type'
+      });
+      Unit.belongsTo(models.Civilization, {
+        foreignKey: 'type',
+      });
+      Unit.belongsTo(models.Military_building, {
+        foreignKey: 'name',
       });
     }
   }
@@ -25,6 +29,30 @@ module.exports = (sequelize, DataTypes) => {
     carrying: {
       type: DataTypes.INTEGER,
       allowNull: false
+    },
+    unit_type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'unit_type',
+        key: 'type'
+      }
+    },
+    civilization_type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'civilization',
+        key: 'type'
+      }
+    },
+    military_building: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'military_building',
+        key: 'name'
+      }
     },
   }, {
     sequelize,

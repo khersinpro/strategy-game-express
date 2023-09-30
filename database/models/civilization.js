@@ -8,6 +8,9 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.Village, {
         foreignKey: 'civilization_type'
       })
+      this.hasMany(models.Unit, {
+        foreignKey: 'civilization_type'
+      })  
     }
   }
   Civilization.init({
