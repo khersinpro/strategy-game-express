@@ -1,5 +1,5 @@
-class BuildingController {
+class DefenseTypeController {
 
 }
 
-module.exports = new BuildingController();
+module.exports = new DefenseTypeController();

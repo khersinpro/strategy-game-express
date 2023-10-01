@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { Unit } = require('../../database/index').models
+const unitController = require('./unit.controller')
 
 router.get('/', async (req, res) => {
-  const units = await Unit.findAll()
-  res.json(units)
+
 })
 
 

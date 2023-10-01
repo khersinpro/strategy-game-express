@@ -1,3 +1,5 @@
+const BadRequestError = require('../../errors/bad-request');
+
 const { Unit_type } = require('../../database').models;
 
 class UnitTypeService {
@@ -11,12 +13,12 @@ class UnitTypeService {
 
     /**
      * Returns a unitType by id
-     * @param {Number} id
-     * @returns {Promise<Unit_type>}
+     * @param {String} type 
+     * @returns 
      */
-    getById(id) {
-        return Unit_type.findByPk(id);
-    }   
+    getByType(type) {
+        return Unit_type.findByPk(type);
+    }
 
     /**
      * Creates a new unitType promise
@@ -29,29 +31,29 @@ class UnitTypeService {
 
     /**
      * Updates a unitType
-     * @param {Number} id 
+     * @param {String} type 
      * @param {Object} data 
      * @returns {Promise<Unit_type>}
      */
-    update(id, data) {
+    update(type, data) {
         return Unit_type.update(data, {
             where: {
-                id: id
+                type: type
             }
         });
     }
 
     /**
      * Deletes a unitType
-     * @param {Number} id
+     * @param {String} type
      * @returns {Promise<Unit_type>}
      */ 
-    async delete(id) {
-        const UnitType = await Unit_type.findByPk(id);
+    async delete(type) {
+        const UnitType = await this.getByType(type);
 
         if (!UnitType) 
         {
-            throw new NotFoundError(`UnitType with id ${id} not found`);
+            throw new NotFoundError(`UnitType with type ${type} not found`);
         }
 
         return UnitType.destroy();

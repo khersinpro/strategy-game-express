@@ -1,4 +1,4 @@
-class DefenseTypeController {
+class BuildingService {
 
     getAll() {
     
@@ -21,4 +21,4 @@ class DefenseTypeController {
     }
 }
 
-module.exports = new DefenseTypeController();
+module.exports = new BuildingService();

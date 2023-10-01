@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const DefenseTypeController = require('./defense_type.controller');
+const roleController = require('./role.controller');
 
 
 // Create routes
