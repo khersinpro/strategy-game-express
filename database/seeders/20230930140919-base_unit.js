@@ -3,19 +3,21 @@
 /** @type {import('sequelize-cli').Migration} */
 const egiptian_infanteries = [
   {
-    name: 'Sphinx Spearbearer',
-    civilization_type: 'Egyptians',
+    name: 'sphinx spearbearer',
+    atk: 50,
+    civilization_type: 'egyptian',
     unit_type: 'infantry',
-    military_building: 'Barracks',
+    military_building: 'barrack',
     carrying: 20,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Scarab Soldier',
-    civilization_type: 'Egyptians',
+    name: 'scarab soldier',
+    atk: 30,
+    civilization_type: 'egyptian',
     unit_type: 'infantry',
-    military_building: 'Barracks',
+    military_building: 'barrack',
     carrying: 25,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -24,19 +26,21 @@ const egiptian_infanteries = [
 
 const greek_infanteries = [
   {
-    name: 'Spartan Phalanx',
-    civilization_type: 'Greeks',
+    name: 'spartan phalanx',
+    atk: 40,
+    civilization_type: 'greek',
     unit_type: 'infantry',
-    military_building: 'Barracks',
+    military_building: 'barrack',
     carrying: 20,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Olympian Legionnaire',
-    civilization_type: 'Greeks',
+    name: 'olympian legionnaire',
+    atk: 32,
+    civilization_type: 'greek',
     unit_type: 'infantry',
-    military_building: 'Barracks',
+    military_building: 'barrack',
     carrying: 25,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -45,19 +49,21 @@ const greek_infanteries = [
 
 const norse_infanteries = [
   {
-    name: 'Viking Raider',
-    civilization_type: 'Norse',
+    name: 'viking raider',
+    atk: 15,
+    civilization_type: 'norse',
     unit_type: 'infantry',
-    military_building: 'Barracks',
+    military_building: 'barrack',
     carrying: 20,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Berserker',
-    civilization_type: 'Norse',
+    name: 'berserker',
+    atk: 75,
+    civilization_type: 'norse',
     unit_type: 'infantry',
-    military_building: 'Barracks',
+    military_building: 'barrack',
     carrying: 25,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -66,8 +72,9 @@ const norse_infanteries = [
 
 const egiptian_cavalries = [
   {
-    name: 'Anubis Charger',
-    civilization_type: 'Egyptians',
+    name: 'anubis charger',
+    atk: 60,
+    civilization_type: 'egyptian',
     unit_type: 'cavalry',
     military_building: 'Stable',
     carrying: 30,
@@ -75,8 +82,9 @@ const egiptian_cavalries = [
     updatedAt: new Date()
   },
   {
-    name: 'Camel Rider',
-    civilization_type: 'Egyptians',
+    name: 'camel rider',
+    atk: 40,
+    civilization_type: 'egyptian',
     unit_type: 'cavalry',
     military_building: 'Stable',
     carrying: 30,
@@ -87,8 +95,9 @@ const egiptian_cavalries = [
 
 const greek_cavalries = [
   {
-    name: 'Athena Cavalier',
-    civilization_type: 'Greeks',
+    name: 'athena cavalier',
+    atk: 45,
+    civilization_type: 'greek',
     unit_type: 'cavalry',
     military_building: 'Stable',
     carrying: 30,
@@ -96,8 +105,9 @@ const greek_cavalries = [
     updatedAt: new Date()
   },
   {
-    name: 'Spartan Steed',
-    civilization_type: 'Greeks',
+    name: 'spartan steed',
+    atk: 25,
+    civilization_type: 'greek',
     unit_type: 'cavalry',
     military_building: 'Stable',
     carrying: 30,
@@ -108,8 +118,9 @@ const greek_cavalries = [
 
 const norse_cavalries = [
   {
-    name: 'Ragnarok Rider',
-    civilization_type: 'Norse',
+    name: 'ragnarok rider',
+    atk: 40,
+    civilization_type: 'norse',
     unit_type: 'cavalry',
     military_building: 'Stable',
     carrying: 30,
@@ -117,8 +128,9 @@ const norse_cavalries = [
     updatedAt: new Date()
   },
   {
-    name: 'Viking Valkyries',
-    civilization_type: 'Norse',
+    name: 'viking valkyries',
+    atk: 48,
+    civilization_type: 'norse',
     unit_type: 'cavalry',
     military_building: 'Stable',
     carrying: 30,

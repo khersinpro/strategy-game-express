@@ -3,7 +3,9 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
+
   class Civilization extends Model {
+
     static associate(models) {
       this.hasMany(models.Village, {
         foreignKey: 'civilization_type'
@@ -13,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       })  
     }
   }
+  
   Civilization.init({
     type: {
       type: DataTypes.STRING,

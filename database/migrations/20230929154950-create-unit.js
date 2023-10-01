@@ -8,6 +8,10 @@ module.exports = {
         primaryKey: true,
         allowNull: false
       },
+      atk: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
       carrying: {
         type: Sequelize.INTEGER,
         allowNull: false

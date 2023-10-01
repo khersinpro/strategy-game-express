@@ -2,13 +2,13 @@
 
 const military_buildings = [
   {
-    name: 'Barracks',
+    name: 'barrack',
     type: 'military_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Stable',
+    name: 'stable',
     type: 'military_building',
     createdAt: new Date(),
     updatedAt: new Date()
@@ -17,25 +17,25 @@ const military_buildings = [
 
 const resource_buildings = [
   {
-    name: 'Woodcutter',
+    name: 'woodcutter',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Clay Pit',
+    name: 'clay pit',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Iron Mine',
+    name: 'iron mine',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Cropland',
+    name: 'cropland',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()
@@ -65,25 +65,25 @@ const wall_building = [
 
 const infrastructure_buildings = [
   {
-    name: 'Headquarters',
+    name: 'headquarters',
     type: 'infrastructure_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Marketplace',
+    name: 'marketplace',
     type: 'infrastructure_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Residence',
+    name: 'residence',
     type: 'infrastructure_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: "Embassy",
+    name: "embassy",
     type: 'infrastructure_building',
     createdAt: new Date(),
     updatedAt: new Date()
@@ -92,19 +92,19 @@ const infrastructure_buildings = [
 
 const special_buildings = [
   {
-    name: 'Greek Academy',
+    name: 'greek Academy',
     type: 'special_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'Egyptian Academy',
+    name: 'egyptian Academy',
     type: 'special_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: "Norse Academy",
+    name: "norse Academy",
     type: 'special_building',
     createdAt: new Date(),
     updatedAt: new Date()

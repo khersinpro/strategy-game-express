@@ -18,7 +18,7 @@ module.exports = {
       const civilization = civilizations[faker.number.int({ min: 0, max: civilizations.length - 1 })];
 
       const newVillage = new Village({
-        name: faker.person.lastName(),
+        name: 'Vilage of' + user.username,
         createdAt: new Date(),
         updatedAt: new Date(),
         user_id: user.id,

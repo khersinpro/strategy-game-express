@@ -2,18 +2,19 @@
 const {
   Model
 } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Unit extends Model {
 
     static associate(models) {
       Unit.belongsTo(models.Unit_type, {
-        foreignKey: 'type',
+        foreignKey: 'unit_type',
       });
       Unit.hasMany(models.Defense_type, {
         foreignKey: 'unit_name',
       });
       Unit.belongsTo(models.Civilization, {
-        foreignKey: 'type',
+        foreignKey: 'civilization_type',
       });
       Unit.belongsTo(models.Military_building, {
         foreignKey: 'name',
@@ -25,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       primaryKey: true
+    },
+    atk: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     carrying: {
       type: DataTypes.INTEGER,
