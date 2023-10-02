@@ -28,6 +28,7 @@ class UserService {
             include: [
                 {
                 model: Server,
+                as: 'servers',
                 attributes: ['name']
                 }
             ]
@@ -37,15 +38,18 @@ class UserService {
     /**
      * get a user by its email
      * @param {String} email user email
+     * @param {Boolean} withPassword if true, returns the password
      * @returns {Promise<User>} - a user
      */
-    getByEmail(email) {
+    getByEmail(email, withPassword = false) {
+        const exclude = withPassword ? [] : ['password'];
+        
         return User.findOne({
             where: {
                 email
             },
             attributes: {
-                exclude: ['password']
+                exclude
             },
             include: [
                 {

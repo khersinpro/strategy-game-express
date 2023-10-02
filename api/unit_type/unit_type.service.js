@@ -1,4 +1,4 @@
-const BadRequestError = require('../../errors/bad-request');
+const NotFoundError = require('../../errors/not-found');
 
 const { Unit_type } = require('../../database').models;
 

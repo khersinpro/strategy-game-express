@@ -11,6 +11,7 @@ const serverRouter = require('./api/server/server.router');
 const civilizationRouter = require('./api/civilization/civilization.router');
 const unitRouter = require('./api/unit/unit.router');
 const unitTypeRouter = require('./api/unit_type/unit_type.router');
+
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
 const { loginSanitization } = require('./api/user/user.sanitization');
@@ -40,7 +41,7 @@ app.use('/api/role', auth, roleRouter);
 app.use('/api/village', auth, villageRouter);
 app.use('/api/server', auth, serverRouter);
 app.use('/api/civilization', auth, civilizationRouter);
-app.use('/api/unit', unitRouter);
+app.use('/api/unit', auth, unitRouter);
 app.use('/api/unit-type', auth, unitTypeRouter);
 app.post('/api/login', loginSanitization, usersController.login)
 

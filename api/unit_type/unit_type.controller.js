@@ -9,7 +9,7 @@ class UnitTypeController {
         try 
         {
             const unitTypes = await UnitTypeService.getAll();
-            res.json(unitTypes);
+            res.status(200).json(unitTypes);
         }
         catch (error) 
         {
@@ -24,7 +24,7 @@ class UnitTypeController {
         try 
         {
             const unitType = await UnitTypeService.getByType(req.params.type);
-            res.json(unitType);
+            res.status(200).json(unitType);
         }
         catch (error) 
         {
@@ -39,7 +39,7 @@ class UnitTypeController {
         try 
         {
             const unitType = await UnitTypeService.create(req.body);
-            res.json(unitType);
+            res.status(201).json(unitType);
         }
         catch (error) 
         {
@@ -54,7 +54,7 @@ class UnitTypeController {
         try 
         {
             const unitType = await UnitTypeService.update(req.params.type, req.body);
-            res.json(unitType);
+            res.status(200).json(unitType);
         }
         catch (error) 
         {
@@ -68,8 +68,8 @@ class UnitTypeController {
     async delete(req, res, next) {
         try 
         {
-            const unitType = await UnitTypeService.delete(req.params.type);
-            res.json(unitType);
+            await UnitTypeService.delete(req.params.type);
+            res.status(204).end();
         }
         catch (error) 
         {

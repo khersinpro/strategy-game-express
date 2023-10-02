@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.Server, {
         through: 'users_servers',
         foreignKey: 'user_id',
-        otherKey: 'server_name'
+        otherKey: 'server_name',
+        as: 'servers'
       })
       this.hasMany(models.Village, {
         foreignKey: 'user_id'

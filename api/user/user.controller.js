@@ -114,7 +114,7 @@ class UserController {
         {
             const { email, password } = req.body;
 
-            const user = await userService.getByEmail(email);
+            const user = await userService.getByEmail(email, true);
 
             if (!user)
             {
