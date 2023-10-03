@@ -4,6 +4,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = express();
 const cors = require('cors');
+
+// Import routers
 const usersRouter = require('./api/user/user.router');
 const roleRouter = require('./api/role/role.router');
 const villageRouter = require('./api/village/village.router');
@@ -12,6 +14,12 @@ const civilizationRouter = require('./api/civilization/civilization.router');
 const unitRouter = require('./api/unit/unit.router');
 const unitTypeRouter = require('./api/unit_type/unit_type.router');
 const defenseTypeRouter = require('./api/defense_type/defense_type.router');
+const buildingRouter = require('./api/building/building.router');
+const infrastructureBuildingRouter = require('./api/building/infrastructure_building/infrastructure_building.router');
+const militaryBuildingRouter = require('./api/building/military_building/military_building.router');
+const ressourceBuildingRouter = require('./api/building/ressource_building/ressource_building.router');
+const specialBuildingRouter = require('./api/building/special_building/special_building.router');
+const wallBuildingRouter = require('./api/building/wall_building/wall_building.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -45,6 +53,16 @@ app.use('/api/civilization', auth, civilizationRouter);
 app.use('/api/unit', auth, unitRouter);
 app.use('/api/unit-type', auth, unitTypeRouter);
 app.use('/api/defense-type', auth, defenseTypeRouter);
+app.use('/api/building', auth, buildingRouter);
+app.use('/api/infrastructure-building', auth, infrastructureBuildingRouter);
+app.use('/api/military-building', auth, militaryBuildingRouter);
+app.use('/api/ressource-building', auth, ressourceBuildingRouter);
+app.use('/api/special-building', auth, specialBuildingRouter);
+app.use('/api/wall-building', auth, wallBuildingRouter);
+
+/**
+ * Login route
+ */
 app.post('/api/login', loginSanitization, usersController.login)
 
 app.use(express.static('public'));

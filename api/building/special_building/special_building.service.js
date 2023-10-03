@@ -4,7 +4,7 @@ class BuildingService {
     
     }
 
-    getById(id) {
+    getByName(name) {
     
     }
 
@@ -12,11 +12,11 @@ class BuildingService {
     
     }
 
-    update(id, data) {
+    update(name, data) {
 
     }
 
-    delete(id) {
+    delete(name) {
 
     }
 }

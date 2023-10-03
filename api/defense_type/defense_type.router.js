@@ -9,14 +9,14 @@ const { nameParamSanitization, typeParamSanitization, createSanitization, update
  * Auth routes
  */
 router.get('/', DefenseTypeController.getAll);
-router.get('/:unitname', DefenseTypeController.getByUnitName);
-router.get('/:unitname/:type', DefenseTypeController.getByUnitNameAndType);
+router.get('/:unitname', nameParamSanitization, DefenseTypeController.getByUnitName);
+router.get('/:unitname/:type', nameParamSanitization, typeParamSanitization, DefenseTypeController.getByUnitNameAndType);
 
 /**
  * Admin routes
  */
-router.post('/', isAdmin, DefenseTypeController.create);
-router.put('/:unitname/:type', isAdmin, DefenseTypeController.update);
-router.delete('/:unitname/:type', isAdmin, DefenseTypeController.delete);
+router.post('/', isAdmin, createSanitization, DefenseTypeController.create);
+router.put('/:unitname/:type', isAdmin, updateSanitization, DefenseTypeController.update);
+router.delete('/:unitname/:type', isAdmin, nameParamSanitization, typeParamSanitization, DefenseTypeController.delete);
 
 module.exports = router;

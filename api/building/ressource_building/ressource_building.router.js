@@ -1,10 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const roleController = require('./role.controller');
+const RessourceBuildingController = require('./ressource_building.controller');
+const { isAdmin } = require('../../../middlewares/auth');
+const { nameParamSanitization, createSanitization, updateSanitization } = require('./ressource_building.sanitization')
 
+/**
+ * Auth routes
+ */
+router.get('/', RessourceBuildingController.getAll);
+router.get('/:name', nameParamSanitization, RessourceBuildingController.get);
 
-// Create routes
-
-
+/**
+ * Admin routes
+ */
+router.post('/', isAdmin, createSanitization, RessourceBuildingController.create);
+router.put('/:name', isAdmin, updateSanitization, RessourceBuildingController.update);
+router.delete('/:name', isAdmin, nameParamSanitization, RessourceBuildingController.delete);
 
 module.exports = router;
