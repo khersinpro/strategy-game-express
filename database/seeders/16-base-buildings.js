@@ -17,13 +17,13 @@ const military_buildings = [
 
 const resource_buildings = [
   {
-    name: 'woodcutter',
+    name: 'wood cutter',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'clay pit',
+    name: 'stone mine',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()
@@ -35,7 +35,7 @@ const resource_buildings = [
     updatedAt: new Date()
   },
   {
-    name: 'cropland',
+    name: 'wheat fields',
     type: 'resource_building',
     createdAt: new Date(),
     updatedAt: new Date()

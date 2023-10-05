@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building, {
         foreignKey: 'name'
       })
+      this.belongsTo(models.Resource, {
+        foreignKey: 'resource_name'
+      })
     }
 
   }
@@ -22,6 +25,14 @@ module.exports = (sequelize, DataTypes) => {
         key: 'name'
       }
     },
+    resource_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'resource',
+        key: 'name'
+      }
+    }
   }, {
     sequelize,
     modelName: 'Resource_building',

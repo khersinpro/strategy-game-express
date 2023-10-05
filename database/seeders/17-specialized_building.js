@@ -70,6 +70,7 @@ module.exports = {
     await queryInterface.bulkInsert('resource_building', resource_building.map(building => {
       return {
         name: building.name,
+        resource_name: building.name.split(' ')[0],
         createdAt: new Date(),
         updatedAt: new Date()
       }
