@@ -1,9 +1,12 @@
 'use strict';
-const { Building } = require('../index.js').models;
+const { faker } = require('@faker-js/faker');
+const { Building, Civilization } = require('../index.js').models;
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
+    const civilizations = await Civilization.findAll();
+
     const infrastructure_building = await Building.findAll({
       where: {
         type: 'infrastructure_building'
@@ -35,8 +38,10 @@ module.exports = {
     });
 
     await queryInterface.bulkInsert('special_building', special_building.map(building => { 
+      const civilization = civilizations[faker.number.int({ min: 0, max: civilizations.length - 1})];
       return {
         name: building.name,
+        civilization_name: civilization.name,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -51,8 +56,12 @@ module.exports = {
     }))
 
     await queryInterface.bulkInsert('military_building', military_building.map(building => {
+      let unit_type = 'infantry'
+      building.name === 'stable' && (unit_type = 'cavalry')
+
       return {
         name: building.name,
+        unit_type,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -67,8 +76,10 @@ module.exports = {
     }))
 
     await queryInterface.bulkInsert('wall_building', wall_building.map(building => {
+      const civilization = civilizations[faker.number.int({ min: 0, max: civilizations.length - 1 })];
       return {
         name: building.name,
+        civilization_name: civilization.name,
         createdAt: new Date(),
         updatedAt: new Date()
       }

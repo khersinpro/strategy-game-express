@@ -8,16 +8,22 @@ module.exports = (sequelize, DataTypes) => {
 
     static associate(models) {
       this.hasMany(models.Village, {
-        foreignKey: 'civilization_type'
+        foreignKey: 'civilization_name'
       })
       this.hasMany(models.Unit, {
-        foreignKey: 'civilization_type'
+        foreignKey: 'civilization_name'
       })  
+      this.hasMany(models.Special_building, {
+        foreignKey: 'civilization_name'
+      })
+      this.hasMany(models.Wall_building, {
+        foreignKey: 'civilization_name'
+      })
     }
   }
   
   Civilization.init({
-    type: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
       primaryKey: true,

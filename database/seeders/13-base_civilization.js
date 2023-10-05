@@ -4,17 +4,17 @@
 
 const civilizationList = [
   {
-    type: "egyptian",
+    name: "egyptian",
     createdAt: new Date(),
     updatedAt: new Date(),
   },
   {
-    type: "greek",
+    name: "greek",
     createdAt: new Date(),
     updatedAt: new Date(),
   },
   {
-    type: "norse",
+    name: "norse",
     createdAt: new Date(),
     updatedAt: new Date(),
   },

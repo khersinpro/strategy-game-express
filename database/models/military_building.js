@@ -12,6 +12,9 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.Unit, {
         foreignKey: 'military_building'
       })
+      this.belongsTo(models.Unit_type, {
+        foreignKey: 'unit_type'
+      })  
     }
     
   }
@@ -25,6 +28,14 @@ module.exports = (sequelize, DataTypes) => {
         key: 'name'
       }
     },
+    unit_type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'unit_type',
+        key: 'type'
+      }
+    }
   }, {
     sequelize,
     modelName: 'Military_building',

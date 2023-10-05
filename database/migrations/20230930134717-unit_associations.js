@@ -3,12 +3,12 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.addColumn('unit', 'civilization_type', {
+    await queryInterface.addColumn('unit', 'civilization_name', {
       type: Sequelize.STRING,
       allowNull: false,
       references: {
         model: 'civilization',
-        key: 'type'
+        key: 'name'
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
@@ -36,11 +36,8 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
+    await queryInterface.removeColumn('unit', 'civilization_name');
+    await queryInterface.removeColumn('unit', 'unit_type');
+    await queryInterface.removeColumn('unit', 'military_building');
   }
 };

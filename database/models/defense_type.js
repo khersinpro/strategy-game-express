@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
+  
   Defense_type.init({
     unit_name: {
       type: DataTypes.STRING,

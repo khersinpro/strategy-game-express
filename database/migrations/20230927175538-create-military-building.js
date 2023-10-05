@@ -12,6 +12,14 @@ module.exports = {
           key: 'name'
         }
       },
+      unit_type: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'unit_type',
+          key: 'type'
+        }
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

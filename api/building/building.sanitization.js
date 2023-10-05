@@ -7,6 +7,11 @@ exports.createSanitization = [
         .trim()
         .isString().withMessage('name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('name must not be empty'),
+    body('type')
+        .escape()
+        .trim()
+        .isString().withMessage('type must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('type must not be empty'),
     validationHandler.errorhandler
 ] 
 
@@ -21,6 +26,12 @@ exports.updateSanitization = [
         .trim()
         .isString().withMessage('name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('name must not be empty')
+        .optional(),
+    body('type')
+        .escape()
+        .trim()
+        .isString().withMessage('type must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('type must not be empty')
         .optional(),
     validationHandler.errorhandler
 ]

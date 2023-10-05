@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       }),
       this.belongsTo(models.Civilization, {
         foreignKey: {
-          name: 'civilization_type',
+          name: 'civilization_name',
           allowNull: false,
         }
       })
@@ -30,7 +30,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-    }
+    },
+    civilization_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'civilization',
+        key: 'name'
+      }
+    },
   }, {
     sequelize,
     modelName: 'Village',

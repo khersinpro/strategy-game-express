@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building, {
         foreignKey: 'name',
       });
+      this.belongsTo(models.Civilization, {
+        foreignKey: 'civilization_name'
+      })
     }
 
   }
@@ -19,6 +22,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'buildings',
+        key: 'name'
+      }
+    },
+    civilization_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'civilization',
         key: 'name'
       }
     },

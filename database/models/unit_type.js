@@ -12,7 +12,6 @@ module.exports = (sequelize, DataTypes) => {
       });
       Unit_type.hasMany(models.Defense_type, {
         foreignKey: 'type',
-        // as: 'defense_type'
       });
     }
 

@@ -17,7 +17,7 @@ const defenseTypeRouter = require('./api/defense_type/defense_type.router');
 const buildingRouter = require('./api/building/building.router');
 const infrastructureBuildingRouter = require('./api/building/infrastructure_building/infrastructure_building.router');
 const militaryBuildingRouter = require('./api/building/military_building/military_building.router');
-const ressourceBuildingRouter = require('./api/building/ressource_building/ressource_building.router');
+const ressourceBuildingRouter = require('./api/building/resource_building/resource_building.router');
 const specialBuildingRouter = require('./api/building/special_building/special_building.router');
 const wallBuildingRouter = require('./api/building/wall_building/wall_building.router');
 

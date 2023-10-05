@@ -1,8 +1,15 @@
+const { BuildingService } = require('./building.service');
+
 class BuildingController {
+
+    /**
+     * Return all buildings 
+     */
     async getAll (req, res, next) {
         try
         {
-
+            const buildings = await BuildingService.getAll();
+            res.status(200).json(buildings);
         }
         catch (error)
         {
@@ -10,10 +17,14 @@ class BuildingController {
         }
     }
 
+    /**
+     * Return a building by name
+     */
     async get (req, res, next) {
         try
         {
-
+            const building = await BuildingService.getByName(req.params.name);
+            res.status(200).json(building);
         }
         catch (error)
         {
@@ -21,10 +32,14 @@ class BuildingController {
         }
     }
 
+    /**
+     * Create a building 
+     */
     async create (req, res, next) {
         try
         {
-
+            const building = await BuildingService.create(req.body);
+            res.status(201).json(building);
         }
         catch (error)
         {
@@ -32,10 +47,14 @@ class BuildingController {
         }
     }
 
+    /**
+     * Update a building 
+     */
     async update (req, res, next) {
         try
         {
-
+            const building = await BuildingService.update(req.params.name, req.body);
+            res.status(200).json(building);
         }
         catch (error)
         {
@@ -43,10 +62,14 @@ class BuildingController {
         }
     }
 
+    /**
+     * Delete a building 
+     */
     async delete (req, res, next) {
         try
         {
-
+            await BuildingService.delete(req.params.name);
+            res.status(204).end();
         }
         catch (error)
         {

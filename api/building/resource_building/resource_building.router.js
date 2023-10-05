@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const RessourceBuildingController = require('./ressource_building.controller');
+const RessourceBuildingController = require('./resource_building.controller');
 const { isAdmin } = require('../../../middlewares/auth');
-const { nameParamSanitization, createSanitization, updateSanitization } = require('./ressource_building.sanitization')
+const { nameParamSanitization, createSanitization, updateSanitization } = require('./resource_building.sanitization')
 
 /**
  * Auth routes

@@ -22,7 +22,7 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
         user_id: user.id,
-        civilization_type: civilization.type,
+        civilization_name: civilization.name,
         server_name: server.name,
       });
 

@@ -12,6 +12,14 @@ module.exports = {
           key: 'name'
         }
       },
+      civilization_name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'civilization',
+          key: 'name'
+        }
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

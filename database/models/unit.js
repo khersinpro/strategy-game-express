@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'unit_name',
       });
       Unit.belongsTo(models.Civilization, {
-        foreignKey: 'civilization_type',
+        foreignKey: 'civilization_name',
       });
       Unit.belongsTo(models.Military_building, {
         foreignKey: 'name',
@@ -43,12 +43,12 @@ module.exports = (sequelize, DataTypes) => {
         key: 'type'
       }
     },
-    civilization_type: {
+    civilization_name: {
       type: DataTypes.STRING,
       allowNull: false,
       references: {
         model: 'civilization',
-        key: 'type'
+        key: 'name'
       }
     },
     military_building: {

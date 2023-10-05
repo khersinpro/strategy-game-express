@@ -5,7 +5,7 @@ const egiptian_infanteries = [
   {
     name: 'sphinx spearbearer',
     atk: 50,
-    civilization_type: 'egyptian',
+    civilization_name: 'egyptian',
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 20,
@@ -15,7 +15,7 @@ const egiptian_infanteries = [
   {
     name: 'scarab soldier',
     atk: 30,
-    civilization_type: 'egyptian',
+    civilization_name: 'egyptian',
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 25,
@@ -28,7 +28,7 @@ const greek_infanteries = [
   {
     name: 'spartan phalanx',
     atk: 40,
-    civilization_type: 'greek',
+    civilization_name: 'greek',
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 20,
@@ -38,7 +38,7 @@ const greek_infanteries = [
   {
     name: 'olympian legionnaire',
     atk: 32,
-    civilization_type: 'greek',
+    civilization_name: 'greek',
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 25,
@@ -51,7 +51,7 @@ const norse_infanteries = [
   {
     name: 'viking raider',
     atk: 15,
-    civilization_type: 'norse',
+    civilization_name: 'norse',
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 20,
@@ -61,7 +61,7 @@ const norse_infanteries = [
   {
     name: 'berserker',
     atk: 75,
-    civilization_type: 'norse',
+    civilization_name: 'norse',
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 25,
@@ -74,9 +74,9 @@ const egiptian_cavalries = [
   {
     name: 'anubis charger',
     atk: 60,
-    civilization_type: 'egyptian',
+    civilization_name: 'egyptian',
     unit_type: 'cavalry',
-    military_building: 'Stable',
+    military_building: 'stable',
     carrying: 30,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -84,9 +84,9 @@ const egiptian_cavalries = [
   {
     name: 'camel rider',
     atk: 40,
-    civilization_type: 'egyptian',
+    civilization_name: 'egyptian',
     unit_type: 'cavalry',
-    military_building: 'Stable',
+    military_building: 'stable',
     carrying: 30,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -97,9 +97,9 @@ const greek_cavalries = [
   {
     name: 'athena cavalier',
     atk: 45,
-    civilization_type: 'greek',
+    civilization_name: 'greek',
     unit_type: 'cavalry',
-    military_building: 'Stable',
+    military_building: 'stable',
     carrying: 30,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -107,9 +107,9 @@ const greek_cavalries = [
   {
     name: 'spartan steed',
     atk: 25,
-    civilization_type: 'greek',
+    civilization_name: 'greek',
     unit_type: 'cavalry',
-    military_building: 'Stable',
+    military_building: 'stable',
     carrying: 30,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -120,9 +120,9 @@ const norse_cavalries = [
   {
     name: 'ragnarok rider',
     atk: 40,
-    civilization_type: 'norse',
+    civilization_name: 'norse',
     unit_type: 'cavalry',
-    military_building: 'Stable',
+    military_building: 'stable',
     carrying: 30,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -130,9 +130,9 @@ const norse_cavalries = [
   {
     name: 'viking valkyries',
     atk: 48,
-    civilization_type: 'norse',
+    civilization_name: 'norse',
     unit_type: 'cavalry',
-    military_building: 'Stable',
+    military_building: 'stable',
     carrying: 30,
     createdAt: new Date(),
     updatedAt: new Date()

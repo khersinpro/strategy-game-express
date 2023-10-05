@@ -60,4 +60,4 @@ class CivilizationService {
     }
 }
 
-module.exports = new Civilization();
+module.exports = new CivilizationService();
