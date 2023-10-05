@@ -26,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'name',
         onDelete: 'CASCADE'
       });
+      this.hasMany(models.Building_level, {
+        foreignKey: 'building_name'
+      })
     }
   }
   
@@ -44,5 +47,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Building',
     tableName: 'building'
   });
+  
   return Building;
 };
