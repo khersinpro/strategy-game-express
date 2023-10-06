@@ -35,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
     indexes: [
       {
         unique: true,
-
         fields: ['building_name', 'level']
       }
     ]

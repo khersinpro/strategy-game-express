@@ -6,12 +6,18 @@ module.exports = (sequelize, DataTypes) => {
   class Resource extends Model {
 
     static associate(models) {
-
+      this.hasMany(models.Building_cost, {
+        foreignKey: 'resource_name'
+      })
     }
   }
 
   Resource.init({
-    name: DataTypes.STRING
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      primaryKey: true
+    }
   }, {
     sequelize,
     modelName: 'Resource',

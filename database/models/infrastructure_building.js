@@ -1,7 +1,6 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Infrastructure_building extends Model {
 
@@ -10,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'name',
       });
     }
-    
   }
+  
   Infrastructure_building.init({
     name: {
       type: DataTypes.STRING,
@@ -27,5 +26,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Infrastructure_building',
     tableName: 'infrastructure_building'
   });
+
   return Infrastructure_building;
 };
