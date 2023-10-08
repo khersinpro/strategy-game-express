@@ -1,8 +1,7 @@
 'use strict';
 const bcrypt = require('bcrypt')
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
 
@@ -29,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       return bcrypt.compareSync(password, this.password)
     }
   }
+
   User.init({
     username: {
       type: DataTypes.STRING,
@@ -62,5 +62,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'User',
     tableName: 'user',
   });
+  
   return User;
 };

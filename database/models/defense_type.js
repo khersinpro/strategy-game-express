@@ -1,7 +1,6 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Defense_type extends Model {
 
@@ -43,5 +42,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Defense_type',
     tableName: 'defense_type',
   });
+
   return Defense_type;
 };

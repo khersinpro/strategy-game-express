@@ -76,15 +76,16 @@ module.exports = {
       }
     }))
 
-    await queryInterface.bulkInsert('wall_building', wall_building.map(building => {
-      const civilization = civilizations[faker.number.int({ min: 0, max: civilizations.length - 1 })];
+    const wall_bulding_inherit = wall_building.map(building => {
       return {
         name: building.name,
-        civilization_name: civilization.name,
+        civilization_name: building.name.split(' ')[0],
         createdAt: new Date(),
         updatedAt: new Date()
       }
-    }))
+    })
+
+    await queryInterface.bulkInsert('wall_building', wall_bulding_inherit )
   },
 
   async down (queryInterface, Sequelize) {

@@ -2,12 +2,11 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-
-  class Building_cost extends Model {
+  class Resource_production extends Model {
 
     static associate(models) {
-      this.belongsTo(models.Resource, {
-        foreignKey: 'resource_name'
+      this.belongsTo(models.Resource_building, {
+        foreignKey: 'resource_building_name'
       })
       this.belongsTo(models.Building_level, {
         foreignKey: 'building_level_id'
@@ -15,17 +14,16 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
-  Building_cost.init({
-    quantity: {
+  Resource_production.init({
+    production: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
+      allowNull: false
     },
-    resource_name: {
+    resource_building_name: {
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: 'resource',
+        model: 'resource_building',
         key: 'name'
       }
     },
@@ -36,18 +34,18 @@ module.exports = (sequelize, DataTypes) => {
         model: 'building_level',
         key: 'id'
       }
-    }
+    },
   }, {
     indexes: [
       {
         unique: true,
-        fields: ['resource_name', 'building_level_id']
+        fields: ['resource_building_name', 'building_level_id']
       }
     ],
     sequelize,
-    modelName: 'Building_cost',
-    tableName: 'building_cost'
+    modelName: 'Resource_production',
+    tableName: 'resource_production'
   });
-  
-  return Building_cost;
+
+  return Resource_production;
 };

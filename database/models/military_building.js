@@ -1,7 +1,6 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Military_building extends Model {
     
@@ -15,9 +14,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Unit_type, {
         foreignKey: 'unit_type'
       })  
-    }
-    
+    }    
   }
+
   Military_building.init({
     name: {
       type: DataTypes.STRING,
@@ -41,5 +40,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Military_building',
     tableName: 'military_building'
   });
+  
   return Military_building;
 };

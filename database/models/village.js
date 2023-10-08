@@ -1,9 +1,9 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Village extends Model {
+
     static associate(models) {
       this.belongsTo(models.Server, {
         foreignKey: {
@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       })
     }
   }
+
   Village.init({
     name: {
       type: DataTypes.STRING,
@@ -44,5 +45,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Village',
     tableName: 'village',
   });
+  
   return Village;
 };

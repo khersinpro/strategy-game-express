@@ -1,7 +1,6 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Unit_type extends Model {
 
@@ -14,8 +13,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'type',
       });
     }
-
   }
+
   Unit_type.init({
     type: {
       type: DataTypes.STRING,
@@ -27,5 +26,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Unit_type',
     tableName: 'unit_type',
   });
+  
   return Unit_type;
 };

@@ -1,14 +1,9 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Server extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+
     static associate(models) {
       this.belongsToMany(models.User, {
         through: 'users_servers',
@@ -17,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       })
     }
   }
+
   Server.init({
     name: {
       type: DataTypes.STRING,
@@ -28,5 +24,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Server',
     tableName: 'server',
   });
+  
   return Server;
 };

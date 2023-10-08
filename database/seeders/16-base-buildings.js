@@ -44,19 +44,19 @@ const resource_buildings = [
 
 const wall_building = [
   {
-    name: 'greeks_wall',
+    name: 'greek wall',
     type: 'wall_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'egyptians_wall',
+    name: 'egyptian wall',
     type: 'wall_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    name: 'norse_wall',
+    name: 'norse wall',
     type: 'wall_building',
     createdAt: new Date(),
     updatedAt: new Date()

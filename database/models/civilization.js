@@ -32,5 +32,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Civilization',
     tableName: 'civilization',
   });
+  
   return Civilization;
 };

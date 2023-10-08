@@ -1,7 +1,6 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Resource_building extends Model {
 
@@ -12,9 +11,12 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Resource, {
         foreignKey: 'resource_name'
       })
+      this.hasMany(models.Resource_production, {
+        foreignKey: 'resource_building_name'
+      })
     }
-
   }
+
   Resource_building.init({
     name: {
       type: DataTypes.STRING,
@@ -38,5 +40,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Resource_building',
     tableName: 'resource_building'
   });
+  
   return Resource_building;
 };
