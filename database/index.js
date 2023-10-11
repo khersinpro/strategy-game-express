@@ -32,7 +32,10 @@ const modelList = [
   require('./models/building_level'),
   require('./models/building_cost'),
   require('./models/resource_production'),
-  require('./models/unit_production')
+  require('./models/unit_production'),
+  require('./models/village_resource'),
+  require('./models/village_unit'),
+  require('./models/village_building'),
 ];
 
 // Déclaration des models a sequelize
