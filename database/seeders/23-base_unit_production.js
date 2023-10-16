@@ -18,7 +18,7 @@ module.exports = {
       return building.levels.map(level => {
         return {
           reduction_percent: level.level * 4,
-          resource_building_name: building.name,
+          military_building_name: building.name,
           building_level_id: level.id,
           createdAt: new Date(),
           updatedAt: new Date()

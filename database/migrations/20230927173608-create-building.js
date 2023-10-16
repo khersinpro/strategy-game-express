@@ -9,7 +9,13 @@ module.exports = {
         primaryKey: true
       },
       type: {
-        type: Sequelize.ENUM('infrastructure_building', 'military_building', 'resource_building', 'wall_building', 'special_building'),
+        type: Sequelize.ENUM('infrastructure_building',
+         'military_building',
+          'resource_building',
+          'wall_building',
+          'special_building',
+          'storage_building'
+        ),
         allowNull: false
       },
       createdAt: {

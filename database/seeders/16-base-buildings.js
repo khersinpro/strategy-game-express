@@ -111,12 +111,40 @@ const special_buildings = [
   },
 ]
 
+const storage_building = [
+  {
+    name: 'wood storage',
+    type: 'storage_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'stone storage',
+    type: 'storage_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'iron storage',
+    type: 'storage_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'wheat storage',
+    type: 'storage_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+]
+
 const buildings = [
   ...military_buildings,
   ...resource_buildings,
   ...wall_building,
   ...infrastructure_buildings,
-  ...special_buildings
+  ...special_buildings,
+  ...storage_building
 ]
 
 /** @type {import('sequelize-cli').Migration} */
@@ -126,6 +154,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-
+    await queryInterface.bulkDelete('building', buildings);
   }
 };

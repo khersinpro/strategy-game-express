@@ -2,34 +2,33 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Resource_building extends Model {
-
+  class Storage_building extends Model {
     static associate(models) {
       this.belongsTo(models.Building, {
         foreignKey: 'name'
-      })
+      });
       this.belongsTo(models.Resource, {
         foreignKey: 'resource_name'
-      })
-      this.hasMany(models.Resource_production, {
-        foreignKey: 'resource_building_name'
-      })
+      });
+      this.hasMany(models.Storage_capacity, {
+        foreignKey: 'storage_building_name'
+      });
     }
   }
 
-  Resource_building.init({
+  Storage_building.init({
     name: {
       type: DataTypes.STRING,
       primaryKey: true,
       allowNull: false,
       references: {
-        model: 'building',
+        model: 'building', 
         key: 'name'
       }
     },
     resource_name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNUll: false,
       references: {
         model: 'resource',
         key: 'name'
@@ -37,9 +36,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    modelName: 'Resource_building',
-    tableName: 'resource_building'
+    modelName: 'Storage_building',
+    tableName: 'storage_building'
   });
-  
-  return Resource_building;
+
+  return Storage_building;
 };
