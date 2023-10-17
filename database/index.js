@@ -38,6 +38,7 @@ const modelList = [
   require('./models/village_building'),
   require('./models/storage_building'),
   require('./models/storage_capacity'),
+  require('./models/wall_defense')
 ];
 
 // Déclaration des models a sequelize

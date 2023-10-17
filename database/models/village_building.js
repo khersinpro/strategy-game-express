@@ -30,6 +30,11 @@ module.exports = (sequelize, DataTypes) => {
         key: 'name'
       }
     },
+    level: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      allowNull: false
+    }
   }, {
     indexes: [
       {
