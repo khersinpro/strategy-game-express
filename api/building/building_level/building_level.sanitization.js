@@ -2,19 +2,19 @@ const { body, param } = require('express-validator');
 const validationHandler = require('../../../utils/validationHandler'); 
 
 exports.createSanitization = [  
-    body('wall_building_name')
+    body('building_name')
         .escape()
         .trim()
-        .isString().withMessage('name must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('name must not be empty'),
-    body('building_level_id')
+        .isString().withMessage('building_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty'),
+    body('level')
         .escape()
         .trim()
-        .isInt().withMessage('building_level_id must be a number'),
-    body('defense_percent')
+        .isInt().withMessage('level must be a number'),
+    body('time')
         .escape()
         .trim()
-        .isInt().withMessage('defense_percent must be a number'),
+        .isInt().withMessage('time must be a number'),
     validationHandler.errorhandler
 ] 
 
@@ -23,21 +23,21 @@ exports.updateSanitization = [
         .escape()
         .trim()
         .isNumeric().withMessage('id must be a number'),
-    body('wall_building_name')
+    body('building_name')
         .escape()
         .trim()
-        .isString().withMessage('name must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('name must not be empty')
+        .isString().withMessage('building_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty')
         .optional(),
-    body('building_level_id')
+    body('level')
         .escape()
         .trim()
-        .isInt().withMessage('building_level_id must be a number')
+        .isInt().withMessage('level must be a number')
         .optional(),
-    body('defense_percent')
+    body('time')
         .escape()
         .trim()
-        .isInt().withMessage('defense_percent must be a number')
+        .isInt().withMessage('time must be a number')
         .optional(),
     validationHandler.errorhandler
 ]

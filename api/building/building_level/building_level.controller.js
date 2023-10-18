@@ -1,15 +1,15 @@
-const WallDefenseService = require('./building_level.service');
+const BuildingLevelService = require('./building_level.service');
 
-class WallDefenseController {
+class BuildingLevelController {
     
     /**
-     * get all wall defenses
+     * get all Building levels
      */
     async getAll (req, res, next) {
         try
         {
-            const wallDefenses = await WallDefenseService.getAll();
-            res.status(200).json(wallDefenses);
+            const buildingLevels = await BuildingLevelService.getAll();
+            res.status(200).json(buildingLevels);
         }
         catch (error)
         {
@@ -18,13 +18,13 @@ class WallDefenseController {
     }
 
     /**
-     * get a wall defense by id
+     * get a Building level by id
      */
     async get (req, res, next) {
         try
         {
-            const wallDefense = await WallDefenseService.getById(req.params.id);
-            res.status(200).json(wallDefense);
+            const buildingLevel = await BuildingLevelService.getById(req.params.id);
+            res.status(200).json(buildingLevel);
         }
         catch (error)
         {
@@ -33,13 +33,13 @@ class WallDefenseController {
     }
 
     /**
-     * create a wall defense
+     * create a Building level
      */
     async create (req, res, next) {
         try
         {
-            const wallDefense = await WallDefenseService.create(req.body);
-            res.status(201).json(wallDefense);
+            const buildingLevel = await BuildingLevelService.create(req.body);
+            res.status(201).json(buildingLevel);
         }
         catch (error)
         {
@@ -48,13 +48,13 @@ class WallDefenseController {
     }
 
     /**
-     * update a wall defense
+     * update a Building level
      */ 
     async update (req, res, next) {
         try
         {
-            const wallDefense = await WallDefenseService.update(req.params.id, req.body);
-            res.status(200).json(wallDefense);
+            const buildingLevel = await BuildingLevelService.update(req.params.id, req.body);
+            res.status(200).json(buildingLevel);
         }
         catch (error)
         {
@@ -63,12 +63,12 @@ class WallDefenseController {
     }
 
     /**
-     * delete a wall defense
+     * delete a Building level
      */
     async delete (req, res, next) {
         try
         {
-            await WallDefenseService.delete(req.params.id);
+            await BuildingLevelService.delete(req.params.id);
             res.status(204).end();
         }
         catch (error)
@@ -78,4 +78,4 @@ class WallDefenseController {
     }
 }
 
-module.exports = new WallDefenseController();
+module.exports = new BuildingLevelController();

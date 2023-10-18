@@ -23,6 +23,7 @@ const wallBuildingRouter = require('./api/building/wall_building/wall_building.r
 const storageBuildingRouter = require('./api/building/storage_building/storage_building.router');
 const wallDefenseRouter = require('./api/building/wall_defense/wall_defense.router');
 const buildingCostRouter = require('./api/building/building_cost/building_cost.router');
+const buildingLevelRouter = require('./api/building/building_level/building_level.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -65,6 +66,7 @@ app.use('/api/wall-building', auth, wallBuildingRouter);
 app.use('/api/storage-building', auth, storageBuildingRouter);
 app.use('/api/wall-defense', auth, wallDefenseRouter);
 app.use('/api/building-cost', auth, buildingCostRouter);
+app.use('/api/building-level', auth, buildingLevelRouter);
 
 /**
  * Login route

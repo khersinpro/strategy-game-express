@@ -1,10 +1,10 @@
 const NotFoundError = require('../../../errors/not-found');
 const { Wall_defense } = require('../../../database').models;
 
-class WellDefenseService {
+class WallDefenseService {
 
     /**
-     * return all well defenses into promise
+     * return all wall defenses into promise
      * @returns {Promise<Wall_defense[]>}
      */
     getAll() {
@@ -67,4 +67,4 @@ class WellDefenseService {
     }
 }
 
-module.exports = new WellDefenseService();
+module.exports = new WallDefenseService();

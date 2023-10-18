@@ -1,49 +1,49 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Wall_defense } = require('../../../database').models;
+const { Building_level } = require('../../../database').models;
 
-class WellDefenseService {
+class BuildingLevelService {
 
     /**
-     * return all well defenses into promise
-     * @returns {Promise<Wall_defense[]>}
+     * return all building levels into promise
+     * @returns {Promise<Building_level[]>}
      */
     getAll() {
-        return Wall_defense.findAll();
+        return Building_level.findAll();
     }
 
     /**
-     * return a defense by id into promise
+     * return a building_level by id into promise
      * @param {Number} id
-     * @throws {NotFoundError} When the defense is not found
-     * @returns {Promise<Wall_defense>}
+     * @throws {NotFoundError} When the building_level is not found
+     * @returns {Promise<Building_level>}
      */
     async getById(id) {
-       const wallBuilding = await Wall_defense.findByPk(id);
+       const buildingLevel = await Building_level.findByPk(id);
        
-        if (!wallBuilding) {
-            throw new NotFoundError('Wall_defense not found');
+        if (!buildingLevel) {
+            throw new NotFoundError('Building_level not found');
         }
 
-        return wallBuilding;
+        return buildingLevel;
     }
 
     /**
-     * Create a defense
+     * Create a building_level
      * @param {Object} data
-     * @returns {Promise<Wall_defense>}
+     * @returns {Promise<Building_level>}
      */
     create(data) {
-        return Wall_defense.create(data);
+        return Building_level.create(data);
     }
 
     /**
-     * Update a defense
+     * Update a building_level
      * @param {Number} id
      * @param {Object} data
-     * @returns {Promise<Wall_defense>}
+     * @returns {Promise<Building_level>}
      */
     update(id, data) {
-        return Wall_defense.update(data, {
+        return Building_level.update(data, {
             where: {
                 id
             }
@@ -51,20 +51,20 @@ class WellDefenseService {
     }
 
     /**
-     * Delete a defense
+     * Delete a building_level
      * @param {Number} id
-     * @throws {NotFoundError} When the defense is not found
-     * @returns {Promise<Wall_defense>}
+     * @throws {NotFoundError} When the building_level is not found
+     * @returns {Promise<Building_level>}
      */
     async delete(id) {
-        const wallBuilding = await this.getById(id);
+        const buildingLevel = await this.getById(id);
 
-        if (!wallBuilding) {
-            throw new NotFoundError('Wall_defense not found');
+        if (!buildingLevel) {
+            throw new NotFoundError('Building_level not found');
         }
 
-        return wallBuilding.destroy();
+        return buildingLevel.destroy();
     }
 }
 
-module.exports = new WellDefenseService();
+module.exports = new BuildingLevelService();
