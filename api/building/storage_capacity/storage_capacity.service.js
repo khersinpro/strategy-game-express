@@ -1,70 +1,71 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Storage_building } = require('../../../database/index').models;
+const { Storage_capacity } = require('../../../database/index').models;
 
-class StorageBuildingService {
+class StorageCapacityService {
 
     /**
-     * return all buildings into promise
-     * @returns {Promise<Storage_building[]>}
+     * return all storage capacities into promise
+     * @returns {Promise<Storage_capacity[]>}
      */
     getAll() {
-        return Storage_building.findAll();
+        console.log(Storage_capacity);
+        return Storage_capacity.findAll();
     }
 
     /**
-     * return a building by name into promise
-     * @param {string} name
-     * @throws {NotFoundError} When the building is not found
-     * @returns {Promise<Storage_building>}
+     * return a storage capacity by id into promise
+     * @param {Number} id
+     * @throws {NotFoundError} When the storage capacity is not found
+     * @returns {Promise<Storage_capacity>}
      */
-    async getByName(name) {
-       const storage_building = await Storage_building.findByPk(name);
+    async getById(id) {
+       const storage_capacity = await Storage_capacity.findByPk(id);
        
-        if (!storage_building) {
-            throw new NotFoundError('Storage_building not found');
+        if (!storage_capacity) {
+            throw new NotFoundError('Storage_capacity not found');
         }
 
-        return storage_building;
+        return storage_capacity;
     }
 
     /**
-     * Create a building
+     * Create a storage capacity
      * @param {Object} data
-     * @returns {Promise<Storage_building>}
+     * @returns {Promise<Storage_capacity>}
      */
     create(data) {
-        return Storage_building.create(data);
+        return Storage_capacity.create(data);
     }
 
     /**
-     * Update a building
-     * @param {string} name
+     * Update a storage capacity
+     * @param {Number} id
      * @param {Object} data
-     * @returns {Promise<Storage_building>}
+     * @returns {Promise<Storage_capacity>}
      */
-    update(name, data) {
-        return Storage_building.update(data, {
+    update(id, data) {
+        return Storage_capacity.update(data, {
             where: {
-                name
+                id
             }
         });
     }
 
     /**
-     * Delete a building
-     * @param {string} name
-     * @throws {NotFoundError} When the building is not found
-     * @returns {Promise<Storage_building>}
+     * Delete a storage capacity
+     * @param {Number} id
+     * @throws {NotFoundError} When the storage capacity is not found
+     * @returns {Promise<Storage_capacity>}
      */
-    async delete(name) {
-        const storage_building = await this.getByName(name);
+    async delete(id) {
+        const storage_capacity = await this.getById(id);
 
-        if (!storage_building) {
-            throw new NotFoundError('Storage_building not found');
+        if (!storage_capacity) {
+            throw new NotFoundError('Storage_capacity not found');
         }
 
-        return storage_building.destroy();
+        return storage_capacity.destroy();
     }
 }
 
-module.exports = new StorageBuildingService();
+module.exports = new StorageCapacityService();

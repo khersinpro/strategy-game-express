@@ -1,14 +1,14 @@
-const StorageBuildingService = require('./storage_capacity.service');
+const StorageCapacityService = require('./storage_capacity.service');
 
-class StorageBuildingController {
+class StorageCapacityController {
      /**
-     * get all storage buildings
+     * get all storage capacities
      */
      async getAll (req, res, next) {
         try
         {
-            const storageBuildings = await StorageBuildingService.getAll();
-            res.status(200).json(storageBuildings);
+            const storageCapacities = await StorageCapacityService.getAll();
+            res.status(200).json(storageCapacities);
         }
         catch (error)
         {
@@ -17,13 +17,13 @@ class StorageBuildingController {
     }
 
     /**
-     * get a storage building by name
+     * get a storage capacity by id
      */
     async get (req, res, next) {
         try
         {
-            const storageBuilding = await StorageBuildingService.getByName(req.params.name);
-            res.status(200).json(storageBuilding);
+            const storageCapacity = await StorageCapacityService.getById(req.params.id);
+            res.status(200).json(storageCapacity);
         }
         catch (error)
         {
@@ -32,13 +32,13 @@ class StorageBuildingController {
     }
 
     /**
-     * create a storage building
+     * create a storage capacity
      */
     async create (req, res, next) {
         try
         {
-            const storageBuilding = await StorageBuildingService.create(req.body);
-            res.status(201).json(storageBuilding);
+            const storageCapacity = await StorageCapacityService.create(req.body);
+            res.status(201).json(storageCapacity);
         }
         catch (error)
         {
@@ -47,13 +47,13 @@ class StorageBuildingController {
     }
 
     /**
-     * update a storage building
+     * update a storage capacity
      */ 
     async update (req, res, next) {
         try
         {
-            const storageBuilding = await StorageBuildingService.update(req.params.name, req.body);
-            res.status(200).json(storageBuilding);
+            const storageCapacity = await StorageCapacityService.update(req.params.id, req.body);
+            res.status(200).json(storageCapacity);
         }
         catch (error)
         {
@@ -62,12 +62,12 @@ class StorageBuildingController {
     }
 
     /**
-     * delete a storage building
+     * delete a storage capacity
      */
     async delete (req, res, next) {
         try
         {
-            await StorageBuildingService.delete(req.params.name);
+            await StorageCapacityService.delete(req.params.id);
             res.status(204).end();
         }
         catch (error)
@@ -77,4 +77,4 @@ class StorageBuildingController {
     }
 }
 
-module.exports = new StorageBuildingController();
+module.exports = new StorageCapacityController();

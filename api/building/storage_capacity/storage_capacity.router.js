@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const StorageBuildingController = require('./storage_building.controller');
+const StorageCapacityController = require('./storage_capacity.controller');
 const { isAdmin } = require('../../../middlewares/auth');
-const { nameParamSanitization, createSanitization, updateSanitization } = require('./storage_building.sanitization')
+const { idParamSanitization, createSanitization, updateSanitization } = require('./storage_capacity.sanitization')
 
 /**
  * Auth routes
  */
-router.get('/', StorageBuildingController.getAll);
-router.get('/:name', nameParamSanitization, StorageBuildingController.get);
+router.get('/', StorageCapacityController.getAll);
+router.get('/:id', idParamSanitization, StorageCapacityController.get);
 
 /**
  * Admin routes
  */ 
-router.post('/', isAdmin, createSanitization, StorageBuildingController.create);
-router.put('/:name', isAdmin, updateSanitization, StorageBuildingController.update);
-router.delete('/:name', isAdmin, nameParamSanitization, StorageBuildingController.delete);
+router.post('/', isAdmin, createSanitization, StorageCapacityController.create);
+router.put('/:id', isAdmin, updateSanitization, StorageCapacityController.update);
+router.delete('/:id', isAdmin, idParamSanitization, StorageCapacityController.delete);
 
 
 module.exports = router;

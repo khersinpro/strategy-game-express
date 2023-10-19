@@ -9,31 +9,30 @@ exports.auth = async (req, res, next) => {
     try
     {
         const token = req.headers['authorization'];
-
+        
         if (!token)
         {
             throw new UnauthorizedError('Token manquant');
         }
-
+        
         const extractedToken = token.split(' ')[1];
-
+        
         const decodedToken = jwt.verify(extractedToken, config.jwtSecret);
-
+        
         if (!decodedToken || !decodedToken.id)
         {
             throw new UnauthorizedError('Token invalide');
         }
 
         const user = await userService.getById(decodedToken.id);
-
-
+        
         if (!user)
         {
             throw new NotFoundError('Utilisateur introuvable');
         }
-
+        
         req.user = user;
-
+        
         next();
     }
     catch (error)

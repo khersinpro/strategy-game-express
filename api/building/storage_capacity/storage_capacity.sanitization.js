@@ -2,34 +2,50 @@ const { body, param } = require('express-validator');
 const validationHandler = require('../../../utils/validationHandler'); 
 
 exports.createSanitization = [
-    body('name')
+    body('capacity')
         .escape()
         .trim()
-        .isString().withMessage('name must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('name must not be empty'),
+        .isNumeric(),
+    body('storage_building_name')
+        .escape()
+        .trim()
+        .isString().withMessage('storage_building_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('storage_building_name must not be empty'),
+    body('building_level_id')
+        .escape()
+        .trim()
+        .isNumeric().withMessage('building_level_id must be a number'),
     validationHandler.errorhandler
 ] 
 
 exports.updateSanitization = [    
-    param('name')
+    param('id')
         .escape()
         .trim()
-        .isString().withMessage('name must be a string')
-        .isLength({ min: 3 }).withMessage('name must not be empty'),
-    body('name')
+        .isNumeric().withMessage('id must be a number'),
+    body('capacity')
         .escape()
         .trim()
-        .isString().withMessage('name must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('name must not be empty')
+        .isNumeric()
+        .optional(),
+    body('storage_building_name')
+        .escape()
+        .trim()
+        .isString().withMessage('storage_building_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('storage_building_name must not be empty')
+        .optional(),
+    body('building_level_id')
+        .escape()
+        .trim()
+        .isNumeric().withMessage('building_level_id must be a number')
         .optional(),
     validationHandler.errorhandler
 ]
 
-exports.nameParamSanitization = [
-    param('name')
+exports.idParamSanitization = [
+    param('id')
         .escape()
         .trim()
-        .isString().withMessage('name must be a string')
-        .isLength({ min: 3 }).withMessage('name must not be empty'),
+        .isNumeric().withMessage('id must be a number'),
     validationHandler.errorhandler
 ]
