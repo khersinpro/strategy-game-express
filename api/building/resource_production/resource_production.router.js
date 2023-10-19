@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const RessourceBuildingController = require('./resource_building.controller');
+const ResourceProductionController = require('./resource_production.controller');
 const { isAdmin } = require('../../../middlewares/auth');
-const { nameParamSanitization, createSanitization, updateSanitization } = require('./resource_building.sanitization')
+const { idParamSanitization, createSanitization, updateSanitization } = require('./resource_production.sanitization')
 
 /**
  * Auth routes
  */
-router.get('/', RessourceBuildingController.getAll);
-router.get('/:name', nameParamSanitization, RessourceBuildingController.get);
+router.get('/', ResourceProductionController.getAll);
+router.get('/:id', idParamSanitization, ResourceProductionController.get);
 
 /**
  * Admin routes
  */
-router.post('/', isAdmin, createSanitization, RessourceBuildingController.create);
-router.put('/:name', isAdmin, updateSanitization, RessourceBuildingController.update);
-router.delete('/:name', isAdmin, nameParamSanitization, RessourceBuildingController.delete);
+router.post('/', isAdmin, createSanitization, ResourceProductionController.create);
+router.put('/:id', isAdmin, updateSanitization, ResourceProductionController.update);
+router.delete('/:id', isAdmin, idParamSanitization, ResourceProductionController.delete);
 
 module.exports = router;

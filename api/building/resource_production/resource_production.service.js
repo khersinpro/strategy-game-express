@@ -1,71 +1,70 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Resource_building } = require('../../../database/index').models;
+const { Resource_production } = require('../../../database/index').models;
 
-class BuildingService {
+class ResourceProductionService {
 
     /**
-     * return all buildings into promise
-     * @returns {Promise<Resource_building[]>}
+     * return all resource productions into promise
+     * @returns {Promise<Resource_production[]>}
      */
     getAll() {
-        console.log(Resource_building);
-        return Resource_building.findAll();
+        return Resource_production.findAll();
     }
 
     /**
-     * return a building by name into promise
-     * @param {string} name
-     * @throws {NotFoundError} When the building is not found
-     * @returns {Promise<Resource_building>}
+     * return a resource production by name into promise
+     * @param {string} id
+     * @throws {NotFoundError} When the resource production is not found
+     * @returns {Promise<Resource_production>}
      */
-    async getByName(name) {
-       const ressourceBuilding = await Resource_building.findByPk(name);
+    async getById(id) {
+       const resourceProduction = await Resource_production.findByPk(id);
        
-        if (!ressourceBuilding) {
-            throw new NotFoundError('Resource_building not found');
+        if (!resourceProduction) {
+            throw new NotFoundError('Resource_production not found');
         }
 
-        return ressourceBuilding;
+        return resourceProduction;
     }
 
     /**
-     * Create a building
+     * Create a resource production
      * @param {Object} data
-     * @returns {Promise<Resource_building>}
+     * @returns {Promise<Resource_production>}
      */
     create(data) {
-        return Resource_building.create(data);
+        return Resource_production.create(data);
     }
 
     /**
-     * Update a building
-     * @param {string} name
+     * Update a resource production
+     * @param {string} id
      * @param {Object} data
-     * @returns {Promise<Resource_building>}
+     * @returns {Promise<Resource_production>}
      */
-    update(name, data) {
-        return Resource_building.update(data, {
+    update(id, data) {
+        return Resource_production.update(data, {
             where: {
-                name
+                id
             }
         });
     }
 
     /**
-     * Delete a building
-     * @param {string} name
-     * @throws {NotFoundError} When the building is not found
-     * @returns {Promise<Resource_building>}
+     * Delete a resource production
+     * @param {string} id
+     * @throws {NotFoundError} When the resource production is not found
+     * @returns {Promise<Resource_production>}
      */
-    async delete(name) {
-        const ressourceBuilding = await this.getByName(name);
+    async delete(id) {
+        const ressourceBuilding = await this.getById(id);
 
         if (!ressourceBuilding) {
-            throw new NotFoundError('Resource_building not found');
+            throw new NotFoundError('Resource_production not found');
         }
 
         return ressourceBuilding.destroy();
     }
 }
 
-module.exports = new BuildingService();
+module.exports = new ResourceProductionService();

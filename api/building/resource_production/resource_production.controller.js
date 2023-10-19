@@ -1,15 +1,15 @@
-const ressource_buildingService = require('./resource_production.service');
+const ResourceProductionService = require('./resource_production.service');
 
-class RessourceBuildingController {
+class ResourceProductionController {
        
     /**
-     * get all ressource buildings
+     * get all resource productions
      */
     async getAll (req, res, next) {
         try
         {
-            const ressourceBuildings = await ressource_buildingService.getAll();
-            res.status(200).json(ressourceBuildings);
+            const resourceProductions = await ResourceProductionService.getAll();
+            res.status(200).json(resourceProductions);
         }
         catch (error)
         {
@@ -18,13 +18,13 @@ class RessourceBuildingController {
     }
 
     /**
-     * get a ressource building by name
+     * get a resource production by id
      */
     async get (req, res, next) {
         try
         {
-            const ressourceBuilding = await ressource_buildingService.getByName(req.params.name);
-            res.status(200).json(ressourceBuilding);
+            const resourceProduction = await ResourceProductionService.getById(req.params.id);
+            res.status(200).json(resourceProduction);
         }
         catch (error)
         {
@@ -33,13 +33,13 @@ class RessourceBuildingController {
     }
 
     /**
-     * create a ressource building
+     * create a resource production
      */
     async create (req, res, next) {
         try
         {
-            const ressourceBuilding = await ressource_buildingService.create(req.body);
-            res.status(201).json(ressourceBuilding);
+            const resourceProduction = await ResourceProductionService.create(req.body);
+            res.status(201).json(resourceProduction);
         }
         catch (error)
         {
@@ -48,13 +48,13 @@ class RessourceBuildingController {
     }
 
     /**
-     * update a ressource building
+     * update a resource production
      */ 
     async update (req, res, next) {
         try
         {
-            const ressourceBuilding = await ressource_buildingService.update(req.params.name, req.body);
-            res.status(200).json(ressourceBuilding);
+            const resourceProduction = await ResourceProductionService.update(req.params.id, req.body);
+            res.status(200).json(resourceProduction);
         }
         catch (error)
         {
@@ -63,12 +63,12 @@ class RessourceBuildingController {
     }
 
     /**
-     * delete a ressource building
+     * delete a resource production
      */
     async delete (req, res, next) {
         try
         {
-            await ressource_buildingService.delete(req.params.name);
+            await ResourceProductionService.delete(req.params.id);
             res.status(204).end();
         }
         catch (error)
@@ -78,4 +78,4 @@ class RessourceBuildingController {
     }
 }
 
-module.exports = new RessourceBuildingController();
+module.exports = new ResourceProductionController();
