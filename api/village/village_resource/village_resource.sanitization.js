@@ -1,5 +1,5 @@
 const { body, param } = require('express-validator');
-const validationHandler = require('../../utils/validationHandler'); 
+const validationHandler = require('../../../utils/validationHandler'); 
 
 exports.createSanitization = [
 
