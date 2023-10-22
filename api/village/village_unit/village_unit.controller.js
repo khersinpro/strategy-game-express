@@ -1,14 +1,14 @@
-const VillageBuildingService = require('./village_building.service');
-class VillageBuildingController {
+const VillageUnitService = require('./village_unit.service');
+class VillageUnitController {
     
     /**
-     * get all village buildings
+     * get all village units
      */
     async getAll (req, res, next) {
         try
         {
-            const villageBuildings = await VillageBuildingService.getAll();
-            res.status(200).json(villageBuildings);
+            const villageUnits = await VillageUnitService.getAll();
+            res.status(200).json(villageUnits);
         }
         catch (error)
         {
@@ -17,13 +17,13 @@ class VillageBuildingController {
     }
 
     /**
-     * get a village building by id
+     * get a village unit by id
      */
     async get (req, res, next) {
         try
         {
-            const villageBuilding = await VillageBuildingService.getById(req.params.id);
-            res.status(200).json(villageBuilding);
+            const villageUnit = await VillageUnitService.getById(req.params.id);
+            res.status(200).json(villageUnit);
         }
         catch (error)
         {
@@ -32,13 +32,13 @@ class VillageBuildingController {
     }
 
     /**
-     * create a village building
+     * create a village unit
      */
     async create (req, res, next) {
         try
         {
-            const villageBuilding = await VillageBuildingService.create(req.body);
-            res.status(201).json(villageBuilding);
+            const villageUnit = await VillageUnitService.create(req.body);
+            res.status(201).json(villageUnit);
         }
         catch (error)
         {
@@ -47,13 +47,13 @@ class VillageBuildingController {
     }
 
     /**
-     * update a village building
+     * update a village unit
      */ 
     async update (req, res, next) {
         try
         {
-            const villageBuilding = await VillageBuildingService.update(req.params.id, req.body);
-            res.status(200).json(villageBuilding);
+            const villageUnit = await VillageUnitService.update(req.params.id, req.body);
+            res.status(200).json(villageUnit);
         }
         catch (error)
         {
@@ -62,12 +62,12 @@ class VillageBuildingController {
     }
 
     /**
-     * delete a village building
+     * delete a village unit
      */
     async delete (req, res, next) {
         try
         {
-            await VillageBuildingService.delete(req.params.id);
+            await VillageUnitService.delete(req.params.id);
             res.status(204).end();
         }
         catch (error)
@@ -77,4 +77,4 @@ class VillageBuildingController {
     }
 }
 
-module.exports = new VillageBuildingController();
+module.exports = new VillageUnitController();

@@ -1,20 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const VillagebuildingController = require('./village_building.controller');
+const VillageUnitController = require('./village_unit.controller');
 const { isAdmin } = require('../../../middlewares/auth');
-const { idParamSanitization, createSanitization, updateSanitization } = require('./village_building.sanitization');
-
+const { idParamSanitization, createSanitization, updateSanitization } = require('./village_unit.sanitization'); 
 /**
  * Auth routes
  */
-router.get('/', VillagebuildingController.getAll);
-router.get('/:id', idParamSanitization, VillagebuildingController.get);
+router.get('/', VillageUnitController.getAll);
+router.get('/:id', idParamSanitization, VillageUnitController.get);
 
 /**
  * Admin routes
  */
-router.post('/', isAdmin, createSanitization, VillagebuildingController.create);
-router.put('/:id', isAdmin, updateSanitization, VillagebuildingController.update);
-router.delete('/:id', isAdmin, idParamSanitization, VillagebuildingController.delete);
+router.post('/', isAdmin, createSanitization, VillageUnitController.create);
+router.put('/:id', isAdmin, updateSanitization, VillageUnitController.update);
+router.delete('/:id', isAdmin, idParamSanitization, VillageUnitController.delete);
 
 module.exports = router;

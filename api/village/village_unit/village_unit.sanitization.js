@@ -6,15 +6,15 @@ exports.createSanitization = [
         .escape()
         .trim()
         .isInt().withMessage('village_id must be an integer'),
-    body('building_name')
+    body('unit_name')
         .escape()
         .trim()
-        .isString().withMessage('building_name must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty'),
-    body('level')
+        .isString().withMessage('unit_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('unit_name must not be empty'),
+    body('quantity')
         .escape()
         .trim()
-        .isInt().withMessage('level must be a number'),
+        .isInt().withMessage('quantity must be a number'),
     validationHandler.errorhandler
 ] 
 
@@ -28,16 +28,16 @@ exports.updateSanitization = [
         .trim()
         .isInt().withMessage('village_id must be an integer')
         .optional(),
-    body('building_name')
+    body('unit_name')
         .escape()
         .trim()
-        .isString().withMessage('building_name must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty')
+        .isString().withMessage('unit_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('unit_name must not be empty')
         .optional(),
-    body('level')
+    body('quantity')
         .escape()
         .trim()
-        .isInt().withMessage('level must be a number')
+        .isInt().withMessage('quantity must be a number')
         .optional(),
     validationHandler.errorhandler
 ]
