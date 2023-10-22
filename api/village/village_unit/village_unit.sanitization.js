@@ -2,13 +2,50 @@ const { body, param } = require('express-validator');
 const validationHandler = require('../../../utils/validationHandler'); 
 
 exports.createSanitization = [
-
+    body('village_id')
+        .escape()
+        .trim()
+        .isInt().withMessage('village_id must be an integer'),
+    body('building_name')
+        .escape()
+        .trim()
+        .isString().withMessage('building_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty'),
+    body('level')
+        .escape()
+        .trim()
+        .isInt().withMessage('level must be a number'),
+    validationHandler.errorhandler
 ] 
 
 exports.updateSanitization = [    
-
+    param('id')
+        .escape()
+        .trim()
+        .isInt().withMessage('Id must be an integer'),
+    body('village_id')
+        .escape()
+        .trim()
+        .isInt().withMessage('village_id must be an integer')
+        .optional(),
+    body('building_name')
+        .escape()
+        .trim()
+        .isString().withMessage('building_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty')
+        .optional(),
+    body('level')
+        .escape()
+        .trim()
+        .isInt().withMessage('level must be a number')
+        .optional(),
+    validationHandler.errorhandler
 ]
 
 exports.idParamSanitization = [
-
+    param('id')
+        .escape()
+        .trim()
+        .isInt().withMessage('Id must be an integer'),
+    validationHandler.errorhandler
 ]
