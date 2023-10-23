@@ -1,5 +1,5 @@
 const NotFoundError = require('../../errors/not-found');
-const { Village } = require('../../database').models;
+const { Village, Village_building, Village_unit, Village_resource, Civilization, User, Server } = require('../../database').models;
 const UserService = require('../user/user.service');
 const ServerService = require('../server/server.service');
 const ForbiddenError = require('../../errors/forbidden');
@@ -9,8 +9,9 @@ class VilageService {
      * Returns all villages
      * @returns {Promise<Village[]>}
      */
-    getAll() {
-        return Village.findAll();
+    getAll(query) {
+        const filters = this.generateFilters(query);
+        return Village.findAll(filters);
     }
 
     /**
@@ -18,8 +19,9 @@ class VilageService {
      * @param {Number} id
      * @returns {Promise<Village>}
      */
-    getById(id) {
-        return Village.findByPk(id);
+    getById(id, query) {
+        const filters = this.generateFilters(query);
+        return Village.findByPk(id, filters);
     }   
 
     /**
@@ -86,6 +88,65 @@ class VilageService {
         }
 
         return Village.destroy();
+    }
+
+    /**
+     * Query filters generator
+     * @param {Object} query
+     * @returns {Object}
+     */
+    generateFilters(query) {
+        const filters = {
+            include: [],
+            where: {}
+        };
+
+        if (query.resources)
+        {
+            filters.include.push({
+                model: Village_resource,
+            });
+        }
+
+        if (query.buildings)
+        {
+            filters.include.push({
+                model: Village_building,
+            });
+        }
+
+        if (query.units)
+        {
+            filters.include.push({
+                model: Village_unit,
+            });
+        }
+
+        if (query.civilization)
+        {
+            filters.include.push({
+                model: Civilization,
+            });
+        }
+
+        if (query.user)
+        {
+            filters.include.push({
+                model: User,
+                attributes: {
+                    exclude: ['password']
+                },
+            });
+        }
+
+        if (query.server)
+        {
+            filters.include.push({
+                model: Server,
+            });
+        }
+
+        return filters;
     }
 }
 

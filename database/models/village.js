@@ -23,6 +23,21 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         }
       })
+      this.hasMany(models.Village_building, {
+        foreignKey: {
+          name: 'village_id'
+        }
+      })
+      this.hasMany(models.Village_unit, {
+        foreignKey: {
+          name: 'village_id'
+        }
+      })
+      this.hasMany(models.Village_resource, {
+        foreignKey: {
+          name: 'village_id'
+        }
+      })
     }
   }
   
