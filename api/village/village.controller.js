@@ -62,6 +62,7 @@ class VillageController {
         }
         catch (error)
         {
+            console.error(error)
             next(error);
         }
     }

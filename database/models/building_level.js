@@ -8,6 +8,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building, {
         foreignKey: 'building_name'
       })
+      this.hasMany(models.Resource_production, {
+        foreignKey: 'building_level_id'
+      })
     }
   }
 

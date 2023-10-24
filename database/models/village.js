@@ -60,27 +60,79 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Village',
     tableName: 'village',
   });
+
+  Village.addHook('beforeFind', async (options) => {
+    //Update village resources by last updated time and resource building level and production 
+    const villageResourceBuilding = await sequelize.models.Village_building.findAll({
+      include: [
+        {
+          model: sequelize.models.Building,
+        },
+        {
+          model: sequelize.models.Building_level,
+          include: [
+            {
+              model: sequelize.models.Resource_production,
+            }
+          ]
+        }
+      ],
+      where: {
+        '$Building.type$': 'resource_building',
+        village_id: options.where.id,
+      }
+    })
+
+    console.log(villageResourceBuilding[0]);
+  })
   
   Village.addHook('afterCreate', async (village, options) => {
     const models = require('../index').models;
-    
+
     // Create resources building level 1
-    const recource_buildings = await models.Resource_building.findAll()
+    const recource_buildings = await models.Building.findAll({
+      include: [
+        {
+          model: models.Building_level,
+          as: 'levels',
+          where: {
+            level: 1
+          }
+        }
+      ],
+      where: {
+        type: 'resource_building',
+      }
+    })
+
     for (const resource_building of recource_buildings) {
       await models.Village_building.create({
         village_id: village.id,
         building_name: resource_building.name,
-        level: 1,
+        building_level_id:resource_building.levels[0].id,
       })
     }
 
     // Create storage resource building level 1
-    const storage_buildings = await models.Storage_building.findAll()
+    const storage_buildings = await models.Building.findAll({
+      include: [
+        {
+          model: models.Building_level,
+          as: 'levels',
+          where: {
+            level: 1
+          }
+        }
+      ],
+      where: {
+        type: 'storage_building',
+      }
+    })
     for (const storage_building of storage_buildings) {
       await models.Village_building.create({
         village_id: village.id,
         building_name: storage_building.name,
-        level: 1,
+        building_level_id: storage_building.levels[0].id,
       })
     }
 
@@ -96,15 +148,26 @@ module.exports = (sequelize, DataTypes) => {
 
 
     // Create headquarters building level 1
-    const headquarter_building = await models.Infrastructure_building.findOne({
+    const headquarter_building = await models.Building.findOne({
+      include: [
+        {
+          model: models.Building_level,
+          as: 'levels',
+          where: {
+            level: 1
+          }
+        }
+      ],
       where: {
-        name: 'headquarters'
+        name: 'headquarters',
+        type: 'infrastructure_building'
       }
     })
+
     await models.Village_building.create({
       village_id: village.id,
       building_name: headquarter_building.name,
-      level: 1,
+      building_level_id: headquarter_building.levels[0].id,
     })
 
     // Create all units of village resource with quantity 0

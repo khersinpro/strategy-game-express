@@ -25,10 +25,13 @@ module.exports = {
           key: 'name'
         }
       },
-      level: {
+      building_level_id: {
         type: Sequelize.INTEGER,
-        defaultValue: 1,
-        allowNull: false
+        allowNull: false,
+        references: {
+          model: 'building_level',
+          key: 'id'
+        }
       },
       createdAt: {
         allowNull: false,

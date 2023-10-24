@@ -10,6 +10,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building, {
         foreignKey: 'building_name',
       });
+      this.belongsTo(models.Building_level, {
+        foreignKey: 'building_level_id',
+      });
     }
   }
 
@@ -30,11 +33,14 @@ module.exports = (sequelize, DataTypes) => {
         key: 'name'
       }
     },
-    level: {
+    building_level_id: {
       type: DataTypes.INTEGER,
-      defaultValue: 1,
-      allowNull: false
-    }
+      allowNull: false,
+      references: {
+        model: 'building_level',
+        key: 'id'
+      }
+    },
   }, {
     indexes: [
       {
