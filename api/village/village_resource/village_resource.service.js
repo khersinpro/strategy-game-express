@@ -107,24 +107,53 @@ class VillageBuildingService {
             const diffInMinute = Math.floor(diffInMilisecond / 1000 / 60);
             const productionInMinute = villageResource.production / 60;
             const generatedtProduction = productionInMinute * diffInMinute
+            let totalResource = villageResource.village_resource_quantity + generatedtProduction;
 
-            promises.push(Village_resource.update({
-                quantity: generatedtProduction
-            }, {
-                
-            }))
-            console.log(villageResource.resource_name, generatedtProduction);
+            if (totalResource > villageResource.village_resource_storage) {
+                totalResource = villageResource.village_resource_storage;
+            }
+
+            if (totalResource > 0) {
+                promises.push(this.update(villageResource.village_resource_id, { quantity: totalResource }))
+            }
         };
-        // building_name: 'iron mine',
-        // production: 5,
-        // resource_name: 'iron',
-        // village_resource_id: 1,
-        // village_resource_quantity: 300,
-        // village_last_update: 2023-10-24T10:51:27.000Z,
-        // village_resource_storage: 420
 
+        if (promises.length === 0) 
+        {
+            await Promise.all(promises);
+        }
 
-        return results;
+        return villageResources;
+    }
+
+    async updateAllVillagesResources() {
+        const query = "\
+            SELECT v1.building_name,\
+            resource_production.production, \
+            v1.village_id,\
+            resource_building.resource_name, \
+            village_resource.id AS village_resource_id, \
+            village_resource.quantity AS village_resource_quantity, \
+            village_resource.updatedAt AS village_last_update,\
+            (   SELECT storage_capacity.capacity FROM village_building \
+                LEFT JOIN building ON village_building.building_name = building.name\
+                LEFT JOIN storage_building ON building.name = storage_building.name\
+                LEFT JOIN storage_capacity ON village_building.building_level_id = storage_capacity.building_level_id\
+                WHERE v1.village_id = village_building.village_id\
+                AND building.type = 'storage_building'\
+                AND storage_building.resource_name = resource_building.resource_name\
+            ) AS village_resource_storage\
+            FROM `village_building` v1\
+            LEFT JOIN building ON v1.building_name = building.name \
+            LEFT JOIN resource_building ON building.name = resource_building.name\
+            LEFT JOIN resource_production ON v1.building_level_id = resource_production.building_level_id\
+            LEFT JOIN village_resource ON resource_building.resource_name = village_resource.resource_name\
+            WHERE building.type = 'resource_building'\
+            AND v1.village_id = village_resource.village_id  \
+            ORDER BY `village_resource_id` ASC;\
+        ";
+
+        const [allVillagesResources, metadata] = await sequelize.query(query);
     }
 }
 

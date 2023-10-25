@@ -10,7 +10,8 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       quantity: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.FLOAT,
+        allowNull: false,
         defaultValue: 0
       },
       village_id: {

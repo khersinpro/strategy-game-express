@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
 
   Village_resource.init({
     quantity: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
+      allowNull: false,
       defaultValue: 0
     },
     village_id: {

@@ -20,5 +20,12 @@
       "database": "database_production",
       "host": "127.0.0.1",
       "dialect": "mysql"
+    },
+    "other": {
+      "username": "root",
+      "password": null,
+      "database": "strategy_game",
+      "host": "127.0.0.1",
+      "dialect": "mysql"
     }
   }

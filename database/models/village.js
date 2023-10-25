@@ -64,7 +64,11 @@ module.exports = (sequelize, DataTypes) => {
   Village.addHook('beforeFind', async (options) => {
     const villageResourceService = require('../../api/village/village_resource/village_resource.service');
     const villageId = options.where.id;
-
+    
+    if (!villageId) {
+      return;
+    }
+    
     const villageResources = await villageResourceService.updateVillageResource(villageId);
 
     console.log(villageResources);
