@@ -62,28 +62,12 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Village.addHook('beforeFind', async (options) => {
-    //Update village resources by last updated time and resource building level and production 
-    const villageResourceBuilding = await sequelize.models.Village_building.findAll({
-      include: [
-        {
-          model: sequelize.models.Building,
-        },
-        {
-          model: sequelize.models.Building_level,
-          include: [
-            {
-              model: sequelize.models.Resource_production,
-            }
-          ]
-        }
-      ],
-      where: {
-        '$Building.type$': 'resource_building',
-        village_id: options.where.id,
-      }
-    })
+    const villageResourceService = require('../../api/village/village_resource/village_resource.service');
+    const villageId = options.where.id;
 
-    console.log(villageResourceBuilding[0]);
+    const villageResources = await villageResourceService.updateVillageResource(villageId);
+
+    console.log(villageResources);
   })
   
   Village.addHook('afterCreate', async (village, options) => {
