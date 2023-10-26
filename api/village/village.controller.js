@@ -1,5 +1,6 @@
 const NotFoundError = require('../../errors/not-found');
 const VillageService = require('./village.service');
+const VillageResourceService = require('./village_resource/village_resource.service');
 
 class VillageController {
 
@@ -14,6 +15,7 @@ class VillageController {
      */
     async getAll(req, res, next) {
         try {
+            await VillageResourceService.updateAllVillagesResources();
             const villages = await VillageService.getAll(req.query);
             res.status(200).send(villages);
         }

@@ -1,5 +1,10 @@
 const env = require('dotenv').config({path: __dirname + '/../.env'}).parsed;
-console.log(env);
+
+if (!env)
+{
+    throw new Error('Environment file not found')
+}
+
 module.exports = {
     username: env.USER,
     password: env.PASSWORD,
