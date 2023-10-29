@@ -29,6 +29,7 @@ const storageCapacityRouter = require('./api/building/storage_capacity/storage_c
 const villageBuildingRouter = require('./api/village/village_building/village_building.router');
 const villageResourceRouter = require('./api/village/village_resource/village_resource.router');
 const villageUnitRouter = require('./api/village/village_unit/village_unit.router');
+const villageConstructionProgressRouter = require('./api/village/village_construction_progresss/village_construction_progresss.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -77,6 +78,7 @@ app.use('/api/storage-capacity', auth, storageCapacityRouter);
 app.use('/api/village-building', auth, villageBuildingRouter);
 app.use('/api/village-resource', auth, villageResourceRouter);
 app.use('/api/village-unit', auth, villageUnitRouter);
+app.use('/api/village-construction-progress', auth, villageConstructionProgressRouter);
 
 /**
  * Login route

@@ -1,0 +1,19 @@
+const express = require('express');
+const router = express.Router();
+const VillageUnitController = require('./village_construction_progresss.controller');
+const { isAdmin } = require('../../../middlewares/auth');
+const { idParamSanitization, createSanitization, updateSanitization } = require('./village_construction_progresss.sanitization'); 
+/**
+ * Auth routes
+ */
+router.get('/', VillageUnitController.getAll);
+router.get('/:id', idParamSanitization, VillageUnitController.get);
+
+/**
+ * Admin routes
+ */
+router.post('/', isAdmin, createSanitization, VillageUnitController.create);
+router.put('/:id', isAdmin, updateSanitization, VillageUnitController.update);
+router.delete('/:id', isAdmin, idParamSanitization, VillageUnitController.delete);
+
+module.exports = router;

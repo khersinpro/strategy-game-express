@@ -63,6 +63,24 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Village_construction_progress',
     tableName: 'vilage_construction_progress'
   });
+
+  /**
+   * Before creating a new construction progress, check if there are already 3 constructions in progress
+   */
+  Village_construction_progress.beforeCreate(async (village_construction_progress, options) => {
+    const constructionsInProgress = await Village_construction_progress.count({
+      where: {
+        village_id: village_construction_progress.village_id,
+        enabled: true,
+        archived: false
+      }
+    });
+
+    if (constructionsInProgress >= 3) {
+      throw new Error('Maximum number of constructions in progress reached');
+    }
+
+  });
   
   return Village_construction_progress;
 };
