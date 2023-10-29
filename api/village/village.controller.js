@@ -15,7 +15,13 @@ class VillageController {
      */
     async getAll(req, res, next) {
         try {
+            /**
+             * A retirer par la suite
+             */
             await VillageResourceService.updateAllVillagesResources();
+            /**
+             * 
+             */
             const villages = await VillageService.getAll(req.query);
             res.status(200).send(villages);
         }

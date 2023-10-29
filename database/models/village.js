@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         }
       })
+      
       this.hasMany(models.Village_building, {
         foreignKey: {
           name: 'village_id'
@@ -34,6 +35,11 @@ module.exports = (sequelize, DataTypes) => {
         }
       })
       this.hasMany(models.Village_resource, {
+        foreignKey: {
+          name: 'village_id'
+        }
+      })
+      this.hasMany(models.Village_construction_progress, {
         foreignKey: {
           name: 'village_id'
         }
@@ -69,9 +75,7 @@ module.exports = (sequelize, DataTypes) => {
       return;
     }
     
-    const villageResources = await villageResourceService.updateVillageResource(villageId);
-
-    console.log(villageResources);
+    await villageResourceService.updateVillageResource(villageId);
   })
   
   Village.addHook('afterCreate', async (village, options) => {

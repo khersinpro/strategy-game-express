@@ -127,7 +127,7 @@ class VillageBuildingService {
         const productionInMinute    = villageResource.production / 60;
         const generatedProduction  = productionInMinute * diffInMinute;
         const storageCapacity       = villageResource.village_resource_storage;
-        const totalResource         = storageCapacity + generatedProduction;
+        const totalResource         = villageResource.village_resource_quantity + generatedProduction;
 
         if (totalResource <= 0 && generatedProduction <= 0) 
         {

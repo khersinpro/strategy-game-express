@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building_level, {
         foreignKey: 'building_level_id',
       });
+      this.hasMany(models.Village_construction_progress, {
+        foreignKey: 'village_building_id',
+      });
     }
   }
 
