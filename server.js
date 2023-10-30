@@ -37,7 +37,6 @@ const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
 const { loginSanitization } = require('./api/user/user.sanitization');
 
-
 // Déclaratioon du serveur et configuration de socket.io
 const server = http.createServer(app);
 const io = new Server(server);
