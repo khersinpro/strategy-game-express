@@ -30,6 +30,8 @@ const villageBuildingRouter = require('./api/village/village_building/village_bu
 const villageResourceRouter = require('./api/village/village_resource/village_resource.router');
 const villageUnitRouter = require('./api/village/village_unit/village_unit.router');
 const villageConstructionProgressRouter = require('./api/village/village_construction_progresss/village_construction_progresss.router');
+const villageNewConstructionRouter = require('./api/village/village_new_construction/village_new_construction.router');
+const villageUpdateConstructionRouter = require('./api/village/village_update_construction/village_update_construction.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -79,6 +81,8 @@ app.use('/api/village-building', auth, villageBuildingRouter);
 app.use('/api/village-resource', auth, villageResourceRouter);
 app.use('/api/village-unit', auth, villageUnitRouter);
 app.use('/api/village-construction-progress', auth, villageConstructionProgressRouter);
+app.use('/api/village-new-construction', auth, villageNewConstructionRouter);
+app.use('/api/village-update-construction', auth, villageUpdateConstructionRouter);
 
 /**
  * Login route
