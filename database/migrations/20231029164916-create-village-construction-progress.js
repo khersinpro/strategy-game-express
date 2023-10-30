@@ -10,7 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       type: {
-        type: Sequelize.ENUM('construction', 'upgrade'),
+        type: Sequelize.ENUM('village_new_construction', 'village_update_construction'),
         allowNull: false,
       },
       construction_start: {
@@ -36,14 +36,6 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'village',
-          key: 'id'
-        }
-      },
-      village_building_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'village_building',
           key: 'id'
         }
       },

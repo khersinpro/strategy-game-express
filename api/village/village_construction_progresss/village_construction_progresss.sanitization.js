@@ -6,6 +6,10 @@ exports.createSanitization = [
         .escape()
         .trim()
         .isInt().withMessage('village_id must be an integer'),
+    body('village_building_id')
+        .escape()
+        .trim()
+        .isInt().withMessage('village_building_id must be an integer'),
     body('unit_name')
         .escape()
         .trim()

@@ -10,18 +10,12 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false
         }
       })
-      this.belongsTo(models.Village_building, {
-        foreignKey: {
-          name: 'village_building_id',
-          allowNull: false
-        }
-      })
     }
   }
 
   Village_construction_progress.init({
     type: {
-      type: DataTypes.ENUM('construction', 'upgrade'),
+      type: DataTypes.ENUM('village_new_construction', 'village_update_construction'),
       allowNull: false
     },
     construction_start: {
@@ -47,14 +41,6 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'village',
-        key: 'id'
-      }
-    },
-    village_building_id: {
-      type: DataTypes.INTEGER, 
-      allowNull: false,
-      references: {
-        model: 'village_building',
         key: 'id'
       }
     }
