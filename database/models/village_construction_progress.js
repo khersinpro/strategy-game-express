@@ -10,6 +10,11 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false
         }
       })
+      this.hasOne(models.Village_new_construction, {
+        foreignKey: {
+          name: 'id',
+        }
+      })
     }
   }
 
@@ -22,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false  
     },
-    constructon_end: {
+    construction_end: {
       type: DataTypes.DATE,
       allowNull: false
     },

@@ -2,7 +2,7 @@ const VillageConstructionProgressService = require('./village_construction_progr
 class VillageUnitController {
     
     /**
-     * get all village_production_progresss 
+     * get all village_construction_progresss 
      */
     async getAll (req, res, next) {
         try
@@ -17,7 +17,7 @@ class VillageUnitController {
     }
 
     /**
-     * get a village_production_progresss by id
+     * get a village_construction_progresss by id
      */
     async get (req, res, next) {
         try
@@ -32,12 +32,14 @@ class VillageUnitController {
     }
 
     /**
-     * create a village_production_progresss
+     * create a village_construction_progresss with type village_new_construction
+     * @param req.body.village_id id of the village
+     * @param req.body.building_name name of the building to be constructed
      */
-    async create (req, res, next) {
+    async createNewBuilding (req, res, next) {
         try
         {
-            const villageConstructionProgress = await VillageConstructionProgressService.create(req.body);
+            const villageConstructionProgress = await VillageConstructionProgressService.createNewConstructionProgress(req.body, req.user);
             res.status(201).json(villageConstructionProgress);
         }
         catch (error)
@@ -47,7 +49,24 @@ class VillageUnitController {
     }
 
     /**
-     * update a village_production_progresss
+     * create a village_construction_progresss with type village_update_construction
+     * @param req.body.village_id id of the village
+     * @param req.body.village_building_id id of the village_building to be updated
+     */
+    async createUpdateBuilding (req, res, next) {
+        try
+        {
+            const villageConstructionProgress = await VillageConstructionProgressService.createUpdateConstructionProgress(req.body);
+            res.status(201).json(villageConstructionProgress);
+        }
+        catch (error)
+        {
+            next(error)
+        }
+    }
+
+    /**
+     * update a village_construction_progresss
      */ 
     async update (req, res, next) {
         try
@@ -62,7 +81,7 @@ class VillageUnitController {
     }
 
     /**
-     * delete a village_production_progresss
+     * delete a village_construction_progresss
      */
     async delete (req, res, next) {
         try

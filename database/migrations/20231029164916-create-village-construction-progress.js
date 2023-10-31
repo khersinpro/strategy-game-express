@@ -17,7 +17,7 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       },
-      constructon_end: {
+      construction_end: {
         type: Sequelize.DATE,
         allowNull: false,
       },

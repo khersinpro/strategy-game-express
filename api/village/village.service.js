@@ -17,6 +17,7 @@ class VilageService {
     /**
      * Returns a village by id
      * @param {Number} id
+     * @param {Object} query
      * @returns {Promise<Village>}
      */
     getById(id, query) {
