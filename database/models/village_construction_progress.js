@@ -52,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Village_construction_progress',
-    tableName: 'vilage_construction_progress'
+    tableName: 'village_construction_progress'
   });
 
   /**
