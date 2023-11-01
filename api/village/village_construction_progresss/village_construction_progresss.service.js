@@ -50,10 +50,9 @@ class VillageProductionProgressService {
      * @returns {Promise<Village_construction_progress>}
      */ 
     async createNewConstructionProgress(data, currentUser) {
-        const transaction = await sequelize.transaction();
+        const resourceTransaction = await sequelize.transaction();
         try
         {
-            console.log("createNewConstructionProgress step");
             // check if the village exists, if not throw NotFoundError
             const village = await VillageService.getById(data.village_id, { user: 1})
 
@@ -67,7 +66,7 @@ class VillageProductionProgressService {
             {
                 throw new ForbiddenError('You are not allowed to create a building on this village');
             }
-    console.log('before existingBuilding step')
+
             // check if building exists, if not throw NotFoundError
             const existingBuilding = await BuildingService.getByName(data.building_name);
 
@@ -88,22 +87,22 @@ class VillageProductionProgressService {
             {
                 throw new ForbiddenError('Building already exists in the village');
             }
-            console.log("existingBuilding step");
+
             // check if building construction in progress, if yes throw ForbiddenError
             const existingVillageConstructionInProgress = await Village_construction_progress.findOne({
-                // include: [
-                //     {
-                //         model: Village_new_construction,
-                //         where: {
-                //             building_name: data.building_name
-                //         }
-                //     }
-                // ],
+                include: [
+                    {
+                        model: Village_new_construction,
+                        where: {
+                            building_name: data.building_name
+                        }
+                    }
+                ],
                 where: {
                     village_id: data.village_id
                 }
             });
-console.log("existingVillageConstructionInProgress step");
+
             if (existingVillageConstructionInProgress)
             {
                 throw new ForbiddenError('Building construction already in progress');
@@ -171,7 +170,19 @@ console.log("existingVillageConstructionInProgress step");
             }
 
             // generate the start date of the construction and the end date with the timestamp of the start date + the construction duration
-            const startDate                             = new Date();
+            const lastBuildingConstructionProgressDate = await Village_construction_progress.findOne({
+                attributes: ['construction_end'],
+                where: {
+                    village_id: data.village_id
+                },
+                order: [
+                    ['construction_end', 'DESC']
+                ]
+            });
+            
+            // Check if there's a last construction end date
+            const hasLastConstructionEndDate            = lastBuildingConstructionProgressDate && lastBuildingConstructionProgressDate.construction_end;
+            const startDate                             = hasLastConstructionEndDate ? new Date(lastBuildingConstructionProgressDate.construction_end) : new Date();
             const starDateInMilliseconds                = startDate.getTime();
             const constructionDurationInMilliseconds    = buildingFirstLevelAndCost.time * 1000;
             const endDate                               = new Date(starDateInMilliseconds + constructionDurationInMilliseconds);
@@ -181,7 +192,7 @@ console.log("existingVillageConstructionInProgress step");
 
             for (const villageResource of villageResourcesMap.values())
             {
-                villageResourcesUpdatePromises.push(villageResource.save({ transaction }));
+                villageResourcesUpdatePromises.push(villageResource.save({ transaction: resourceTransaction }));
             }
 
             await Promise.all(villageResourcesUpdatePromises);
@@ -192,42 +203,38 @@ console.log("existingVillageConstructionInProgress step");
                 construction_start: startDate,
                 construction_end: endDate,
                 village_id: data.village_id
-            }, { transaction })
+            })
 
             if (!villageConstructionProgress)
             {
                 throw new Error('Village production progress not created');
             }
 
-            await transaction.commit();
-
             // create the associated village_new_construction
             const villageNewConstruction = await Village_new_construction.create({
-                id: villageProductionProgress.id,
+                id: villageConstructionProgress.id,
                 building_name: data.building_name,
                 building_level_id: buildingFirstLevelAndCost.id
-            }, { transaction });
+            });
 
-            console.log(villageNewConstruction);
             if (!villageNewConstruction)
             {
-                // TODO: delete village_production_progresss and rollback resources
+                await villageConstructionProgress.destroy();
                 throw new Error('Village new construction not created');
             }
     
             // set the village_new_building to the village_new_construction with setDataValue
-            villageProductionProgress.setDataValue('village_new_construction', villageNewConstruction);
+            villageConstructionProgress.setDataValue('village_new_construction', villageNewConstruction);
     
             // commit transaction
-            // await transaction.commit();
+            await resourceTransaction.commit();
     
             // return the village_update_construction
-            return villageProductionProgress;
+            return villageConstructionProgress;
         }
         catch (error)
         {
-            console.log("here", error);
-            await transaction.rollback();
+            await resourceTransaction.rollback();
             throw error;
         }
     }
