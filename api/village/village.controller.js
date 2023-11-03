@@ -39,18 +39,11 @@ class VillageController {
      * @param req.query.server - If true, returns the village server
      * @param req.query.user - If true, returns the village user
      * @param req.query.civilization - If true, returns the village civilization
-     * @throws {NotFoundError} if the village does not exist
      */
     async get(req, res, next) {
         try 
         {
             const village = await VillageService.getById(req.params.id, req.query);    
-
-            if (!village)
-            {
-                throw new NotFoundError(`Village with id ${req.params.id} not found`);
-            }
-
             res.status(200).send(village);
         }
         catch (error)

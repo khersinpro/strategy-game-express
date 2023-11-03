@@ -56,18 +56,10 @@ class VillageProductionProgressService {
         {
             // check if the village exists, if not throw NotFoundError
             const village = await VillageService.getById(data.village_id, { user: 1})
-
-            if (!village)
-            {
-                throw new NotFoundError('Village not found');
-            }
     
             // check if current user has the ownership of the village or if he is an admin, if not throw ForbiddenError
-            if (village.user_id !== currentUser.id && currentUser.role_name !== 'ROLE_ADMIN')
-            {
-                throw new ForbiddenError('You are not allowed to create a building on this village');
-            }
-
+            village.isAdminOrVillageOwner(currentUser);
+  
             // check if building exists, if not throw NotFoundError
             const existingBuilding = await BuildingService.getByName(data.building_name);
 
@@ -224,16 +216,8 @@ class VillageProductionProgressService {
             // check if the village exists, if not throw NotFoundError
             const village = await VillageService.getById(data.village_id, { user: 1})
 
-            if (!village)
-            {
-                throw new NotFoundError('Village not found');
-            }
-
             // check if current user has the ownership of the village or if he is an admin, if not throw ForbiddenError
-            if (village.user_id !== currentUser.id && currentUser.role_name !== 'ROLE_ADMIN')
-            {
-                throw new ForbiddenError('You are not allowed to create a building on this village');
-            }
+            village.isAdminOrVillageOwner(currentUser);
 
             // check if village_building already exists, if not trhow NotFoundError
             const villageBuilding = await Village_building.findOne({
@@ -335,7 +319,6 @@ class VillageProductionProgressService {
             const starDateInMilliseconds                = startDate.getTime();
             const constructionDurationInMilliseconds    = buildingNextLevel.time * 1000;
             const endDate                               = new Date(starDateInMilliseconds + constructionDurationInMilliseconds);
-            console.log('startDate', startDate, 'endDate', endDate, lastVillageUpdateProgress);
 
             // create a new village_production_progresss with the start date and the end date
             const villageConstructionProgress = await Village_construction_progress.create({
@@ -410,16 +393,6 @@ class VillageProductionProgressService {
         return villageProductionProgress.destroy();
     }
 
-    test() {
-        try 
-        {
-            // throw new ForbiddenError('test');
-        }
-        catch (error)
-        {
-            throw error;
-        }
-    }
     /**
      * Check if the village has enough resources to create a new building and update the resources with or without transaction
      * WARNING: if transaction is not passed, the function will save the resources

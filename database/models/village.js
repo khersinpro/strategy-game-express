@@ -1,5 +1,6 @@
 'use strict';
 const { Model } = require('sequelize');
+const ForbiddenError = require('../../errors/forbidden');
 
 module.exports = (sequelize, DataTypes) => {
   class Village extends Model {
@@ -45,6 +46,22 @@ module.exports = (sequelize, DataTypes) => {
         }
       })
     }
+
+    // Other methods
+
+    /**
+     * Check if current user is owner of village or admin, if not throw error
+     * @param {User} user
+     * @throws {ForbiddenError} if the user is not the owner or admin
+     * @returns {boolean} true if the user is the owner or admin
+     */
+    isAdminOrVillageOwner(user) {
+      if (this.user_id !== user.id && user.role_name !== 'ROLE_ADMIN') 
+      {
+        throw new ForbiddenError(`You are not allowed to access this village`);
+      }
+      return true;
+    }
   }
   
   Village.init({
@@ -67,6 +84,9 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'village',
   });
 
+  /**
+   * This hook is called before a village is finded and update the village resources
+   */
   Village.addHook('beforeFind', async (options) => {
     const villageResourceService = require('../../api/village/village_resource/village_resource.service');
     const villageId = options.where.id;
@@ -78,6 +98,9 @@ module.exports = (sequelize, DataTypes) => {
     await villageResourceService.updateVillageResource(villageId);
   })
   
+  /**
+   * This hook is called after a village is created and create all base village resources, buildings and units
+   */
   Village.addHook('afterCreate', async (village, options) => {
     const models = require('../index').models;
 
@@ -137,7 +160,6 @@ module.exports = (sequelize, DataTypes) => {
         quantity: 300,
       })
     }
-
 
     // Create headquarters building level 1
     const headquarter_building = await models.Building.findOne({

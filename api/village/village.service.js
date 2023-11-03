@@ -2,27 +2,34 @@ const NotFoundError = require('../../errors/not-found');
 const { Village, Village_building, Village_unit, Village_resource, Civilization, User, Server } = require('../../database').models;
 const UserService = require('../user/user.service');
 const ServerService = require('../server/server.service');
-const ForbiddenError = require('../../errors/forbidden');
- 
+const ForbiddenError = require('../../errors/forbidden'); 
 class VilageService {
     /**
      * Returns all villages
      * @returns {Promise<Village[]>}
      */
-    getAll(query) {
-        const filters = this.generateFilters(query);
+    getAll(includes, whereparams) {
+        const filters = this.generateFilters(includes, whereparams);
         return Village.findAll(filters);
     }
 
     /**
      * Returns a village by id
      * @param {Number} id
-     * @param {Object} query
+     * @param {Object} includes
+     * @throws {NotFoundError} if the village does not exist
      * @returns {Promise<Village>}
      */
-    getById(id, query) {
-        const filters = this.generateFilters(query);
-        return Village.findByPk(id, filters);
+    getById(id, includes, whereparams) {
+        const filters = this.generateFilters(includes, whereparams);
+        const village = Village.findByPk(id, filters);
+
+        if (!village)
+        {
+            throw new NotFoundError(`Village with id ${id} not found`);
+        }
+
+        return village;
     }   
 
     /**
@@ -93,58 +100,90 @@ class VilageService {
 
     /**
      * Query filters generator
-     * @param {Object} query
+     * @param {Object} includes
+     * @param {Object} whereparams
      * @returns {Object}
      */
-    generateFilters(query) {
+    generateFilters(includes = {}, whereparams = {}) {
         const filters = {
             include: [],
             where: {}
         };
 
-        if (query.resources)
+        if (includes.length)
         {
-            filters.include.push({
-                model: Village_resource,
-            });
+            if (includes.resources)
+            {
+                filters.include.push({
+                    model: Village_resource,
+                });
+            }
+    
+            if (includes.buildings)
+            {
+                filters.include.push({
+                    model: Village_building,
+                });
+            }
+    
+            if (includes.units)
+            {
+                filters.include.push({
+                    model: Village_unit,
+                });
+            }
+    
+            if (includes.civilization)
+            {
+                filters.include.push({
+                    model: Civilization,
+                });
+            }
+    
+            if (includes.user)
+            {
+                filters.include.push({
+                    model: User,
+                    attributes: {
+                        exclude: ['password']
+                    },
+                });
+            }
+    
+            if (includes.server)
+            {
+                filters.include.push({
+                    model: Server,
+                });
+            }
         }
 
-        if (query.buildings)
+        if (whereparams.length)
         {
-            filters.include.push({
-                model: Village_building,
-            });
-        }
+            if (whereparams.name)
+            {
+                filters.where.name = whereparams.name;
+            }
 
-        if (query.units)
-        {
-            filters.include.push({
-                model: Village_unit,
-            });
-        }
+            if (whereparams.id)
+            {
+                filters.where.id = whereparams.id;
+            }
 
-        if (query.civilization)
-        {
-            filters.include.push({
-                model: Civilization,
-            });
-        }
+            if (whereparams.user_id)
+            {
+                filters.where.user_id = whereparams.user_id;
+            }
 
-        if (query.user)
-        {
-            filters.include.push({
-                model: User,
-                attributes: {
-                    exclude: ['password']
-                },
-            });
-        }
+            if (whereparams.server_name)
+            {
+                filters.where.server_name = whereparams.server_name;
+            }
 
-        if (query.server)
-        {
-            filters.include.push({
-                model: Server,
-            });
+            if (whereparams.civilization_name)
+            {
+                filters.where.civilization_name = whereparams.civilization_name;
+            }
         }
 
         return filters;
