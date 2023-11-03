@@ -15,6 +15,11 @@ module.exports = (sequelize, DataTypes) => {
           name: 'id',
         }
       })
+      this.hasOne(models.Village_update_construction, {
+        foreignKey: {
+          name: 'id',
+        }
+      })
     }
   }
 

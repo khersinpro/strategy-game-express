@@ -101,6 +101,7 @@ app.use((req, res, next) => {
  * Middleware de gestion d'erreur
  */
 app.use((error, req, res, next) => {
+    console.log('jarrive ici');
     const status = error.status || 500;
     let message = error.message || 'Erreur interne au serveur';
     if (process.env.NODE_ENV === 'production')

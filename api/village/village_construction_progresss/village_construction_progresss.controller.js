@@ -56,11 +56,13 @@ class VillageUnitController {
     async createUpdateBuilding (req, res, next) {
         try
         {
-            const villageConstructionProgress = await VillageConstructionProgressService.createUpdateConstructionProgress(req.body);
+            console.log('oco');
+            const villageConstructionProgress = await VillageConstructionProgressService.createUpdateConstructionProgress(req.body, req.user);
             res.status(201).json(villageConstructionProgress);
         }
         catch (error)
         {
+            console.log(error);
             next(error)
         }
     }

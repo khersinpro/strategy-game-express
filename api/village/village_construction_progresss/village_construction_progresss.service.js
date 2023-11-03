@@ -1,9 +1,10 @@
 const ForbiddenError = require('../../../errors/forbidden');
 const NotFoundError = require('../../../errors/not-found');
-const { Village_construction_progress, Village_update_progress, Village_new_construction, Village_building, Building_level, Building_cost, Village_resource } = require('../../../database/index').models;
+const { Village_construction_progress, Village_update_construction, Village_new_construction, Village_building, Building_level, Building_cost, Village_resource } = require('../../../database/index').models;
 const sequelize = require('../../../database/index').sequelize;
 const VillageService = require('../village.service');
 const BuildingService = require('../../building/building.service');
+
 class VillageProductionProgressService {
 
     /**
@@ -93,13 +94,16 @@ class VillageProductionProgressService {
                 include: [
                     {
                         model: Village_new_construction,
+                        required: true,
                         where: {
                             building_name: data.building_name
                         }
                     }
                 ],
                 where: {
-                    village_id: data.village_id
+                    village_id: data.village_id,
+                    enabled: true,
+                    archived: false
                 }
             });
 
@@ -112,7 +116,8 @@ class VillageProductionProgressService {
             const buildingFirstLevelAndCost = await Building_level.findOne({
                 include: [
                     {
-                        model: Building_cost
+                        model: Building_cost,
+                        required: true
                     }
                 ],
                 where: {
@@ -130,44 +135,20 @@ class VillageProductionProgressService {
                 throw new NotFoundError('Building cost not found');
             }
     
-            // check if village has enough resources, if not throw ForbiddenError
             const villageResources = await Village_resource.findAll({
                 where: {
                     village_id: data.village_id
                 }
             });
-
+            
             if (!villageResources.length)
             {
                 throw new NotFoundError('Village resources not found');
             }
-
-            const villageResourcesMap   = new Map();
-            const buildingCostMap       = new Map();
-
-            villageResources.forEach(villageResource => {
-                villageResourcesMap.set(villageResource.resource_name, villageResource);
-            });
-
-            buildingFirstLevelAndCost.Building_costs.forEach(buildingCost => {
-                buildingCostMap.set(buildingCost.resource_name, buildingCost);
-            });
-
-            for (const [resourceName, buildingCost] of buildingCostMap.entries())
-            {
-                const villageResource = villageResourcesMap.get(resourceName);
-                if (!villageResource)
-                {
-                    throw new NotFoundError(`Village resource ${resourceName} not found`);
-                }
-
-                if (villageResource.quantity < buildingCost.quantity)
-                {
-                    throw new ForbiddenError(`Village does not have enough ${resourceName}`);
-                }
-
-                villageResource.quantity -= buildingCost.quantity;  
-            }
+            
+            
+            // check if village has enough resources and save new village_resource, if not throw ForbiddenError
+            await this.checkAndUpdateResourcesBeforeCreate(villageResources, buildingFirstLevelAndCost.Building_costs, resourceTransaction);
 
             // generate the start date of the construction and the end date with the timestamp of the start date + the construction duration
             const lastBuildingConstructionProgressDate = await Village_construction_progress.findOne({
@@ -186,16 +167,6 @@ class VillageProductionProgressService {
             const starDateInMilliseconds                = startDate.getTime();
             const constructionDurationInMilliseconds    = buildingFirstLevelAndCost.time * 1000;
             const endDate                               = new Date(starDateInMilliseconds + constructionDurationInMilliseconds);
-
-            // update village resources
-            const villageResourcesUpdatePromises = [];
-
-            for (const villageResource of villageResourcesMap.values())
-            {
-                villageResourcesUpdatePromises.push(villageResource.save({ transaction: resourceTransaction }));
-            }
-
-            await Promise.all(villageResourcesUpdatePromises);
     
             // create a new village_constructoin_progresss with the start date and the end date
             const villageConstructionProgress = await Village_construction_progress.create({
@@ -246,44 +217,164 @@ class VillageProductionProgressService {
      * @param data.village_building_id id of the village_building to be updated
      * @returns {Promise<Village_construction_progress>}
      */
-    async createUpdateConstructionProgress(data) {
-        const transaction = await sequelize.transaction();
+    async createUpdateConstructionProgress(data, currentUser) {
+        const resourceTransaction = await sequelize.transaction();
         try
         {
             // check if the village exists, if not throw NotFoundError
+            const village = await VillageService.getById(data.village_id, { user: 1})
 
-            // check if village_building already exists, if not trhow NotFoundError
+            if (!village)
+            {
+                throw new NotFoundError('Village not found');
+            }
 
             // check if current user has the ownership of the village or if he is an admin, if not throw ForbiddenError
+            if (village.user_id !== currentUser.id && currentUser.role_name !== 'ROLE_ADMIN')
+            {
+                throw new ForbiddenError('You are not allowed to create a building on this village');
+            }
 
-            // check if building has already an update in progress
+            // check if village_building already exists, if not trhow NotFoundError
+            const villageBuilding = await Village_building.findOne({
+                include: [
+                    {
+                        model: Building_level,
+                        required: true
+                    }
+                ],
+                where: {
+                    id: data.village_building_id,
+                    village_id: data.village_id
+                }
+            });
+
+            if (!villageBuilding)
+            {
+                throw new NotFoundError('Village building not found or building level not found');
+            }
+
+            // check if building has already an update in progress and get the last update progress
+            const sameBuildingUpdateInProgress = await Village_construction_progress.findOne({
+                include: [
+                    {
+                        model: Village_update_construction,
+                        where: {
+                            village_building_id: data.village_building_id
+                        }, 
+                        include: [
+                            {
+                                model: Building_level, 
+                                required: true
+                            }
+                        ]
+                    }
+                ],
+                where: {
+                    village_id: data.village_id,
+                    enabled: true,
+                    archived: false
+                },             
+                order: [
+                    ['construction_end', 'DESC']
+                ]
+            });
 
             // get the next level of the building, if build as already an update in progress, get the next level of the update
+            const buildingLevelParams           = {}
+            const actualBuildingLevel           = sameBuildingUpdateInProgress ? sameBuildingUpdateInProgress.Village_update_construction.Building_level : villageBuilding.Building_level;
+            buildingLevelParams.level           = actualBuildingLevel.level + 1;
+            buildingLevelParams.building_name   = actualBuildingLevel.building_name;
+
+            const buildingNextLevel = await Building_level.findOne({
+                include: [
+                    {
+                        model: Building_cost, 
+                        required: true
+                    }
+                ],
+                where: buildingLevelParams
+            });
+
+            if (!buildingNextLevel)
+            {   
+                throw new NotFoundError('Next building level not found or building cost not found');
+            }
 
             // get the building update cost for all resources
+            const buildingUpdateCosts = buildingNextLevel.Building_costs;
 
-            // check if village has enough resources, if not throw ForbiddenError
+            // get the village resources
+            const villageResources = await Village_resource.findAll({
+                where: {
+                    village_id: data.village_id
+                }
+            });
+
+            if (!villageResources.length)
+            {
+                throw new NotFoundError('Village resources not found');
+            }
+
+            // check if village has enough resources and save, if not throw ForbiddenError
+            await this.checkAndUpdateResourcesBeforeCreate(villageResources, buildingUpdateCosts, resourceTransaction);
 
             // generate the start date of the update and the end date with the timestamp of the start date + the update duration
-            
-            // update village resources
+            const lastVillageUpdateProgress = await Village_construction_progress.findOne({
+                attributes: ['construction_end'],
+                where: {
+                    village_id: data.village_id
+                },
+                order: [
+                    ['construction_end', 'DESC']
+                ]
+            });
+
+            const hasUpdateInProgress                   = lastVillageUpdateProgress && lastVillageUpdateProgress.construction_end;
+            const startDate                             = hasUpdateInProgress ? new Date(lastVillageUpdateProgress.construction_end) : new Date();
+            const starDateInMilliseconds                = startDate.getTime();
+            const constructionDurationInMilliseconds    = buildingNextLevel.time * 1000;
+            const endDate                               = new Date(starDateInMilliseconds + constructionDurationInMilliseconds);
+            console.log('startDate', startDate, 'endDate', endDate, lastVillageUpdateProgress);
 
             // create a new village_production_progresss with the start date and the end date
+            const villageConstructionProgress = await Village_construction_progress.create({
+                type: 'village_update_construction',
+                construction_start: startDate,
+                construction_end: endDate,
+                village_id: data.village_id
+            })
+
+            if (!villageConstructionProgress)
+            {
+                throw new Error('Village production progress not created');
+            }
 
             // create the associated village_update_construction 
+            const villageUpdateConstruction = await Village_update_construction.create({    
+                id: villageConstructionProgress.id,
+                village_building_id: data.village_building_id,
+                building_level_id: buildingNextLevel.id
+            });
+
+            if (!villageUpdateConstruction)
+            {
+                await villageConstructionProgress.destroy();
+                throw new Error('Village update construction not created');
+            }
 
             // set the village_update_building to the village_update_construction with setDataValue
+            villageConstructionProgress.setDataValue('village_update_construction', villageUpdateConstruction);
 
             // commit transaction
-            await transaction.commit();
+            await resourceTransaction.commit();
 
             // return the village_update_construction
-
-
+            return villageConstructionProgress;
         }
         catch (error)
         {
-            await transaction.rollback();
+            await resourceTransaction.rollback();
             throw error;
         }
     }
@@ -317,6 +408,74 @@ class VillageProductionProgressService {
         }
 
         return villageProductionProgress.destroy();
+    }
+
+    test() {
+        try 
+        {
+            // throw new ForbiddenError('test');
+        }
+        catch (error)
+        {
+            throw error;
+        }
+    }
+    /**
+     * Check if the village has enough resources to create a new building and update the resources with or without transaction
+     * WARNING: if transaction is not passed, the function will save the resources
+     * WARNING: if transaction is passed, the function will not commit the transaction
+     * @param {Village_resource} villageResource array of village_resource
+     * @param {Building_cost[]} buildingCost array of building_cost
+     * @param {Sequelize.Transaction} transaction sequelize transaction
+     * @throws {NotFoundError} when resource not found
+     * @throws {ForbiddenError} when user user is not allowed to update or create a building
+     * @returns {Promise<Village_resource[]>}
+     */
+    async checkAndUpdateResourcesBeforeCreate (villageResources, buildingCosts, transaction = null) {
+        try 
+        {
+            const villageResourcesMap   = new Map();
+            const buildingCostMap       = new Map();
+
+            villageResources.forEach(villageResource => {
+                villageResourcesMap.set(villageResource.resource_name, villageResource);
+            });
+    
+            buildingCosts.forEach(buildingCost => {
+                buildingCostMap.set(buildingCost.resource_name, buildingCost);
+            });
+    
+            for (const [resourceName, buildingCost] of buildingCostMap.entries())
+            {
+                const villageResource = villageResourcesMap.get(resourceName);
+  
+                if (!villageResource)
+                {
+                    throw new NotFoundError(`Village resource ${resourceName} not found`);
+                }
+
+                if (villageResource.quantity < buildingCost.quantity)
+                {
+                    throw new ForbiddenError(`Village does not have enough ${resourceName} to create the building`);
+                }
+    
+                villageResource.quantity -= buildingCost.quantity;  
+            }
+    
+            // update village resources
+            const villageResourcesUpdatePromises = [];
+    
+            for (const villageResource of villageResourcesMap.values())
+            {
+                villageResourcesUpdatePromises.push(villageResource.save(transaction ? { transaction } : {}));
+            }
+            
+            return Promise.all(villageResourcesUpdatePromises);
+        }
+        catch (error)
+        {
+            throw error;
+        }
     }
 }
 
