@@ -69,10 +69,7 @@ class VilageService {
             throw new NotFoundError(`Village with id ${id} not found`);
         }
 
-        if (user.id !== village.user_id || user.role_name !== 'ROLE_ADMIN')
-        {
-            throw new ForbiddenError(`You are not allowed to create a village on this server`);
-        }
+        village.isAdminOrVillageOwner(user);
 
         return Village.update(data, {
             where: {

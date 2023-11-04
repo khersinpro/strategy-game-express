@@ -450,6 +450,8 @@ class VillageProductionProgressService {
             throw error;
         }
     }
+
+
 }
 
 module.exports = new VillageProductionProgressService();
