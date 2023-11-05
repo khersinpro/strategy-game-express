@@ -1,9 +1,17 @@
-const ForbiddenError = require('../../../errors/forbidden');
-const NotFoundError = require('../../../errors/not-found');
-const { Village_construction_progress, Village_update_construction, Village_new_construction, Village_building, Building_level, Building_cost, Village_resource } = require('../../../database/index').models;
-const sequelize = require('../../../database/index').sequelize;
-const VillageService = require('../village.service');
-const BuildingService = require('../../building/building.service');
+const ForbiddenError    = require('../../../errors/forbidden');
+const NotFoundError     = require('../../../errors/not-found');
+const sequelize         = require('../../../database/index').sequelize;
+const VillageService    = require('../village.service');
+const BuildingService   = require('../../building/building.service');
+const { 
+    Village_construction_progress, 
+    Village_update_construction, 
+    Village_new_construction, 
+    Village_building, 
+    Building_level, 
+    Building_cost, 
+    Village_resource 
+} = require('../../../database/index').models;
 
 class VillageProductionProgressService {
 
@@ -450,8 +458,6 @@ class VillageProductionProgressService {
             throw error;
         }
     }
-
-
 }
 
 module.exports = new VillageProductionProgressService();

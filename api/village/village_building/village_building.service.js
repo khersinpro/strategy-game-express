@@ -1,5 +1,12 @@
+const { Op } = require('sequelize');
 const NotFoundError = require('../../../errors/not-found');
-const { Village_building } = require('../../../database/index').models;
+const { sequelize } = require('../../../database/index');
+const { 
+    Village_building,
+    Village_construction_progress,
+    Village_new_construction,
+    Village_update_construction 
+} = require('../../../database/index').models;
 class VillageBuildingService {
 
     /**
@@ -66,6 +73,134 @@ class VillageBuildingService {
 
         return village.destroy();
     }
+
+    /**
+     * Create buildings for one village when the village construction progress of the village is finished
+     * @param {Number} villageId village id
+     * @returns {Promise<Boolean>} true if the buildings are created
+     */
+    async createUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
+        const transaction = await sequelize.transaction();
+        try
+        {
+            const villageNewConstructions = await Village_construction_progress.findAll({
+                include: [
+                    {
+                        model: Village_new_construction,
+                        required: true,
+                    }
+                ],
+                where: {
+                    type: 'village_new_construction',
+                    village_id: villageId,
+                    enabled: true,
+                    archived: false,
+                    construction_end: {
+                        [Op.lte]: new Date()
+                    }
+                }
+            })
+
+            if (villageNewConstructions.length)
+            {
+                const newConstructionPromises = []
+        
+                for (const villageNewConstruction of villageNewConstructions)
+                {
+                    const newConstructionPromise = Village_building.create({
+                        village_id: villageNewConstruction.village_id,
+                        building_name: villageNewConstruction.Village_new_construction.building_name,
+                        building_level_id: villageNewConstruction.Village_new_construction.building_level_id
+                    }, { transaction })
+
+                    villageNewConstruction.enabled  = false
+                    villageNewConstruction.archived = true
+                    villageNewConstruction.save({ transaction })
+                    newConstructionPromises.push(newConstructionPromise)
+                }
+        
+                await Promise.all(newConstructionPromises)
+            }
+
+            await transaction.commit();
+
+            return true;
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
+    }    
+
+    /**
+     * Update buildings when for one village when the village construction progress of the village is finished
+     * @param {Number} villageId village id
+     */
+    async updateUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
+        const villageUpdateConstructions = await Village_construction_progress.findAll({
+            include: [
+                {
+                    model: Village_update_construction,
+                    required: true,
+                }
+            ],
+            where: {
+                type: 'village_update_construction',
+                village_id: villageId,
+                enabled: true,
+                archived: false,
+                construction_end: {
+                    [Op.lte]: new Date()
+                }
+            }
+        })
+    }
+
+    /**
+     * Create buildings for all villages when the village construction progress is finished
+     */
+    async createAllVillageBuildingWhenConstructionProgressIsFinished () {
+        const allVillageNewConstructions = await Village_construction_progress.findAll({
+            include: [
+                {
+                    model: Village_update_construction,
+                    required: true,
+                }
+            ],
+            where: {
+                type: 'village_new_construction',
+                enabled: true,
+                archived: false,
+                construction_end: {
+                    [Op.lte]: new Date()
+                }
+            }
+        })
+    }
+
+    /**
+     * Update buildings for all villages when the village construction progress is finished
+     */
+    async updateAllVillageBuildingWhenConstructionProgressIsFinished () {
+        const allVillageUpdateConstructions = await Village_construction_progress.findAll({
+            include: [
+                {
+                    model: Village_update_construction,
+                    required: true,
+                }
+            ],
+            where: {
+                type: 'village_update_construction',
+                enabled: true,
+                archived: false,
+                construction_end: {
+                    [Op.lte]: new Date()
+                }
+            }
+        })
+    }    
+
 }
 
 module.exports = new VillageBuildingService();

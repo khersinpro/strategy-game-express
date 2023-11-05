@@ -1,5 +1,6 @@
 const NotFoundError = require('../../errors/not-found');
 const VillageService = require('./village.service');
+const villageBuildingService = require('./village_building/village_building.service');
 const VillageResourceService = require('./village_resource/village_resource.service');
 
 class VillageController {
@@ -43,6 +44,7 @@ class VillageController {
     async get(req, res, next) {
         try 
         {
+            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             const village = await VillageService.getById(req.params.id, req.query);    
             res.status(200).send(village);
         }
