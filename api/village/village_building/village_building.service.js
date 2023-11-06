@@ -122,9 +122,7 @@ class VillageBuildingService {
                 await Promise.all(newConstructionPromises)
             }
 
-            await transaction.commit();
-
-            return true;
+            return transaction.commit();
         }
         catch (error)
         {
@@ -162,7 +160,6 @@ class VillageBuildingService {
 
             if (villageUpdateConstructions.length)
             {
-                console.log("ici");
                 const updateConstructionPromises = []
         
                 for (const villageUpdateConstruction of villageUpdateConstructions)
@@ -181,12 +178,11 @@ class VillageBuildingService {
                     await villageUpdateConstruction.save({ transaction })
                     updateConstructionPromises.push(updateConstructionPromise)
                 }
-        
+
                 await Promise.all(updateConstructionPromises)
             }
-
-            await transaction.commit();
-            return true;
+            
+            return transaction.commit();
         }
         catch (error)
         {
@@ -199,44 +195,110 @@ class VillageBuildingService {
      * Create buildings for all villages when the village construction progress is finished
      */
     async createAllVillageBuildingWhenConstructionProgressIsFinished () {
-        const allVillageNewConstructions = await Village_construction_progress.findAll({
-            include: [
+        const transaction = await sequelize.transaction();
+        try
+        {
+
+            const allVillageNewConstructions = await Village_construction_progress.findAll({
+                include: [
+                    {
+                        model: Village_update_construction,
+                        required: true,
+                    }
+                ],
+                where: {
+                    type: 'village_new_construction',
+                    enabled: true,
+                    archived: false,
+                    construction_end: {
+                        [Op.lte]: new Date()
+                    }
+                }
+            })
+    
+            if (allVillageNewConstructions.length)
+            {
+                const newConstructionPromises = []
+    
+                for (const villageNewConstruction of allVillageNewConstructions)
                 {
-                    model: Village_update_construction,
-                    required: true,
+                    const newConstructionPromise = Village_building.create({
+                        village_id: villageNewConstruction.village_id,
+                        building_name: villageNewConstruction.Village_new_construction.building_name,
+                        building_level_id: villageNewConstruction.Village_new_construction.building_level_id
+                    }, { transaction })
+    
+                    villageNewConstruction.enabled  = false
+                    villageNewConstruction.archived = true
+                    await villageNewConstruction.save({ transaction })
+                    newConstructionPromises.push(newConstructionPromise)
                 }
-            ],
-            where: {
-                type: 'village_new_construction',
-                enabled: true,
-                archived: false,
-                construction_end: {
-                    [Op.lte]: new Date()
-                }
+    
+                await Promise.all(newConstructionPromises)
             }
-        })
+
+            return transaction.commit();
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
     }
 
     /**
      * Update buildings for all villages when the village construction progress is finished
      */
     async updateAllVillageBuildingWhenConstructionProgressIsFinished () {
-        const allVillageUpdateConstructions = await Village_construction_progress.findAll({
-            include: [
+        const transaction = await sequelize.transaction();
+        try
+        {
+            const allVillageUpdateConstructions = await Village_construction_progress.findAll({
+                include: [
+                    {
+                        model: Village_update_construction,
+                        required: true,
+                    }
+                ],
+                where: {
+                    type: 'village_update_construction',
+                    enabled: true,
+                    archived: false,
+                    construction_end: {
+                        [Op.lte]: new Date()
+                    }
+                }
+            })
+
+            if (allVillageUpdateConstructions.length)
+            {
+                const updateConstructionPromises = []
+        
+                for (const villageUpdateConstruction of allVillageUpdateConstructions)
                 {
-                    model: Village_update_construction,
-                    required: true,
+                    const updateConstructionPromise = Village_building.update({
+                        building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
+                    }, {
+                        where: {
+                            id: villageUpdateConstruction.Village_update_construction.village_building_id
+                        },
+                        transaction
+                    })
+
+                    villageUpdateConstruction.enabled  = false
+                    villageUpdateConstruction.archived = true
+                    await villageUpdateConstruction.save({ transaction })
+                    updateConstructionPromises.push(updateConstructionPromise)
                 }
-            ],
-            where: {
-                type: 'village_update_construction',
-                enabled: true,
-                archived: false,
-                construction_end: {
-                    [Op.lte]: new Date()
-                }
+
+                await Promise.all(updateConstructionPromises)
             }
-        })
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
     }    
 
 }

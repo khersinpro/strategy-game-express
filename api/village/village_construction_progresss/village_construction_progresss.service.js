@@ -162,7 +162,6 @@ class VillageProductionProgressService {
                     ['construction_end', 'DESC']
                 ]
             });
-            console.log('ma date', new Date());
             // Check if there's a last construction end date
             const hasLastConstructionEndDate            = lastBuildingConstructionProgressDate && lastBuildingConstructionProgressDate.construction_end;
             const startDate                             = hasLastConstructionEndDate ? new Date(lastBuildingConstructionProgressDate.construction_end) : new Date();
