@@ -8,8 +8,8 @@ class VilageService {
      * Returns all villages
      * @returns {Promise<Village[]>}
      */
-    getAll(includes, whereparams) {
-        const filters = this.generateFilters(includes, whereparams);
+    getAll(includes, whereparams, currentUser) {
+        const filters = this.generateFilters(includes, whereparams, currentUser);
         return Village.findAll(filters);
     }
 
@@ -20,8 +20,10 @@ class VilageService {
      * @throws {NotFoundError} if the village does not exist
      * @returns {Promise<Village>}
      */
-    getById(id, includes, whereparams) {
-        const filters = this.generateFilters(includes, whereparams);
+    getById(id, includes, whereparams, currentUser) {
+        console.log(includes, whereparams);
+        const filters = this.generateFilters(includes, whereparams, currentUser);
+        console.log(filters);
         const village = Village.findByPk(id, filters);
 
         if (!village)
@@ -97,33 +99,36 @@ class VilageService {
 
     /**
      * Query filters generator
-     * @param {Object} includes
-     * @param {Object} whereparams
-     * @returns {Object}
+     * @param {Object} includes optional
+     * @param {Object} whereparams optional
+     * @param {User} currentUser optional
+     * @returns {Object} Object of filters and includes
      */
-    generateFilters(includes = {}, whereparams = {}) {
+    generateFilters(includes = {}, whereparams = {}, currentUser = null) {
         const filters = {
             include: [],
             where: {}
         };
 
-        if (includes.length)
+        const isUserAdmin = currentUser && currentUser.role_name === 'ROLE_ADMIN';
+
+        if (includes && Object.keys(includes).length)
         {
-            if (includes.resources)
+            if (includes.resources && isUserAdmin)
             {
                 filters.include.push({
                     model: Village_resource,
                 });
             }
     
-            if (includes.buildings)
+            if (includes.buildings && isUserAdmin)
             {
                 filters.include.push({
                     model: Village_building,
                 });
             }
     
-            if (includes.units)
+            if (includes.units && isUserAdmin)
             {
                 filters.include.push({
                     model: Village_unit,
@@ -139,11 +144,14 @@ class VilageService {
     
             if (includes.user)
             {
+                const attributes = isUserAdmin ? 
+                ['id', 'username', 'email', 'createdAt', 'updatedAt'] 
+                : 
+                ['id', 'username'];
+
                 filters.include.push({
                     model: User,
-                    attributes: {
-                        exclude: ['password']
-                    },
+                    attributes
                 });
             }
     
@@ -155,7 +163,7 @@ class VilageService {
             }
         }
 
-        if (whereparams.length)
+        if (whereparams && Object.keys(whereparams).length)
         {
             if (whereparams.name)
             {

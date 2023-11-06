@@ -23,7 +23,7 @@ class VillageController {
             /**
              * 
              */
-            const villages = await VillageService.getAll(req.query);
+            const villages = await VillageService.getAll(req.query, {}, req.user);
             res.status(200).send(villages);
         }
         catch (error) 
@@ -45,7 +45,7 @@ class VillageController {
         try 
         {
             await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
-            const village = await VillageService.getById(req.params.id, req.query);    
+            const village = await VillageService.getById(req.params.id, req.query, {}, req.user);    
             res.status(200).send(village);
         }
         catch (error)
