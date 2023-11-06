@@ -100,7 +100,7 @@ class VillageBuildingService {
                     }
                 }
             })
-
+            console.log(new Date());
             if (villageNewConstructions.length)
             {
                 const newConstructionPromises = []

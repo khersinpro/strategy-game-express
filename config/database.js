@@ -11,5 +11,10 @@ module.exports = {
     database: env.DATABASE,
     host: env.HOST,
     port: env.DB_PORT,
-    dialect: env.DIALECT
+    dialect: env.DIALECT,
+    dialectOptions: {
+        options: {
+          useUTC: true, 
+        },
+      },
 }
