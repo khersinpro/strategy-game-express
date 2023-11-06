@@ -154,7 +154,9 @@ class VillageProductionProgressService {
             const lastBuildingConstructionProgressDate = await Village_construction_progress.findOne({
                 attributes: ['construction_end'],
                 where: {
-                    village_id: data.village_id
+                    village_id: data.village_id,
+                    enabled: true,
+                    archived: false
                 },
                 order: [
                     ['construction_end', 'DESC']
@@ -315,7 +317,9 @@ class VillageProductionProgressService {
             const lastVillageUpdateProgress = await Village_construction_progress.findOne({
                 attributes: ['construction_end'],
                 where: {
-                    village_id: data.village_id
+                    village_id: data.village_id,
+                    enabled: true,
+                    archived: false
                 },
                 order: [
                     ['construction_end', 'DESC']

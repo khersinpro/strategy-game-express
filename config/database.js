@@ -12,9 +12,9 @@ module.exports = {
     host: env.HOST,
     port: env.DB_PORT,
     dialect: env.DIALECT,
-    dialectOptions: {
-        options: {
-          useUTC: true, 
-        },
-      },
+    // dialectOptions: {
+    //     options: {
+    //       useUTC: true, 
+    //     },
+    //   },
 }

@@ -77,7 +77,7 @@ class VillageBuildingService {
     /**
      * Create buildings for one village when the village construction progress of the village is finished
      * @param {Number} villageId village id
-     * @returns {Promise<Boolean>} true if the buildings are created
+     * @returns {Boolean} true if the buildings are created
      */
     async createUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
         const transaction = await sequelize.transaction();
@@ -100,7 +100,7 @@ class VillageBuildingService {
                     }
                 }
             })
-            console.log(new Date());
+
             if (villageNewConstructions.length)
             {
                 const newConstructionPromises = []
@@ -115,7 +115,7 @@ class VillageBuildingService {
 
                     villageNewConstruction.enabled  = false
                     villageNewConstruction.archived = true
-                    villageNewConstruction.save({ transaction })
+                    await villageNewConstruction.save({ transaction })
                     newConstructionPromises.push(newConstructionPromise)
                 }
         
@@ -136,25 +136,63 @@ class VillageBuildingService {
     /**
      * Update buildings when for one village when the village construction progress of the village is finished
      * @param {Number} villageId village id
+     * @returns {Boolean} true if the buildings are updated
      */
     async updateUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
-        const villageUpdateConstructions = await Village_construction_progress.findAll({
-            include: [
+        const transaction = await sequelize.transaction();
+        try
+        {
+            const villageUpdateConstructions = await Village_construction_progress.findAll({
+                include: [
+                    {
+                        model: Village_update_construction,
+                        required: true,
+                    }
+                ],
+                where: {
+                    type: 'village_update_construction',
+                    village_id: villageId,
+                    enabled: true,
+                    archived: false,
+                    construction_end: {
+                        [Op.lte]: new Date()
+                    }
+                }
+            })
+
+            if (villageUpdateConstructions.length)
+            {
+                console.log("ici");
+                const updateConstructionPromises = []
+        
+                for (const villageUpdateConstruction of villageUpdateConstructions)
                 {
-                    model: Village_update_construction,
-                    required: true,
+                    const updateConstructionPromise = Village_building.update({
+                        building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
+                    }, {
+                        where: {
+                            id: villageUpdateConstruction.Village_update_construction.village_building_id
+                        },
+                        transaction
+                    })
+
+                    villageUpdateConstruction.enabled  = false
+                    villageUpdateConstruction.archived = true
+                    await villageUpdateConstruction.save({ transaction })
+                    updateConstructionPromises.push(updateConstructionPromise)
                 }
-            ],
-            where: {
-                type: 'village_update_construction',
-                village_id: villageId,
-                enabled: true,
-                archived: false,
-                construction_end: {
-                    [Op.lte]: new Date()
-                }
+        
+                await Promise.all(updateConstructionPromises)
             }
-        })
+
+            await transaction.commit();
+            return true;
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
     }
 
     /**

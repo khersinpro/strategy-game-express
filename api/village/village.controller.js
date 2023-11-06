@@ -45,6 +45,7 @@ class VillageController {
         try 
         {
             await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
+            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             const village = await VillageService.getById(req.params.id, req.query, {}, req.user);    
             res.status(200).send(village);
         }
