@@ -77,7 +77,7 @@ class VillageBuildingService {
     /**
      * Create buildings for one village when the village construction progress of the village is finished
      * @param {Number} villageId village id
-     * @returns {Boolean} true if the buildings are created
+     * @return {Promise<sequelize.transaction>} transaction promise
      */
     async createUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
         const transaction = await sequelize.transaction();
@@ -103,23 +103,24 @@ class VillageBuildingService {
 
             if (villageNewConstructions.length)
             {
-                const newConstructionPromises = []
+                await this.createVillageBuildingLoopsAndDisableVillageConstructionProgress(villageNewConstructions, transaction)
+                // const newConstructionPromises = []
         
-                for (const villageNewConstruction of villageNewConstructions)
-                {
-                    const newConstructionPromise = Village_building.create({
-                        village_id: villageNewConstruction.village_id,
-                        building_name: villageNewConstruction.Village_new_construction.building_name,
-                        building_level_id: villageNewConstruction.Village_new_construction.building_level_id
-                    }, { transaction })
+                // for (const villageNewConstruction of villageNewConstructions)
+                // {
+                //     const newConstructionPromise = Village_building.create({
+                //         village_id: villageNewConstruction.village_id,
+                //         building_name: villageNewConstruction.Village_new_construction.building_name,
+                //         building_level_id: villageNewConstruction.Village_new_construction.building_level_id
+                //     }, { transaction })
 
-                    villageNewConstruction.enabled  = false
-                    villageNewConstruction.archived = true
-                    await villageNewConstruction.save({ transaction })
-                    newConstructionPromises.push(newConstructionPromise)
-                }
+                //     villageNewConstruction.enabled  = false
+                //     villageNewConstruction.archived = true
+                //     await villageNewConstruction.save({ transaction })
+                //     newConstructionPromises.push(newConstructionPromise)
+                // }
         
-                await Promise.all(newConstructionPromises)
+                // await Promise.all(newConstructionPromises)
             }
 
             return transaction.commit();
@@ -134,7 +135,7 @@ class VillageBuildingService {
     /**
      * Update buildings when for one village when the village construction progress of the village is finished
      * @param {Number} villageId village id
-     * @returns {Boolean} true if the buildings are updated
+     * @return {Promise<sequelize.transaction>} transaction promise
      */
     async updateUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
         const transaction = await sequelize.transaction();
@@ -160,26 +161,27 @@ class VillageBuildingService {
 
             if (villageUpdateConstructions.length)
             {
-                const updateConstructionPromises = []
+                await this.updateVillageBuildingLoopsAndDisableVillageConstructionProgress(villageUpdateConstructions, transaction)
+                // const updateConstructionPromises = []
         
-                for (const villageUpdateConstruction of villageUpdateConstructions)
-                {
-                    const updateConstructionPromise = Village_building.update({
-                        building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
-                    }, {
-                        where: {
-                            id: villageUpdateConstruction.Village_update_construction.village_building_id
-                        },
-                        transaction
-                    })
-
-                    villageUpdateConstruction.enabled  = false
-                    villageUpdateConstruction.archived = true
-                    await villageUpdateConstruction.save({ transaction })
-                    updateConstructionPromises.push(updateConstructionPromise)
-                }
-
-                await Promise.all(updateConstructionPromises)
+                // for (const villageUpdateConstruction of villageUpdateConstructions)
+                // {
+                //     const updateConstructionPromise = Village_building.update({
+                //         building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
+                //     }, {
+                //         where: {
+                //             id: villageUpdateConstruction.Village_update_construction.village_building_id
+                //         },
+                //         transaction
+                //     })
+    
+                //     villageUpdateConstruction.enabled  = false
+                //     villageUpdateConstruction.archived = true
+                //     await villageUpdateConstruction.save({ transaction })
+                //     updateConstructionPromises.push(updateConstructionPromise)
+                // }
+    
+                // await Promise.all(updateConstructionPromises)
             }
             
             return transaction.commit();
@@ -193,6 +195,7 @@ class VillageBuildingService {
 
     /**
      * Create buildings for all villages when the village construction progress is finished
+     * @return {Promise<sequelize.transaction>} transaction promise
      */
     async createAllVillageBuildingWhenConstructionProgressIsFinished () {
         const transaction = await sequelize.transaction();
@@ -218,23 +221,25 @@ class VillageBuildingService {
     
             if (allVillageNewConstructions.length)
             {
-                const newConstructionPromises = []
+                await this.createVillageBuildingLoopsAndDisableVillageConstructionProgress(allVillageNewConstructions, transaction)
+
+                // const newConstructionPromises = []
     
-                for (const villageNewConstruction of allVillageNewConstructions)
-                {
-                    const newConstructionPromise = Village_building.create({
-                        village_id: villageNewConstruction.village_id,
-                        building_name: villageNewConstruction.Village_new_construction.building_name,
-                        building_level_id: villageNewConstruction.Village_new_construction.building_level_id
-                    }, { transaction })
+                // for (const villageNewConstruction of allVillageNewConstructions)
+                // {
+                //     const newConstructionPromise = Village_building.create({
+                //         village_id: villageNewConstruction.village_id,
+                //         building_name: villageNewConstruction.Village_new_construction.building_name,
+                //         building_level_id: villageNewConstruction.Village_new_construction.building_level_id
+                //     }, { transaction })
     
-                    villageNewConstruction.enabled  = false
-                    villageNewConstruction.archived = true
-                    await villageNewConstruction.save({ transaction })
-                    newConstructionPromises.push(newConstructionPromise)
-                }
+                //     villageNewConstruction.enabled  = false
+                //     villageNewConstruction.archived = true
+                //     await villageNewConstruction.save({ transaction })
+                //     newConstructionPromises.push(newConstructionPromise)
+                // }
     
-                await Promise.all(newConstructionPromises)
+                // await Promise.all(newConstructionPromises)
             }
 
             return transaction.commit();
@@ -248,6 +253,7 @@ class VillageBuildingService {
 
     /**
      * Update buildings for all villages when the village construction progress is finished
+     * @return {Promise<sequelize.transaction>} transaction promise
      */
     async updateAllVillageBuildingWhenConstructionProgressIsFinished () {
         const transaction = await sequelize.transaction();
@@ -272,27 +278,30 @@ class VillageBuildingService {
 
             if (allVillageUpdateConstructions.length)
             {
-                const updateConstructionPromises = []
+                await this.updateVillageBuildingLoopsAndDisableVillageConstructionProgress(allVillageUpdateConstructions, transaction)
+                // const updateConstructionPromises = []
         
-                for (const villageUpdateConstruction of allVillageUpdateConstructions)
-                {
-                    const updateConstructionPromise = Village_building.update({
-                        building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
-                    }, {
-                        where: {
-                            id: villageUpdateConstruction.Village_update_construction.village_building_id
-                        },
-                        transaction
-                    })
+                // for (const villageUpdateConstruction of allVillageUpdateConstructions)
+                // {
+                //     const updateConstructionPromise = Village_building.update({
+                //         building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
+                //     }, {
+                //         where: {
+                //             id: villageUpdateConstruction.Village_update_construction.village_building_id
+                //         },
+                //         transaction
+                //     })
 
-                    villageUpdateConstruction.enabled  = false
-                    villageUpdateConstruction.archived = true
-                    await villageUpdateConstruction.save({ transaction })
-                    updateConstructionPromises.push(updateConstructionPromise)
-                }
+                //     villageUpdateConstruction.enabled  = false
+                //     villageUpdateConstruction.archived = true
+                //     await villageUpdateConstruction.save({ transaction })
+                //     updateConstructionPromises.push(updateConstructionPromise)
+                // }
 
-                await Promise.all(updateConstructionPromises)
+                // await Promise.all(updateConstructionPromises)
             }
+
+            return transaction.commit();
         }
         catch (error)
         {
@@ -300,6 +309,97 @@ class VillageBuildingService {
             throw error;
         }
     }    
+
+    /**
+     * Create village building loops and disabled village_construction_progress
+     * @param {Village_construction_progress[]} villageNewConstructions village new constructions
+     * @param {sequelize.transaction} transaction transaction
+     * @returns {Promise<Village_building[]>} village building promises
+     */
+    async createVillageBuildingLoopsAndDisableVillageConstructionProgress (villageNewConstructions, transaction) {
+        try
+        {
+            if (!villageNewConstructions || !villageNewConstructions.length)
+            {
+                throw new Error('No village new construction found in createVillageBuildingLoopsAndDisableVillageConstructionProgress function')
+            }
+
+            if (!transaction)
+            {
+                throw new Error('No transaction found in createVillageBuildingLoopsAndDisableVillageConstructionProgress function')
+            }
+
+            const newConstructionPromises = []
+
+            for (const villageNewConstruction of villageNewConstructions)
+            {
+                const newConstructionPromise = Village_building.create({
+                    village_id: villageNewConstruction.village_id,
+                    building_name: villageNewConstruction.Village_new_construction.building_name,
+                    building_level_id: villageNewConstruction.Village_new_construction.building_level_id
+                }, { transaction })
+
+                villageNewConstruction.enabled  = false
+                villageNewConstruction.archived = true
+                await villageNewConstruction.save({ transaction })
+                newConstructionPromises.push(newConstructionPromise)
+            }
+
+            return Promise.all(newConstructionPromises)
+        }
+        catch (error)
+        {
+            throw error;
+        }
+    }
+
+    /**
+     * Update village building loops and disabled village_construction_progress
+     * @param {Village_construction_progress[]} villageUpdateConstructions village update constructions
+     * @param {sequelize.transaction} transaction transaction
+     * @returns {Promise<Village_building[]>} village building promises
+     */
+    async updateVillageBuildingLoopsAndDisableVillageConstructionProgress (villageUpdateConstructions, transaction) {
+        try 
+        {
+            if (!villageUpdateConstructions || !villageUpdateConstructions.length)
+            {
+                throw new Error('No village update construction found in updateVillageBuildingLoopsAndDisableVillageConstructionProgress function')
+            }
+
+            if (!transaction)
+            {
+                throw new Error('No transaction found in updateVillageBuildingLoopsAndDisableVillageConstructionProgress function')
+            }
+
+            const updateConstructionPromises = []
+        
+            for (const villageUpdateConstruction of villageUpdateConstructions)
+            {
+                const updateConstructionPromise = Village_building.update({
+                    building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
+                }, {
+                    where: {
+                        id: villageUpdateConstruction.Village_update_construction.village_building_id
+                    },
+                    transaction
+                })
+
+                villageUpdateConstruction.enabled  = false
+                villageUpdateConstruction.archived = true
+                await villageUpdateConstruction.save({ transaction })
+                updateConstructionPromises.push(updateConstructionPromise)
+            }
+
+            await Promise.all(updateConstructionPromises)
+        }
+        catch (error)
+        {
+
+        }
+    }
+
+
 
 }
 

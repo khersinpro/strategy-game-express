@@ -56,7 +56,6 @@ class VillageUnitController {
     async createUpdateBuilding (req, res, next) {
         try
         {
-            console.log('oco');
             const villageConstructionProgress = await VillageConstructionProgressService.createUpdateConstructionProgress(req.body, req.user);
             res.status(201).json(villageConstructionProgress);
         }

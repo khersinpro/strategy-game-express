@@ -398,7 +398,7 @@ class VillageProductionProgressService {
 
         if (!villageProductionProgress)
         {
-            throw new NotFoundError('Village nit not found')
+            throw new NotFoundError('Village not found')
         }
 
         return villageProductionProgress.destroy();
