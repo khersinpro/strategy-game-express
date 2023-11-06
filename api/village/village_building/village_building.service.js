@@ -104,23 +104,6 @@ class VillageBuildingService {
             if (villageNewConstructions.length)
             {
                 await this.createVillageBuildingLoopsAndDisableVillageConstructionProgress(villageNewConstructions, transaction)
-                // const newConstructionPromises = []
-        
-                // for (const villageNewConstruction of villageNewConstructions)
-                // {
-                //     const newConstructionPromise = Village_building.create({
-                //         village_id: villageNewConstruction.village_id,
-                //         building_name: villageNewConstruction.Village_new_construction.building_name,
-                //         building_level_id: villageNewConstruction.Village_new_construction.building_level_id
-                //     }, { transaction })
-
-                //     villageNewConstruction.enabled  = false
-                //     villageNewConstruction.archived = true
-                //     await villageNewConstruction.save({ transaction })
-                //     newConstructionPromises.push(newConstructionPromise)
-                // }
-        
-                // await Promise.all(newConstructionPromises)
             }
 
             return transaction.commit();
@@ -133,7 +116,7 @@ class VillageBuildingService {
     }    
 
     /**
-     * Update buildings when for one village when the village construction progress of the village is finished
+     * Update buildings for one village when the village construction progress of the village is finished
      * @param {Number} villageId village id
      * @return {Promise<sequelize.transaction>} transaction promise
      */
@@ -162,26 +145,6 @@ class VillageBuildingService {
             if (villageUpdateConstructions.length)
             {
                 await this.updateVillageBuildingLoopsAndDisableVillageConstructionProgress(villageUpdateConstructions, transaction)
-                // const updateConstructionPromises = []
-        
-                // for (const villageUpdateConstruction of villageUpdateConstructions)
-                // {
-                //     const updateConstructionPromise = Village_building.update({
-                //         building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
-                //     }, {
-                //         where: {
-                //             id: villageUpdateConstruction.Village_update_construction.village_building_id
-                //         },
-                //         transaction
-                //     })
-    
-                //     villageUpdateConstruction.enabled  = false
-                //     villageUpdateConstruction.archived = true
-                //     await villageUpdateConstruction.save({ transaction })
-                //     updateConstructionPromises.push(updateConstructionPromise)
-                // }
-    
-                // await Promise.all(updateConstructionPromises)
             }
             
             return transaction.commit();
@@ -205,7 +168,7 @@ class VillageBuildingService {
             const allVillageNewConstructions = await Village_construction_progress.findAll({
                 include: [
                     {
-                        model: Village_update_construction,
+                        model: Village_new_construction,
                         required: true,
                     }
                 ],
@@ -218,28 +181,10 @@ class VillageBuildingService {
                     }
                 }
             })
-    
+            console.log(allVillageNewConstructions);
             if (allVillageNewConstructions.length)
             {
                 await this.createVillageBuildingLoopsAndDisableVillageConstructionProgress(allVillageNewConstructions, transaction)
-
-                // const newConstructionPromises = []
-    
-                // for (const villageNewConstruction of allVillageNewConstructions)
-                // {
-                //     const newConstructionPromise = Village_building.create({
-                //         village_id: villageNewConstruction.village_id,
-                //         building_name: villageNewConstruction.Village_new_construction.building_name,
-                //         building_level_id: villageNewConstruction.Village_new_construction.building_level_id
-                //     }, { transaction })
-    
-                //     villageNewConstruction.enabled  = false
-                //     villageNewConstruction.archived = true
-                //     await villageNewConstruction.save({ transaction })
-                //     newConstructionPromises.push(newConstructionPromise)
-                // }
-    
-                // await Promise.all(newConstructionPromises)
             }
 
             return transaction.commit();
@@ -279,26 +224,6 @@ class VillageBuildingService {
             if (allVillageUpdateConstructions.length)
             {
                 await this.updateVillageBuildingLoopsAndDisableVillageConstructionProgress(allVillageUpdateConstructions, transaction)
-                // const updateConstructionPromises = []
-        
-                // for (const villageUpdateConstruction of allVillageUpdateConstructions)
-                // {
-                //     const updateConstructionPromise = Village_building.update({
-                //         building_level_id: villageUpdateConstruction.Village_update_construction.building_level_id
-                //     }, {
-                //         where: {
-                //             id: villageUpdateConstruction.Village_update_construction.village_building_id
-                //         },
-                //         transaction
-                //     })
-
-                //     villageUpdateConstruction.enabled  = false
-                //     villageUpdateConstruction.archived = true
-                //     await villageUpdateConstruction.save({ transaction })
-                //     updateConstructionPromises.push(updateConstructionPromise)
-                // }
-
-                // await Promise.all(updateConstructionPromises)
             }
 
             return transaction.commit();
@@ -395,12 +320,9 @@ class VillageBuildingService {
         }
         catch (error)
         {
-
+            throw error;
         }
     }
-
-
-
 }
 
 module.exports = new VillageBuildingService();

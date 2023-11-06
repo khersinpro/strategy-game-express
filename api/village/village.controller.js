@@ -20,8 +20,10 @@ class VillageController {
              * A retirer par la suite
              */
             await VillageResourceService.updateAllVillagesResources();
+            await villageBuildingService.updateAllVillageBuildingWhenConstructionProgressIsFinished();
+            await villageBuildingService.createAllVillageBuildingWhenConstructionProgressIsFinished();
             /**
-             * 
+             * A retirer par la suite
              */
             const villages = await VillageService.getAll(req.query, {}, req.user);
             res.status(200).send(villages);
