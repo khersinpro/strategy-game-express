@@ -1,6 +1,7 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Village_resource } = require('../../../database/index').models;
+const { Village_resource, Village_construction_progress, Village_update_construction, Village_building, Building } = require('../../../database/index').models;
 const { sequelize }  = require('../../../database/index'); 
+const { Op } = require('sequelize');
 class VillageBuildingService {
 
     /**
@@ -78,11 +79,15 @@ class VillageBuildingService {
             replacements: { villageId }
         });
 
+        console.log(villageResources);
         const promises = []
 
+        
+        
         for (const villageResource of villageResources) 
         {
-            const generatedPromise = this.generateUniqueVillagePromise(villageResource);
+            const lastBuildingsUpdates = await this.getLastVillageResourcesAndStorageBuildingsUpdated(villageId, new Date(villageResource.village_last_update));
+            const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource);
             if (generatedPromise) 
             {
                 promises.push(generatedPromise)
@@ -102,9 +107,12 @@ class VillageBuildingService {
 
         const promises = []
 
+        console.log(allVillagesResources);
+
+        // Voir comment calculer pour faire en sorte que ca calcule les 4 resource d'un coup pour chaque village
         for (const villageResource of allVillagesResources) 
         {
-            const generatedPromise = this.generateUniqueVillagePromise(villageResource);
+            const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource);
             if (generatedPromise) 
             {
                 promises.push(generatedPromise)
@@ -116,16 +124,17 @@ class VillageBuildingService {
 
     /**
      * Generate update resource promise if needed
-     * @param {Object} villageResource 
+     * @param {Object} villageResource  
+     * @param {Object[]} lastBuildingsUpdates - data of last resource_building and storage_building updated since last resource production update
      * @returns {Promise<Village_resource> || false}
      */
-    generateUniqueVillagePromise (villageResource) {
+    async calculateUniqueVillageResourceProduction (villageResource, lastBuildingsUpdates) {
         const lastResourceUpdate    = new Date(villageResource.village_last_update);
         const actualDate            = new Date();
         const diffInMilisecond      = actualDate - lastResourceUpdate;
         const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
         const productionInMinute    = villageResource.production / 60;
-        const generatedProduction  = productionInMinute * diffInMinute;
+        const generatedProduction   = productionInMinute * diffInMinute;
         const storageCapacity       = villageResource.village_resource_storage;
         const totalResource         = villageResource.village_resource_quantity + generatedProduction;
 
@@ -137,6 +146,50 @@ class VillageBuildingService {
         const updatedQuantity = totalResource > storageCapacity ? storageCapacity : totalResource;
         return this.update(villageResource.village_resource_id, { quantity: updatedQuantity });
     }
+
+    /**
+     * Get last village resources and storage buildings updated into last resource production update
+     * @param {Number} villageId - village id
+     * @param {Date} recoveryDate - max date to recover building update
+     * @returns {Promise<Village_construction_progress[]>}
+     */
+    async getLastVillageResourcesAndStorageBuildingsUpdated(villageId, recoveryDate) {
+        // En faire une requête SQL
+        return Village_construction_progress.findAll({
+            include: [
+                {
+                    model: Village_update_construction,
+                    required: true,
+                    include: [
+                        {
+                            model: Village_building,
+                            required: true,
+                            include: [
+                                {
+                                    model: Building,
+                                    where: {
+                                        type: {
+                                            [Op.in]: ['resource_building', 'storage_building']
+                                        }
+                                    },
+                                    required: true,
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            where: {
+                village_id: villageId,
+                enabled: false,
+                archived: true,
+                construction_end: {
+                    [Op.between]: [recoveryDate, new Date()]
+                }
+            }
+        })
+    }
+
 }
 
 module.exports = new VillageBuildingService();

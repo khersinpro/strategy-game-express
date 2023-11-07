@@ -7,6 +7,7 @@ module.exports = {
       CREATE PROCEDURE get_all_village_resources()
       BEGIN
         SELECT v1.building_name,
+          v1.id AS village_building_id,
           resource_production.production,
           v1.village_id,
           resource_building.resource_name,
@@ -37,6 +38,7 @@ module.exports = {
       CREATE PROCEDURE get_all_village_resources_by_village_id(IN villageId INT)
       BEGIN
         SELECT village_building.building_name,
+          village_building.id AS village_building_id,
           resource_production.production,
           resource_building.resource_name,
           village_resource.id AS village_resource_id,
