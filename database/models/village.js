@@ -70,6 +70,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true,
     },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'user',
+        key: 'id'
+      }
+    },
     civilization_name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -125,6 +133,7 @@ module.exports = (sequelize, DataTypes) => {
         village_id: village.id,
         building_name: resource_building.name,
         building_level_id:resource_building.levels[0].id,
+        type: resource_building.type
       })
     }
 
@@ -148,6 +157,7 @@ module.exports = (sequelize, DataTypes) => {
         village_id: village.id,
         building_name: storage_building.name,
         building_level_id: storage_building.levels[0].id,
+        type: storage_building.type
       })
     }
 
@@ -182,6 +192,7 @@ module.exports = (sequelize, DataTypes) => {
       village_id: village.id,
       building_name: headquarter_building.name,
       building_level_id: headquarter_building.levels[0].id,
+      type: headquarter_building.type
     })
 
     // Create all units of village resource with quantity 0

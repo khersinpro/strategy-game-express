@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Building_level, {
         foreignKey: 'building_level_id',
       });
+      this.belongsTo(models.Building_type, {
+        foreignKey: 'type',
+      });
     }
   }
 
@@ -24,6 +27,14 @@ module.exports = (sequelize, DataTypes) => {
         model: 'village',
         key: 'id'
       }
+    },
+    type: {
+      type: DataTypes.STRING,
+      references: {
+        model: 'building_type',
+        key: 'name'
+      },
+      allowNull: false
     },
     building_name: {
       type: DataTypes.STRING,

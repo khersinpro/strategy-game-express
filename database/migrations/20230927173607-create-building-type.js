@@ -2,19 +2,10 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('building', {
+    await queryInterface.createTable('building_type', {
       name: {
         type: Sequelize.STRING,
-        allowNull: false,
         primaryKey: true
-      },
-      type: {
-        type: Sequelize.STRING,
-        references: {
-          model: 'building_type',
-          key: 'name'
-        },
-        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -27,6 +18,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('building');
+    await queryInterface.dropTable('building_type');
   }
 };

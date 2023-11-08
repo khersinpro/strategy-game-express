@@ -13,6 +13,7 @@ const modelList = [
   require('./models/unit_type'),
   require('./models/user'),
   require('./models/village'),
+  require('./models/building_type.js'),
   require('./models/building'),
   require('./models/resource_building'),
   require('./models/special_building'),

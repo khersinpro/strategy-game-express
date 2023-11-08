@@ -29,6 +29,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'name',
         onDelete: 'CASCADE'
       });
+      this.belongsTo(models.Building_type, {
+        foreignKey: 'type',
+      });
       this.hasMany(models.Building_level, {
         foreignKey: 'building_name',
         as: 'levels'
@@ -43,14 +46,11 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true
     },
     type: {
-      type: DataTypes.ENUM(
-        'infrastructure_building', 
-        'military_building', 
-        'ressource_building', 
-        'storage_building',
-        'wall_building', 
-        'special_building'
-      ),
+      type: DataTypes.STRING,
+      references: {
+        model: 'building_type',
+        key: 'name'
+      },
       allowNull: false
     }
   }, {

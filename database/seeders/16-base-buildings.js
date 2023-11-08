@@ -1,5 +1,38 @@
 'use strict';
 
+const base_building_types  = [
+  {
+    name: 'military_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'resource_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'wall_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'infrastructure_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'special_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: 'storage_building',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+]
+
 const military_buildings = [
   {
     name: 'barrack',
@@ -150,10 +183,12 @@ const buildings = [
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
+    await queryInterface.bulkInsert('building_type', base_building_types);
     await queryInterface.bulkInsert('building', buildings);
   },
 
   async down (queryInterface, Sequelize) {
+    await queryInterface.bulkDelete('building_type', base_building_types);
     await queryInterface.bulkDelete('building', buildings);
   }
 };

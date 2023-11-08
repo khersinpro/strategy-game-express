@@ -17,6 +17,14 @@ module.exports = {
           key: 'id'
         }
       },
+      type: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'building_type',
+          key: 'name'
+        }
+      },
       building_name: {
         type: Sequelize.STRING,
         allowNull: false,
