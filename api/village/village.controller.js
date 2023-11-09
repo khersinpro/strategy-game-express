@@ -18,10 +18,10 @@ class VillageController {
         try {
             /**
              * A retirer par la suite
-             */
-            await VillageResourceService.updateAllVillagesResources();
+            */
             await villageBuildingService.updateAllVillageBuildingWhenConstructionProgressIsFinished();
             await villageBuildingService.createAllVillageBuildingWhenConstructionProgressIsFinished();
+            await VillageResourceService.updateAllVillagesResources();
             /**
              * A retirer par la suite
              */

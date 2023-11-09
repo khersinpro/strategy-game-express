@@ -204,6 +204,7 @@ class VillageBuildingService {
         const transaction = await sequelize.transaction();
         try
         {
+            console.log('updateAllVillageBuildingWhenConstructionProgressIsFinished');
             const allVillageUpdateConstructions = await Village_construction_progress.findAll({
                 include: [
                     {
