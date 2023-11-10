@@ -93,20 +93,6 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   /**
-   * This hook is called before a village is finded and update the village resources
-   */
-  Village.addHook('beforeFind', async (options) => {
-    const villageResourceService = require('../../api/village/village_resource/village_resource.service');
-    const villageId = options.where.id;
-    
-    if (!villageId) {
-      return;
-    }
-    
-    await villageResourceService.updateVillageResource(villageId);
-  })
-  
-  /**
    * This hook is called after a village is created and create all base village resources, buildings and units
    */
   Village.addHook('afterCreate', async (village, options) => {

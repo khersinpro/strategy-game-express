@@ -19,9 +19,9 @@ class VillageController {
             /**
              * A retirer par la suite
             */
+            await VillageResourceService.updateAllVillagesResources();
             await villageBuildingService.updateAllVillageBuildingWhenConstructionProgressIsFinished();
             await villageBuildingService.createAllVillageBuildingWhenConstructionProgressIsFinished();
-            await VillageResourceService.updateAllVillagesResources();
             /**
              * A retirer par la suite
              */
@@ -46,6 +46,7 @@ class VillageController {
     async get(req, res, next) {
         try 
         {
+            await VillageResourceService.updateVillageResource(req.params.id);
             await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             const village = await VillageService.getById(req.params.id, req.query, {}, req.user);    

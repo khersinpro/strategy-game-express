@@ -8,14 +8,15 @@ module.exports = {
       BEGIN
         SELECT 
           v1.building_name,
-          v1.id AS village_building_id,
+          v1.id AS production_village_building_id,
           resource_production.production,
           v1.village_id,
           resource_building.resource_name,
           village_resource.id AS village_resource_id,
           village_resource.quantity AS village_resource_quantity,
           village_resource.updatedAt AS village_last_update,
-          storage_capacity.capacity
+          v2.id AS storage_village_building_id,
+          storage_capacity.capacity AS village_resource_storage
         FROM 
           village_building v1
         LEFT JOIN 
@@ -42,14 +43,15 @@ module.exports = {
       BEGIN
         SELECT 
           v1.building_name,
-          v1.id AS village_building_id,
+          v1.id AS production_village_building_id,
           resource_production.production,
           v1.village_id,
           resource_building.resource_name,
           village_resource.id AS village_resource_id,
           village_resource.quantity AS village_resource_quantity,
           village_resource.updatedAt AS village_last_update,
-          storage_capacity.capacity
+          v2.id AS storage_village_building_id,
+          storage_capacity.capacity AS village_resource_storage
         FROM 
           village_building v1
         LEFT JOIN 
@@ -70,6 +72,49 @@ module.exports = {
             AND village_resource.village_id = villageId;
       END;
     `);
+
+    await queryInterface.sequelize.query(`
+      CREATE PROCEDURE get_village_buildings_update_by_id(IN villageId INT, IN startDate DATETIME, IN endDate DATETIME)
+      BEGIN
+        SELECT * FROM (
+          SELECT 
+            village_building.id AS village_building_id,
+            village_building.type AS building_type,
+            resource_production.production AS resource_production,
+            village_construction_progress.id AS construction_progress_id,
+            village_construction_progress.construction_end AS construction_end,
+            village_update_construction.building_level_id AS building_level_id,
+            NULL AS storage_capacity
+          FROM village_construction_progress 
+          INNER JOIN village_update_construction ON village_construction_progress.id = village_update_construction.id
+          INNER JOIN village_building ON village_update_construction.village_building_id = village_building.id
+          INNER JOIN resource_production ON village_update_construction.building_level_id = resource_production.building_level_id
+          WHERE 
+            village_construction_progress.village_id = villageId
+            AND village_construction_progress.enabled = 1
+            AND village_construction_progress.archived = 0
+            AND village_construction_progress.construction_end BETWEEN startDate AND endDate
+          UNION
+          SELECT 
+            village_building.id AS village_building_id,
+            village_building.type AS building_type,
+            NULL AS resource_production,
+            village_construction_progress.id AS construction_progress_id,
+            village_construction_progress.construction_end AS construction_end,
+            village_update_construction.building_level_id AS building_level_id,
+            storage_capacity.capacity AS storage_capacity
+          FROM village_construction_progress 
+          INNER JOIN village_update_construction ON village_construction_progress.id = village_update_construction.id
+          INNER JOIN village_building ON village_update_construction.village_building_id = village_building.id
+          INNER JOIN storage_capacity ON village_update_construction.building_level_id = storage_capacity.building_level_id
+          WHERE 
+            village_construction_progress.village_id = villageId
+            AND village_construction_progress.enabled = 1
+            AND village_construction_progress.archived = 0
+            AND village_construction_progress.construction_end BETWEEN startDate AND endDate
+        ) AS village_buildings_update ORDER BY construction_end ASC;
+      END 
+    `);
   },
 
   async down (queryInterface, Sequelize) {
@@ -78,6 +123,9 @@ module.exports = {
     `);
     await queryInterface.sequelize.query(`
       DROP PROCEDURE get_all_village_resources_by_village_id;
+    `);
+    await queryInterface.sequelize.query(`
+      DROP PROCEDURE get_village_buildings_update_by_id;
     `);
   }
 };

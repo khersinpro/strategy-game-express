@@ -1,7 +1,7 @@
 const NotFoundError = require('../../../errors/not-found');
 const { Village_resource, Village_construction_progress, Village_update_construction, Village_building, Building_level, Storage_capacity, Resource_production } = require('../../../database/index').models;
 const { sequelize }  = require('../../../database/index'); 
-const { Op } = require('sequelize');
+const { Op, Transaction } = require('sequelize');
 
 class VillageBuildingService {
 
@@ -43,13 +43,17 @@ class VillageBuildingService {
      * Return updated village resource promise
      * @param {Number} id village resource id
      * @param {Object} data village resource data
+     * @param {sequelize.Transaction} transaction - transaction to use for update
      * @return {Promise<Village_resource>}
      */
-    update(id, data) {
+    update(id, data, transaction) {
+        const options = transaction ? { transaction } : {};
+
         return Village_resource.update(data, {
             where: {
                 id: id
-            }
+            },
+            ...options
         });
     }
 
@@ -76,27 +80,42 @@ class VillageBuildingService {
      * @returns {Promise<Village_resource[]>}
      */ 
     async updateVillageResource (villageId) {
-        const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', {
-            replacements: { villageId }
-        });
-
-        console.log(villageResources);
-        const promises = []
-
-        
-        
-        for (const villageResource of villageResources) 
+        const transaction = await sequelize.transaction();
+        try 
         {
-            const lastBuildingsUpdates = await this.getLastVillageResourcesAndStorageBuildingsUpdated(villageId, new Date(villageResource.village_last_update));
-            const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource);
-            if (generatedPromise) 
+            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', {
+                replacements: { villageId }
+            });
+    
+            const promises = []
+    
+            const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
+
+            const lastBuildingsUpdates = await sequelize.query('CALL get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
+                replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: new Date() }
+            });
+            
+            for (const villageResource of villageResources) 
             {
-                promises.push(generatedPromise)
-            }
-        };
+                const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource, lastBuildingsUpdates, transaction);
 
+                if (generatedPromise) 
+                {
+                    promises.push(generatedPromise)
+                }
+            };
+    
+    
+            await Promise.all(promises);
 
-        return Promise.all(promises);
+            return transaction.commit();
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
+
     }
 
     /**
@@ -104,176 +123,156 @@ class VillageBuildingService {
      * @returns {Promise<Village_resource[]>}
      */
     async updateAllVillagesResources() {
-        const allVillagesResources = await sequelize.query('CALL get_all_village_resources()');
-
-        const promises = []
-
-        // sort villages resources by allVillagesResources.village_id and make village resource array by village id
-        const villagesResourcesByVillageId = allVillagesResources.reduce((acc, villageResource) => {
-            if (!acc[villageResource.village_id]) {
-                acc[villageResource.village_id] = [];
-            }
-            acc[villageResource.village_id].push(villageResource);
-            return acc;
-        }, {});
-
-        // Voir comment calculer pour faire en sorte que ca calcule les 4 resource d'un coup pour chaque village
-        for (const villageId in villagesResourcesByVillageId) 
+        const transaction = await sequelize.transaction();
+        try 
         {
-            const villageResources = villagesResourcesByVillageId[villageId];
+            const allVillagesResources = await sequelize.query('CALL get_all_village_resources()');
 
-            if (!villageResources.length) continue;
-
-            const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
-            const lastBuildingsUpdates = await this.getLastVillageResourcesAndStorageBuildingsUpdated(villageId, lastVillageResourceUpdate);
-            if (lastBuildingsUpdates.length)
-            {
-                console.log('abcd',lastBuildingsUpdates[0]);
-                console.log('Village_update_construction',lastBuildingsUpdates[0].Village_update_construction);
-                console.log('Building_level',lastBuildingsUpdates[0].Village_update_construction.Village_building.Building_level);
-                console.log('abcd',lastBuildingsUpdates[0].Village_update_construction.Village_building.Building_level.Resource_productions);
-                console.log('abcd',lastBuildingsUpdates[0].Village_update_construction.Village_building.Building_level.Storage_capacities);
-                throw new Error(lastBuildingsUpdates);
-            }
-            for (const villageResource of villageResources)
-            {
-                const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource, lastBuildingsUpdates);
-                if (generatedPromise) 
-                {
-                    promises.push(generatedPromise)
+            const promises = []
+    
+            // sort villages resources by allVillagesResources.village_id and make village resource array by village id
+            const villagesResourcesByVillageId = allVillagesResources.reduce((acc, villageResource) => {
+                if (!acc[villageResource.village_id]) {
+                    acc[villageResource.village_id] = [];
                 }
-            }
-            
-        };
+                acc[villageResource.village_id].push(villageResource);
+                return acc;
+            }, {});
+    
+            // Voir comment calculer pour faire en sorte que ca calcule les 4 resource d'un coup pour chaque village
+            for (const villageId in villagesResourcesByVillageId) 
+            {
+                const villageResources = villagesResourcesByVillageId[villageId];
+    
+                if (!villageResources.length) continue;
+    
+                const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
+                const lastBuildingsUpdates = await sequelize.query('CALL get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
+                    replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: new Date() }
+                });
+    
+                for (const villageResource of villageResources)
+                {
+                    const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource, lastBuildingsUpdates, transaction);
+                    if (generatedPromise) 
+                    {
+                        promises.push(generatedPromise)
+                    }
+                }
+                
+            };
+    
+            await Promise.all(promises);
 
-        return Promise.all(promises);
+            return transaction.commit();
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
     }
 
     /**
      * Generate update resource promise if needed
      * @param {Object} villageResource  
      * @param {Object[]} lastBuildingsUpdates - data of last resource_building and storage_building updated since last resource production update
+     * @param {sequelize.Transaction} resourceTransaction - transaction to use for update
      * @returns {Promise<Village_resource> || false}
      */
-    async calculateUniqueVillageResourceProduction (villageResource, lastBuildingsUpdates) {
-        let lastResourceUpdate    = new Date(villageResource.village_last_update);
-        let totalResource         = villageResource.village_resource_quantity;
-        let storageCapacity       = villageResource.village_resource_storage;
-        let buildingProduction    = villageResource.production;
-
-        lastBuildingsUpdates.forEach(async (lastBuildingsUpdate) => {
-            if (lastBuildingsUpdate.building_type === 'resource_building' && villageResource.production_village_building_id === lastBuildingsUpdate.village_building_id )
-            {
-                // update village totalResource with generated production into lastResourceUpdate and lastBuildingsUpdate.construction_end
-                const constructionEnd       = new Date(lastBuildingsUpdate.construction_end);
-                const diffInMilisecond      = constructionEnd - lastResourceUpdate;
-                const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
-                const productionInMinute    = buildingProduction / 60;
-                const generatedProduction   = productionInMinute * diffInMinute;
-                const totalProduction       = totalResource + generatedProduction;
-                totalResource               = totalProduction > storageCapacity ? storageCapacity : totalProduction;
-                
-                // update lastResourceUpdate with lastBuildingsUpdate.construction_end
-                lastResourceUpdate = constructionEnd;
-
-                // update villageResource.production with lastBuildingsUpdate.resource_production
-                buildingProduction = lastBuildingsUpdate.resource_production;
-
-                // create the village building update then update the villae_constructon_progress to enabled = false and archived = true
-
-            }
-            else if (lastBuildingsUpdate.building_type === 'storage_building' && villageResource.storage_village_building_id === lastBuildingsUpdate.village_building_id)
-            {
-                // update village totalResource with generated production into lastResourceUpdate and lastBuildingsUpdate.construction_end
-                const constructionEnd       = new Date(lastBuildingsUpdate.construction_end);
-                const diffInMilisecond      = constructionEnd - lastResourceUpdate;
-                const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
-                const productionInMinute    = buildingProduction / 60;
-                const generatedProduction   = productionInMinute * diffInMinute;
-                const totalProduction       = totalResource + generatedProduction;
-                totalResource               = totalProduction > storageCapacity ? storageCapacity : totalProduction;
-
-                // update lastResourceUpdate with lastBuildingsUpdate.construction_end
-                lastResourceUpdate = constructionEnd;
-
-                // update villageResource.storage_capacity with lastBuildingsUpdate.storage_capacity
-                storageCapacity = lastBuildingsUpdate.storage_capacity;
-
-                // create the village building update then update the villae_constructon_progress to enabled = false and archived = true
-            }
-        });
-        
-        
-        const actualDate            = new Date();
-        const diffInMilisecond      = actualDate - lastResourceUpdate;
-        const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
-        const productionInMinute    = buildingProduction / 60;
-        const generatedProduction   = productionInMinute * diffInMinute;
-        
-        
-
-        if (totalResource <= 0 && generatedProduction <= 0) 
+    async calculateUniqueVillageResourceProduction (villageResource, lastBuildingsUpdates, resourceTransaction = false) {
+        try 
         {
-            return false;
+            let lastResourceUpdate    = new Date(villageResource.village_last_update);
+            let totalResource         = villageResource.village_resource_quantity;
+            let storageCapacity       = villageResource.village_resource_storage;
+            let buildingProduction    = villageResource.production;
+    
+            lastBuildingsUpdates.forEach(async (lastBuildingsUpdate) => {
+                const options = resourceTransaction ? { transaction: resourceTransaction } : {};
+                if (lastBuildingsUpdate.building_type === 'resource_building' && villageResource.production_village_building_id === lastBuildingsUpdate.village_building_id )
+                {
+                    // update village totalResource with generated production into lastResourceUpdate and lastBuildingsUpdate.construction_end
+                    const constructionEnd       = new Date(lastBuildingsUpdate.construction_end);
+                    const diffInMilisecond      = constructionEnd - lastResourceUpdate;
+                    const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
+                    const productionInMinute    = buildingProduction / 60;
+                    const generatedProduction   = productionInMinute * diffInMinute;
+                    const totalProduction       = totalResource + generatedProduction;
+                    totalResource               = totalProduction > storageCapacity ? storageCapacity : totalProduction;
+    
+                    // update lastResourceUpdate with lastBuildingsUpdate.construction_end
+                    lastResourceUpdate = constructionEnd;
+    
+                    // update villageResource.production with lastBuildingsUpdate.resource_production
+                    buildingProduction = lastBuildingsUpdate.resource_production;
+    
+                    // create the village building update then update the villae_constructon_progress to enabled = false and archived = true
+                    await Village_building.update({ building_level_id: lastBuildingsUpdate.building_level_id }, {
+                            where : { id : lastBuildingsUpdate.village_building_id },
+                            ...options 
+                    });
+    
+                    await Village_construction_progress.update({ enabled: false, archived: true }, {
+                        where : { id : lastBuildingsUpdate.construction_progress_id },
+                        ...options
+                    });
+    
+                }
+                else if (lastBuildingsUpdate.building_type === 'storage_building' && villageResource.storage_village_building_id === lastBuildingsUpdate.village_building_id)
+                {
+                    // update village totalResource with generated production into lastResourceUpdate and lastBuildingsUpdate.construction_end
+                    const constructionEnd       = new Date(lastBuildingsUpdate.construction_end);
+                    const diffInMilisecond      = constructionEnd - lastResourceUpdate;
+                    const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
+                    const productionInMinute    = buildingProduction / 60;
+                    const generatedProduction   = productionInMinute * diffInMinute;
+                    const totalProduction       = totalResource + generatedProduction;
+                    totalResource               = totalProduction > storageCapacity ? storageCapacity : totalProduction;
+    
+                    // update lastResourceUpdate with lastBuildingsUpdate.construction_end
+                    lastResourceUpdate = constructionEnd;
+    
+                    // update villageResource.storage_capacity with lastBuildingsUpdate.storage_capacity
+                    storageCapacity = lastBuildingsUpdate.storage_capacity;
+    
+                    // create the village building update then update the villae_constructon_progress to enabled = false and archived = true
+                    await Village_building.update({ building_level_id: lastBuildingsUpdate.building_level_id }, {
+                        where : { id : lastBuildingsUpdate.village_building_id },
+                        ...options 
+                    });
+    
+                    await Village_construction_progress.update({ enabled: false, archived: true }, {
+                        where : { id : lastBuildingsUpdate.construction_progress_id },
+                        ...options
+                    });
+                }
+            });
+            
+            
+            const actualDate            = new Date();
+            const diffInMilisecond      = actualDate - lastResourceUpdate;
+            const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
+            const productionInMinute    = buildingProduction / 60;
+            const generatedProduction   = productionInMinute * diffInMinute;
+            totalResource               = totalResource + generatedProduction;
+    
+            if (generatedProduction <= 0) 
+            {
+                return false;
+            }
+
+            // await transaction.commit();
+            const updatedQuantity = totalResource > storageCapacity ? storageCapacity : totalResource;
+            return this.update(villageResource.village_resource_id, { quantity: updatedQuantity }, resourceTransaction);
+        }
+        catch (error)
+        {
+            // await transaction.rollback();
+            throw error;
         }
 
-        const updatedQuantity = totalResource > storageCapacity ? storageCapacity : totalResource;
-        return this.update(villageResource.village_resource_id, { quantity: updatedQuantity });
     }
-
-    /**
-     * Get last village resources and storage buildings updated into last resource production update
-     * @param {Number} villageId - village id
-     * @param {Date} recoveryDate - max date to recover building update
-     * @returns {Promise<Village_construction_progress[]>}
-     */
-    async getLastVillageResourcesAndStorageBuildingsUpdated(villageId, recoveryDate) {
-        // En faire une requête SQL
-        return Village_construction_progress.findAll({
-            include: [
-                {
-                    model: Village_update_construction,
-                    required: true,
-                    include: [
-                        {
-                            model: Village_building,
-                            required: true,
-                            where: {
-                                type: {
-                                    [Op.in]: ['resource_building', 'storage_building']
-                                }
-                            },
-                            include: [
-                                {
-                                    model: Building_level,
-                                    required: true,
-                                    include: [
-                                        {
-                                            model: Storage_capacity,
-                                        },
-                                        {
-                                            model: Resource_production,
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ],
-            where: {
-                village_id: villageId,
-                enabled: false,
-                archived: true,
-                type: 'village_update_construction',
-                construction_end: {
-                    [Op.between]: [recoveryDate, new Date()]
-                }
-            },
-            order: [['construction_end', 'DESC']]
-        })
-    }
-
 }
 
 module.exports = new VillageBuildingService();

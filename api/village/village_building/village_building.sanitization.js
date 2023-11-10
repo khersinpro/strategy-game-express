@@ -6,6 +6,11 @@ exports.createSanitization = [
         .escape()
         .trim()
         .isInt().withMessage('village_id must be an integer'),
+    body('type')
+        .escape()
+        .trim()
+        .isString().withMessage('type must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('type must not be empty'),
     body('building_name')
         .escape()
         .trim()
@@ -27,6 +32,12 @@ exports.updateSanitization = [
         .escape()
         .trim()
         .isInt().withMessage('village_id must be an integer')
+        .optional(),
+    body('type')
+        .escape()
+        .trim()
+        .isString().withMessage('type must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('type must not be empty')
         .optional(),
     body('building_name')
         .escape()
