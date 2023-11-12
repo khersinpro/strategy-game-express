@@ -2,6 +2,7 @@ const NotFoundError = require('../../errors/not-found');
 const VillageService = require('./village.service');
 const villageBuildingService = require('./village_building/village_building.service');
 const VillageResourceService = require('./village_resource/village_resource.service');
+const { Map_position, Village } = require('../../database').models;
 
 class VillageController {
 
@@ -46,11 +47,14 @@ class VillageController {
     async get(req, res, next) {
         try 
         {
-            await VillageResourceService.updateVillageResource(req.params.id);
-            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
-            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
-            const village = await VillageService.getById(req.params.id, req.query, {}, req.user);    
-            res.status(200).send(village);
+            // await VillageResourceService.updateVillageResource(req.params.id);
+            // await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
+            // await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
+            // const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
+            const village_position = await Map_position.findAll({
+                include: [{ model: Village, as: 'village'}],
+            })
+            res.status(200).send(village_position);
         }
         catch (error)
         {

@@ -35,7 +35,9 @@ const modelList = [
   require('./models/wall_defense'),
   require('./models/village_construction_progress.js'),
   require('./models/village_new_construction.js'),
-  require('./models/village_update_construction.js')
+  require('./models/village_update_construction.js'),
+  require('./models/map'),
+  require('./models/map_position'),
 ];
 
 // Déclaration des models a sequelize

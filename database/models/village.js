@@ -24,6 +24,13 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         }
       })
+
+      this.hasOne(models.Map_position, {
+        foreignKey: {
+          name: 'target_entity_id',
+          allowNull: true,
+        },
+      })
       
       this.hasMany(models.Village_building, {
         foreignKey: {
