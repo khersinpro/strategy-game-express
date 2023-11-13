@@ -50,11 +50,8 @@ class VillageController {
             // await VillageResourceService.updateVillageResource(req.params.id);
             // await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             // await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
-            // const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
-            const village_position = await Map_position.findAll({
-                include: [{ model: Village, as: 'village'}],
-            })
-            res.status(200).send(village_position);
+            const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
+            res.status(200).send(village);
         }
         catch (error)
         {

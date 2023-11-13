@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class Village extends Model {
     
     static associate(models) {
+      // belongsTo association
       this.belongsTo(models.Server, {
         foreignKey: {
           name: 'server_name',
@@ -24,14 +25,8 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         }
       })
-
-      this.hasOne(models.Map_position, {
-        foreignKey: {
-          name: 'target_entity_id',
-          allowNull: true,
-        },
-      })
       
+      // hasMany association
       this.hasMany(models.Village_building, {
         foreignKey: {
           name: 'village_id'
@@ -52,9 +47,16 @@ module.exports = (sequelize, DataTypes) => {
           name: 'village_id'
         }
       })
-    }
 
-    // Other methods
+      //  Polimorphic association
+      this.hasOne(models.Map_position, {
+        foreignKey: 'target_entity_id',
+        constraints: false,
+        scope: {
+          target_type: 'village'
+        },
+      });
+    }
 
     /**
      * Check if current user is owner of village or admin, if not throw error

@@ -2,21 +2,28 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('maps', {
+    await queryInterface.createTable('map', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      serveur_name: {
-        type: Sequelize.STRING
+      server_name: {
+        type: Sequelize.STRING,
+        references: {
+          model: 'server',
+          key: 'name'
+        },
+        unique: 'unique_server_map'
       },
       x_area: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false
       },
       y_area: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER, 
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -26,9 +33,15 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+    }, {
+      uniqueKeys: {
+        unique_server_map: {
+          fields: ['server_name']
+        }
+      }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('maps');
+    await queryInterface.dropTable('map');
   }
 };

@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'name'
       })
       this.belongsTo(models.Civilization, {
-        foreignKey: 'civilization-name'
+        foreignKey: 'civilization_name'
       })
     }
   }

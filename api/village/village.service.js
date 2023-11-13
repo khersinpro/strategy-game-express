@@ -1,5 +1,5 @@
 const NotFoundError = require('../../errors/not-found');
-const { Village, Village_building, Village_unit, Village_resource, Civilization, User, Server } = require('../../database').models;
+const { Village, Village_building, Village_unit, Village_resource, Civilization, User, Server, Map_position } = require('../../database').models;
 const UserService = require('../user/user.service');
 const ServerService = require('../server/server.service');
 const ForbiddenError = require('../../errors/forbidden'); 
@@ -23,7 +23,9 @@ class VilageService {
     getById(id, includes, whereparams, currentUser) {
         console.log(includes, whereparams);
         const filters = this.generateFilters(includes, whereparams, currentUser);
-        console.log(filters);
+        filters.include.push({
+            model: Map_position,
+        })
         const village = Village.findByPk(id, filters);
 
         if (!village)

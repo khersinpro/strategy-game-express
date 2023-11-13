@@ -8,14 +8,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'map_id',
         as: 'map'
       });
-      // polymorphic association with village
+      
+      // polymorphic associations
       this.belongsTo(models.Village, {
         foreignKey: 'target_entity_id',
         constraints: false,
-        as: 'village',
-        scope: {
-          target_type: 'village'
-        },
       });
     }
   }
@@ -42,13 +39,24 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
     target_type: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.ENUM('village', 'empty'),
+      defaultValue: 'empty',
+      allowNull: false
     }
   }, {
     sequelize,
     modelName: 'Map_position',
     tableName: 'map_position',
+    indexes: [
+      {
+        unique: true,
+        fields: ['x', 'y', 'map_id']
+      },
+      {
+        unique: true,
+        fields: ['target_entity_id', 'target_type', 'map_id']
+      }
+    ]
   });
 
   return Map_position;
