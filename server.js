@@ -33,6 +33,9 @@ const villageConstructionProgressRouter = require('./api/village/village_constru
 const villageNewConstructionRouter = require('./api/village/village_new_construction/village_new_construction.router');
 const villageUpdateConstructionRouter = require('./api/village/village_update_construction/village_update_construction.router');
 const buildingTypeRouter = require('./api/building/building_type/building_type.router');
+const mapRouter = require('./api/map/map.router');
+const mapPositionRouter = require('./api/map/map_position/map_position.router');
+
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -84,6 +87,8 @@ app.use('/api/village-construction-progress', auth, villageConstructionProgressR
 app.use('/api/village-new-construction', auth, villageNewConstructionRouter);
 app.use('/api/village-update-construction', auth, villageUpdateConstructionRouter);
 app.use('/api/building-type', auth, buildingTypeRouter);
+app.use('/api/map', auth, mapRouter);
+app.use('/api/map-position', auth, mapPositionRouter);
 
 
 /**
