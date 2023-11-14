@@ -15,6 +15,23 @@ module.exports = (sequelize, DataTypes) => {
         constraints: false,
       });
     }
+
+    /**
+     * add a village this map position
+     * @param {Village} village 
+     */
+    async addVillage(village) {
+      try 
+      {
+        this.target_entity_id = village.id;
+        this.target_type = 'village';
+        await this.save();
+      }
+      catch (error)
+      {
+        throw error;
+      }
+    }
   }
 
   Map_position.init({

@@ -17,7 +17,8 @@ class MapPositionService {
      * @returns {Promise<Map_position>}
      */
     async getById(id) {
-        try {
+        try 
+        {
             const mapPositon = await Map_position.findByPk(id);
 
             if (!mapPositon) 
@@ -27,7 +28,8 @@ class MapPositionService {
 
             return mapPositon;
         }
-        catch (error) {
+        catch (error) 
+        {
             throw error;
         }
     }
@@ -59,11 +61,13 @@ class MapPositionService {
      * @returns {Promise<number>}
      */
     async delete(id) {
-        try {
+        try 
+        {
             const mapPositon = await this.getById(id);
             return mapPositon.destroy();
         }
-        catch (error) {
+        catch (error) 
+        {
             throw error;
         }
     }

@@ -5,11 +5,13 @@ class MapController {
      * Returns all maps
      */
     async getAll (req, res, next) {
-        try {
+        try 
+        {
             const maps = await MapService.getAll();
             res.status(200).json(maps);
         }
-        catch (error) {
+        catch (error) 
+        {
             next(error);
         }
     }
@@ -19,11 +21,13 @@ class MapController {
      * @param {number} req.params.id - Map id
      */
     async getById (req, res, next) {
-        try {
+        try 
+        {
             const map = await MapService.getById(req.params.id);
             res.status(200).json(map);
         }
-        catch (error) {
+        catch (error) 
+        {
             next(error);
         }
     }
@@ -33,11 +37,13 @@ class MapController {
      * @param {Object} req.body - Map data
      */
     async create (req, res, next) {
-        try {
+        try 
+        {
             const map = await MapService.create(req.body);
             res.status(201).json(map);
         }
-        catch (error) {
+        catch (error) 
+        {
             next(error);
         }
     }
@@ -48,11 +54,13 @@ class MapController {
      * @param {Object} req.body - Map data
      */
     async update (req, res, next) {
-        try {
+        try 
+        {
             const map = await MapService.update(req.params.id, req.body);
             res.status(200).json(map);
         }
-        catch (error) {
+        catch (error) 
+        {
             next(error);
         }
     }
@@ -62,11 +70,13 @@ class MapController {
      * @param {number} req.params.id - Map id
      */ 
     async delete (req, res, next) {
-        try {
+        try 
+        {
             const map = await MapService.delete(req.params.id);
             res.status(200).json(map);
         }
-        catch (error) {
+        catch (error) 
+        {
             next(error);
         }
     }

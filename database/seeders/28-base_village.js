@@ -1,5 +1,5 @@
 'use strict';
-const { faker, fa } = require('@faker-js/faker');
+const { faker } = require('@faker-js/faker');
 const { User, Server, Village, Civilization } = require('../index.js').models;
 /** @type {import('sequelize-cli').Migration} */
 
@@ -36,6 +36,9 @@ module.exports = {
 
   async down (queryInterface, Sequelize) {
     await queryInterface.bulkDelete('users_servers', null, {});
+    await queryInterface.bulkDelete('village_building', null, {});
+    await queryInterface.bulkDelete('village_resource', null, {});
+    await queryInterface.bulkDelete('village_unit', null, {});
     await queryInterface.bulkDelete('village', null, {});
   }
 };

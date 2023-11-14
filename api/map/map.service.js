@@ -17,7 +17,8 @@ class MapService {
      * @returns {Promise<Map>}
      */
     async getById(id) {
-        try {
+        try 
+        {
             const map = await Map.findByPk(id);
 
             if (!map) 
@@ -27,7 +28,8 @@ class MapService {
 
             return map;
         }
-        catch (error) {
+        catch (error) 
+        {
             throw error;
         }
     }
@@ -37,8 +39,19 @@ class MapService {
      * @param {Object} data
      * @returns {Promise<Map>}
      */
-    create(data) {
-        return Map.create(data);
+    async create(data) {
+        try
+        {
+            const newMap = await Map.create(data);
+
+            await newMap.generateMapPositions();
+
+            return newMap;
+        }
+        catch (error)
+        {
+            throw error;
+        }
     }
 
     /**
@@ -59,11 +72,13 @@ class MapService {
      * @returns {Promise<number>}
      */
     async delete(id) {
-        try {
+        try 
+        {
             const map = await this.getById(id);
             return map.destroy();
         }
-        catch (error) {
+        catch (error) 
+        {
             throw error;
         }
     }
