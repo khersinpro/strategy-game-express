@@ -18,7 +18,7 @@ const modelList = [
   require('./models/resource_building'),
   require('./models/special_building'),
   require('./models/wall_building'),
-  require('./models/infrastructure_building'),
+  require('./models/town_all_building.js'),
   require('./models/military_building'),
   require('./models/unit'),
   require('./models/defense_type'),
@@ -38,6 +38,7 @@ const modelList = [
   require('./models/village_update_construction.js'),
   require('./models/map'),
   require('./models/map_position'),
+  require('./models/population_capacity.js')
 ];
 
 // Déclaration des models a sequelize

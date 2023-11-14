@@ -220,8 +220,8 @@ module.exports = (sequelize, DataTypes) => {
       })
     }
 
-    // Create headquarters building level 1
-    const headquarter_building = await models.Building.findOne({
+    // Create town all building level 1
+    const town_all_building = await models.Building.findOne({
       include: [
         {
           model: models.Building_level,
@@ -232,16 +232,16 @@ module.exports = (sequelize, DataTypes) => {
         }
       ],
       where: {
-        name: 'headquarters',
-        type: 'infrastructure_building'
+        name: 'twon all',
+        type: 'town_all_building'
       }
     })
 
     await models.Village_building.create({
       village_id: village.id,
-      building_name: headquarter_building.name,
-      building_level_id: headquarter_building.levels[0].id,
-      type: headquarter_building.type
+      building_name: town_all_building.name,
+      building_level_id: town_all_building.levels[0].id,
+      type: town_all_building.type
     })
 
     // Create all units of village resource with quantity 0

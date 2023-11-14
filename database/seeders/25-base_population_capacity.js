@@ -12,15 +12,15 @@ module.exports = {
         }
       ],
       where: {
-        type: 'storage_building'
+        type: 'town_all_building'
       }
     })
 
-    const storage_capacity = storage_buildings.map(building => {
+    const populationCapacity = storage_buildings.map(building => {
       return building.levels.map(level => {
         return {
           capacity: level.level * 420,
-          storage_building_name: building.name,
+          town_all_building_name: building.name,
           building_level_id: level.id,
           createdAt: new Date(),
           updatedAt: new Date()
@@ -28,10 +28,10 @@ module.exports = {
       })
     }).flat()
 
-    await queryInterface.bulkInsert('storage_capacity', storage_capacity)
+    await queryInterface.bulkInsert('population_capacity', populationCapacity)
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('storage_capacity', null, {})
+    await queryInterface.bulkDelete('population_capacity', null, {})
   }
 };

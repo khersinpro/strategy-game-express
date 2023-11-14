@@ -6,12 +6,14 @@ const { Building, Civilization } = require('../index.js').models;
 module.exports = {
   async up (queryInterface, Sequelize) {
     const civilizations = await Civilization.findAll();
-
+console.log('ici');
     const infrastructure_building = await Building.findAll({
       where: {
-        type: 'infrastructure_building'
+        type: 'town_all_building'
       }
     });
+console.log('ma');
+    console.log(infrastructure_building);
 
     const military_building = await Building.findAll({
       where: {
@@ -53,7 +55,7 @@ module.exports = {
       }
     }))
 
-    await queryInterface.bulkInsert('infrastructure_building', infrastructure_building.map(building => {
+    await queryInterface.bulkInsert('town_all_building', infrastructure_building.map(building => {
       return {      
         name: building.name,
         createdAt: new Date(),
@@ -105,7 +107,7 @@ module.exports = {
 
   async down (queryInterface, Sequelize) {
     await queryInterface.bulkDelete('specialized_building', null, {});
-    await queryInterface.bulkDelete('infrastructure_building', null, {});
+    await queryInterface.bulkDelete('town_all_building', null, {});
     await queryInterface.bulkDelete('military_building', null, {});
     await queryInterface.bulkDelete('resource_building', null, {});
     await queryInterface.bulkDelete('wall_building', null, {});

@@ -2,7 +2,7 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Infrastructure_building extends Model {
+  class Town_all_building extends Model {
 
     static associate(models) {
       this.belongsTo(models.Building, {
@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   
-  Infrastructure_building.init({
+  Town_all_building.init({
     name: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -23,9 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     sequelize,
-    modelName: 'Infrastructure_building',
-    tableName: 'infrastructure_building'
+    modelName: 'Town_all_building',
+    tableName: 'town_all_building'
   });
 
-  return Infrastructure_building;
+  return Town_all_building;
 };

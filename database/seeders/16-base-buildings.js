@@ -17,7 +17,7 @@ const base_building_types  = [
     updatedAt: new Date()
   },
   {
-    name: 'infrastructure_building',
+    name: 'town_all_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -96,31 +96,13 @@ const wall_building = [
   }
 ]
 
-const infrastructure_buildings = [
+const town_all_building = [
   {
-    name: 'headquarters',
-    type: 'infrastructure_building',
+    name: 'town all',
+    type: 'town_all_building',
     createdAt: new Date(),
     updatedAt: new Date()
   },
-  {
-    name: 'marketplace',
-    type: 'infrastructure_building',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    name: 'residence',
-    type: 'infrastructure_building',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    name: "embassy",
-    type: 'infrastructure_building',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
 ]
 
 const special_buildings = [
@@ -175,7 +157,7 @@ const buildings = [
   ...military_buildings,
   ...resource_buildings,
   ...wall_building,
-  ...infrastructure_buildings,
+  ...town_all_building,
   ...special_buildings,
   ...storage_building
 ]

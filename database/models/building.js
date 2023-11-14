@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
   class Building extends Model {
 
     static associate(models) {
-      this.hasOne(models.Infrastructure_building, {
+      this.hasOne(models.Town_all_building, {
         foreignKey: 'name',
         onDelete: 'CASCADE'
       });
