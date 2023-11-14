@@ -232,7 +232,7 @@ module.exports = (sequelize, DataTypes) => {
         }
       ],
       where: {
-        name: 'twon all',
+        name: 'town all',
         type: 'town_all_building'
       }
     })
