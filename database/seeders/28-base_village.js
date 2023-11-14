@@ -29,6 +29,8 @@ module.exports = {
       await user.addServer(server);
 
       await newVillage.save();
+
+      await newVillage.addMapPosition(0, 25, 0, 25);
     } 
   },
 

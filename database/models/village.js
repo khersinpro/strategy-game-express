@@ -1,5 +1,5 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, Op } = require('sequelize');
 const ForbiddenError = require('../../errors/forbidden');
 
 module.exports = (sequelize, DataTypes) => {
@@ -71,6 +71,60 @@ module.exports = (sequelize, DataTypes) => {
       }
       return true;
     }
+
+    /**
+     * Find an emptu position into the map with parameters and add the village to it
+     * @param {number} startX - search start x position
+     * @param {number} endX - search end x position
+     * @param {number} startY - search start y position
+     * @param {number} endY  - search end y position
+     */
+    async addMapPosition (startX, endX, startY, endY) {
+      try
+      {
+        if ((startX === 'undefined' || isNaN(startX)) || (endX  === 'undefined'|| isNaN(endX)) || (startY === 'undefined' || isNaN(startY)) || (endY === 'undefined' || isNaN(endY)) )
+        {
+          throw new Error('Invalid location')
+        }
+  
+        const allEmptyPositions = await sequelize.models.Map_position.findAll({
+          include: [
+            {
+              model: sequelize.models.Map,
+              as: 'map',
+              required: true,
+              where: {
+                server_name: this.server_name
+              }
+            }
+          ],
+          where: {
+            x : { [Op.between]: [startX , endX]},
+            y : { [Op.between]: [startY , endY]}, 
+            target_type: 'empty',
+            target_entity_id: null,
+          }
+        })
+  
+        if (!allEmptyPositions || allEmptyPositions.length === 0) 
+        {
+          throw new NotFoundError('No empty position found into this area')
+        }
+
+        const randomPosition = allEmptyPositions[Math.floor(Math.random() * allEmptyPositions.length)]
+
+  
+        randomPosition.target_type = 'village'
+        randomPosition.target_entity_id = this.id
+  
+        await randomPosition.save()
+      }
+      catch (error)
+      {
+        throw error
+      }
+    }
+
   }
   
   Village.init({
