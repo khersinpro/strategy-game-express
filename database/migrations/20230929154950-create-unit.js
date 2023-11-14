@@ -16,6 +16,14 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false
       },
+      movement_speed: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
+      population_cost: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -9,6 +9,8 @@ const egiptian_infanteries = [
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 20,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -19,6 +21,8 @@ const egiptian_infanteries = [
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 25,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -32,6 +36,8 @@ const greek_infanteries = [
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 20,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -42,6 +48,8 @@ const greek_infanteries = [
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 25,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -55,6 +63,8 @@ const norse_infanteries = [
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 20,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -65,6 +75,8 @@ const norse_infanteries = [
     unit_type: 'infantry',
     military_building: 'barrack',
     carrying: 25,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -78,6 +90,8 @@ const egiptian_cavalries = [
     unit_type: 'cavalry',
     military_building: 'stable',
     carrying: 30,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -88,6 +102,8 @@ const egiptian_cavalries = [
     unit_type: 'cavalry',
     military_building: 'stable',
     carrying: 30,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -101,6 +117,8 @@ const greek_cavalries = [
     unit_type: 'cavalry',
     military_building: 'stable',
     carrying: 30,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -111,6 +129,8 @@ const greek_cavalries = [
     unit_type: 'cavalry',
     military_building: 'stable',
     carrying: 30,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -124,6 +144,8 @@ const norse_cavalries = [
     unit_type: 'cavalry',
     military_building: 'stable',
     carrying: 30,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -134,6 +156,8 @@ const norse_cavalries = [
     unit_type: 'cavalry',
     military_building: 'stable',
     carrying: 30,
+    movement_speed: 10,
+    population_cost: 1,
     createdAt: new Date(),
     updatedAt: new Date()
   }

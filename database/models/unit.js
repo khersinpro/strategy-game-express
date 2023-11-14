@@ -34,6 +34,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    movement_speed: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    population_cost: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },  
     unit_type: {
       type: DataTypes.STRING,
       allowNull: false,
