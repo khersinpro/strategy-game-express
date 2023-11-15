@@ -38,7 +38,9 @@ const modelList = [
   require('./models/village_update_construction.js'),
   require('./models/map'),
   require('./models/map_position'),
-  require('./models/population_capacity.js')
+  require('./models/population_capacity.js'),
+  require('./models/village_training_progress.js'),
+  require('./models/unit_cost.js')
 ];
 
 // Déclaration des models a sequelize

@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
-  
+
   Town_all_building.init({
     name: {
       type: DataTypes.STRING,

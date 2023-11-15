@@ -17,6 +17,9 @@ module.exports = (sequelize, DataTypes) => {
       Unit.belongsTo(models.Military_building, {
         foreignKey: 'name',
       });
+      Unit.hasMany(models.Unit_cost, {
+        foreignKey: 'unit_name',
+      });
     }
   }
 
@@ -26,11 +29,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       primaryKey: true
     },
-    atk: {
+    attack: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    carrying: {
+    carrying_capacity: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
@@ -42,6 +45,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },  
+    training_time: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
     unit_type: {
       type: DataTypes.STRING,
       allowNull: false,

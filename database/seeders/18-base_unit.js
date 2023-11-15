@@ -4,25 +4,27 @@
 const egiptian_infanteries = [
   {
     name: 'sphinx spearbearer',
-    atk: 50,
+    attack: 50,
     civilization_name: 'egyptian',
     unit_type: 'infantry',
     military_building: 'barrack',
-    carrying: 20,
+    carrying_capacity: 20,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'scarab soldier',
-    atk: 30,
+    attack: 30,
     civilization_name: 'egyptian',
     unit_type: 'infantry',
     military_building: 'barrack',
-    carrying: 25,
+    carrying_capacity: 25,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -31,25 +33,27 @@ const egiptian_infanteries = [
 const greek_infanteries = [
   {
     name: 'spartan phalanx',
-    atk: 40,
+    attack: 40,
     civilization_name: 'greek',
     unit_type: 'infantry',
     military_building: 'barrack',
-    carrying: 20,
+    carrying_capacity: 20,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'olympian legionnaire',
-    atk: 32,
+    attack: 32,
     civilization_name: 'greek',
     unit_type: 'infantry',
     military_building: 'barrack',
-    carrying: 25,
+    carrying_capacity: 25,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -58,25 +62,27 @@ const greek_infanteries = [
 const norse_infanteries = [
   {
     name: 'viking raider',
-    atk: 15,
+    attack: 15,
     civilization_name: 'norse',
     unit_type: 'infantry',
     military_building: 'barrack',
-    carrying: 20,
+    carrying_capacity: 20,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'berserker',
-    atk: 75,
+    attack: 75,
     civilization_name: 'norse',
     unit_type: 'infantry',
     military_building: 'barrack',
-    carrying: 25,
+    carrying_capacity: 25,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -85,25 +91,27 @@ const norse_infanteries = [
 const egiptian_cavalries = [
   {
     name: 'anubis charger',
-    atk: 60,
+    attack: 60,
     civilization_name: 'egyptian',
     unit_type: 'cavalry',
     military_building: 'stable',
-    carrying: 30,
+    carrying_capacity: 30,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'camel rider',
-    atk: 40,
+    attack: 40,
     civilization_name: 'egyptian',
     unit_type: 'cavalry',
     military_building: 'stable',
-    carrying: 30,
+    carrying_capacity: 30,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -112,25 +120,27 @@ const egiptian_cavalries = [
 const greek_cavalries = [
   {
     name: 'athena cavalier',
-    atk: 45,
+    attack: 45,
     civilization_name: 'greek',
     unit_type: 'cavalry',
     military_building: 'stable',
-    carrying: 30,
+    carrying_capacity: 30,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'spartan steed',
-    atk: 25,
+    attack: 25,
     civilization_name: 'greek',
     unit_type: 'cavalry',
     military_building: 'stable',
-    carrying: 30,
+    carrying_capacity: 30,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -139,25 +149,27 @@ const greek_cavalries = [
 const norse_cavalries = [
   {
     name: 'ragnarok rider',
-    atk: 40,
+    attack: 40,
     civilization_name: 'norse',
     unit_type: 'cavalry',
     military_building: 'stable',
-    carrying: 30,
+    carrying_capacity: 30,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'viking valkyries',
-    atk: 48,
+    attack: 48,
     civilization_name: 'norse',
     unit_type: 'cavalry',
     military_building: 'stable',
-    carrying: 30,
+    carrying_capacity: 30,
     movement_speed: 10,
     population_cost: 1,
+    training_time: 700,
     createdAt: new Date(),
     updatedAt: new Date()
   }

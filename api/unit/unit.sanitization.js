@@ -6,12 +6,21 @@ exports.createSanitization = [
         .escape()
         .isString().withMessage('Name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('Name must be between 1 and 255 characters long'),
-    body('atk')
+    body('attack')
         .escape()
-        .isInt().withMessage('Atk must be an integer'),
-    body('carrying')
+        .isInt().withMessage('Attack must be an integer'),
+    body('carrying_capacity')
         .escape()
-        .isInt().withMessage('Carrying must be an integer'),
+        .isInt().withMessage('Carrying capacity must be an integer'),
+    body('movement_speed')
+        .escape()
+        .isInt().withMessage('Movement speed must be an integer'),
+    body('population_cost')
+        .escape()
+        .isInt().withMessage('Population cost must be an integer'),
+    body('training_time')
+        .escape()
+        .isInt().withMessage('Training time must be an integer'),
     body('civilization_type')
         .escape()
         .isString().withMessage('Unit type must be a string')
@@ -37,13 +46,25 @@ exports.updateSanitization = [
         .isString().withMessage('Name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('Name must be between 1 and 255 characters long')
         .optional(),
-    body('atk')
+    body('attack')
         .escape()
-        .isInt().withMessage('Atk must be an integer')
+        .isInt().withMessage('Attack must be an integer')
         .optional(),
-    body('carrying')
+    body('carrying_capacity')
         .escape()
-        .isInt().withMessage('Carrying must be an integer')
+        .isInt().withMessage('Carrying capacity must be an integer')
+        .optional(),
+    body('movement_speed')
+        .escape()
+        .isInt().withMessage('Movement speed must be an integer')
+        .optional(),
+    body('population_cost')
+        .escape()
+        .isInt().withMessage('Population cost must be an integer')
+        .optional(),
+    body('training_time')
+        .escape()
+        .isInt().withMessage('Training time must be an integer')
         .optional(),
     body('civilization_type')
         .escape()

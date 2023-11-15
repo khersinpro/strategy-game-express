@@ -8,11 +8,11 @@ module.exports = {
         primaryKey: true,
         allowNull: false
       },
-      atk: {
+      attack: {
         type: Sequelize.INTEGER,
         allowNull: false
       },
-      carrying: {
+      carrying_capacity: {
         type: Sequelize.INTEGER,
         allowNull: false
       },
@@ -23,6 +23,40 @@ module.exports = {
       population_cost: {
         type: Sequelize.INTEGER,
         allowNull: false
+      },
+      training_time: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
+      civilization_name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'civilization',
+          key: 'name'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
+      unit_type: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'unit_type',
+          key: 'type'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
+      military_building: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'military_building',
+          key: 'name'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       createdAt: {
         allowNull: false,
