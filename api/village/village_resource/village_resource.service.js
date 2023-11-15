@@ -271,7 +271,6 @@ class VillageBuildingService {
             // await transaction.rollback();
             throw error;
         }
-
     }
 }
 

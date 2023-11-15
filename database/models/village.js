@@ -1,6 +1,7 @@
 'use strict';
 const { Model, Op } = require('sequelize');
 const ForbiddenError = require('../../errors/forbidden');
+const NotFoundError = require('../../errors/not-found');
 
 module.exports = (sequelize, DataTypes) => {
   class Village extends Model {
@@ -111,10 +112,8 @@ module.exports = (sequelize, DataTypes) => {
           throw new NotFoundError('No empty position found into this area')
         }
 
-        const randomPosition = allEmptyPositions[Math.floor(Math.random() * allEmptyPositions.length)]
-
-  
-        randomPosition.target_type = 'village'
+        const randomPosition            = allEmptyPositions[Math.floor(Math.random() * allEmptyPositions.length)]
+        randomPosition.target_type      = 'village'
         randomPosition.target_entity_id = this.id
   
         await randomPosition.save()
@@ -124,6 +123,107 @@ module.exports = (sequelize, DataTypes) => {
         throw error
       }
     }
+
+    /**
+     * Check if the village has enough population to train the unit 
+     * @param {Number} additionalPopulation - the population unit to add to the village population
+     * @returns 
+     */
+    async checkPopulationCapacity (additionalPopulation) {
+      try
+      {
+        if (isNaN(additionalPopulation) || additionalPopulation < 0)
+        {
+          throw new Error('Invalid additional population')
+        }
+
+        const townAllBuilding = await sequelize.models.Village_building.findOne({
+          where: {
+            village_id: this.id,
+            type: 'town_all_building'
+          }
+        });
+
+        if (!townAllBuilding)
+        {
+          throw new NotFoundError('Town all building not found')
+        }
+
+        const populationCapacity = await sequelize.models.Population_capacity.findOne({
+          where: {
+            building_level_id: townAllBuilding.building_level_id
+          }
+        })
+
+        if (!populationCapacity)
+        {
+          throw new NotFoundError('Population capacity not found')
+        }
+
+        // check population in village unit with quantity * unit.population_cost
+        const allVillageUnit = await sequelize.models.Village_unit.findAll({
+          include: [
+            {
+              model: sequelize.models.Unit,
+              required: true
+            }
+          ],
+          where: {
+            village_id: this.id
+          }
+        })
+
+        
+        if (!allVillageUnit)
+        {
+          throw new NotFoundError('Village population not found')
+        }
+
+        const actualVillagePopulation = 0;
+
+        for (const villageUnit of allVillageUnit) {
+          actualVillagePopulation += villageUnit.quantity * villageUnit.Unit.population_cost
+        }
+
+        // check population in actual training
+
+        const allVillageTrainingProgress = await sequelize.models.Village_training_progress.findAll({
+          include: [
+            {
+              model: sequelize.models.Village_unit,
+              required: true,
+              include: [
+                {
+                  model: sequelize.models.Unit,
+                  required: true
+                }
+              ]
+            }
+          ]
+        })
+
+        const populationInTraining = 0;
+
+        if (allVillageTrainingProgress)
+        {
+          for (const villageTrainingProgress of allVillageTrainingProgress) {
+
+          }
+        }
+         
+        
+        // check if it's possible
+        const enoughPopulationCapacity = populationCapacity.capacity >= actualVillagePopulation + populationInTraining + additionalPopulation;
+
+        return enoughPopulationCapacity;
+
+      }
+      catch (error)
+      {
+        throw error
+      }
+    }
+
 
   }
   
