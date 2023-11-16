@@ -23,9 +23,6 @@ class VilageService {
     getById(id, includes, whereparams, currentUser) {
         console.log(includes, whereparams);
         const filters = this.generateFilters(includes, whereparams, currentUser);
-        filters.include.push({
-            model: Map_position,
-        })
         const village = Village.findByPk(id, filters);
 
         if (!village)

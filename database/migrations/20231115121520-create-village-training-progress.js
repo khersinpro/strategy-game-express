@@ -26,6 +26,10 @@ module.exports = {
         allowNull: false,
         default: 0
       },
+      single_training_duration: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
       village_id: {
         type: Sequelize.INTEGER,
         references: {

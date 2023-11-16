@@ -1,19 +1,17 @@
 const NotFoundError = require('../../../errors/not-found');
 const BadRequestError = require('../../../errors/bad-request');
+const ForbiddenError = require('../../../errors/forbidden');
 const sequelize = require('../../../database/index').sequelize;
 const VillageService = require('../village.service');
 const { 
     Village_training_progress, 
     Unit, 
-    Unit_type, 
     Unit_cost,
     Village_building, 
     Village_unit,
     Village_resource,
     Village_construction_progress,
     Village_update_construction,
-    Military_building, 
-    Building_level,
     Unit_production,
 } = require('../../../database/index').models;
 
@@ -50,7 +48,7 @@ class VillageTrainingProgressService {
     }
 
     /**
-     * 
+     * Create a new village training progress
      * @param {Object} data - Data of the village training progress to create
      * @param {Number} data.village_id - Id of the village
      * @param {String} data.unit_name - name of the unit
@@ -83,7 +81,7 @@ class VillageTrainingProgressService {
             }
 
             const village_building = await Village_building.findOne({
-                attributes: ['id'],
+                attributes: ['id', 'building_level_id', 'building_name'],
                 where: {
                     village_id: village.id,
                     building_name: unitToTrain.military_building
@@ -165,7 +163,7 @@ class VillageTrainingProgressService {
                     village_id: village.id
                 }
             });
-            
+
             await this.checkAndUpdateResourcesBeforeTraining(village_resources, unitCosts, data.unit_to_train_count, transaction);
             
             // check if the village has enough population to train the unit, if not throw BadRequestError
@@ -195,7 +193,25 @@ class VillageTrainingProgressService {
                 startTrainingDate = village_training_progress.training_end;
             }
 
-            const endTrainingDate = new Date(startTrainingDate.getTime() + unitToTrain.training_time * 1000);
+            // get the unit_production reduction percentage of the village with the village_building level
+            const unit_production = await Unit_production.findOne({
+                attributes: ['reduction_percent'],
+                where: {
+                    military_building_name: village_building.building_name,
+                    building_level_id: village_building.building_level_id
+                }
+            });
+
+            if (!unit_production || !unit_production.reduction_percent)
+            {
+                throw new BadRequestError('Unit_production reduction percent not found.');
+            }
+
+            const singleTrainingDuration            = unitToTrain.training_time * (1 - unit_production.reduction_percent / 100);
+            const totalTrainingTimeInMilliseconds   = singleTrainingDuration * 1000 * data.unit_to_train_count;
+            const endTrainingDate                   = new Date(startTrainingDate.getTime() + totalTrainingTimeInMilliseconds);
+            
+            // generate the time to create one unit with the reduction percent
 
             // create the village_training_progress entry
             await Village_training_progress.create({
@@ -204,6 +220,7 @@ class VillageTrainingProgressService {
                 unit_to_train_count: data.unit_to_train_count,
                 trained_unit_count: 0,
                 village_id: village.id,
+                single_training_duration: singleTrainingDuration,
                 village_building_id: village_building.id,
                 village_unit_id: village_unit.id
             }, { transaction });
@@ -301,7 +318,7 @@ class VillageTrainingProgressService {
         {
             throw error;
         }
-    }
+    }  
 }
 
 module.exports = new VillageTrainingProgressService();

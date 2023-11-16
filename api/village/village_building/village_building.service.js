@@ -164,7 +164,6 @@ class VillageBuildingService {
         const transaction = await sequelize.transaction();
         try
         {
-
             const allVillageNewConstructions = await Village_construction_progress.findAll({
                 include: [
                     {
@@ -181,7 +180,7 @@ class VillageBuildingService {
                     }
                 }
             })
-            console.log(allVillageNewConstructions);
+
             if (allVillageNewConstructions.length)
             {
                 await this.createVillageBuildingLoopsAndDisableVillageConstructionProgress(allVillageNewConstructions, transaction)
@@ -204,7 +203,6 @@ class VillageBuildingService {
         const transaction = await sequelize.transaction();
         try
         {
-            console.log('updateAllVillageBuildingWhenConstructionProgressIsFinished');
             const allVillageUpdateConstructions = await Village_construction_progress.findAll({
                 include: [
                     {

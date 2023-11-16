@@ -34,6 +34,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: 0
     },
+    single_training_duration: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
     village_id: {
       type: DataTypes.INTEGER,
       references: {
