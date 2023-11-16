@@ -35,6 +35,7 @@ const villageUpdateConstructionRouter = require('./api/village/village_update_co
 const buildingTypeRouter = require('./api/building/building_type/building_type.router');
 const mapRouter = require('./api/map/map.router');
 const mapPositionRouter = require('./api/map/map_position/map_position.router');
+const villageTrainingProgressRouter = require('./api/village/village_training_progress/village_training_progress.router');
 
 
 const usersController = require('./api/user/user.controller');
@@ -89,6 +90,7 @@ app.use('/api/village-update-construction', auth, villageUpdateConstructionRoute
 app.use('/api/building-type', auth, buildingTypeRouter);
 app.use('/api/map', auth, mapRouter);
 app.use('/api/map-position', auth, mapPositionRouter);
+app.use('/api/village-training-progress', auth, villageTrainingProgressRouter);
 
 
 /**

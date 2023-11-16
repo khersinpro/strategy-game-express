@@ -125,19 +125,15 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     /**
-     * Check if the village has enough population to train the unit 
-     * @param {Number} additionalPopulation - the population unit to add to the village population
-     * @returns 
+     * Get the population capacity of the village
+     * @throws {NotFoundError} if the town all building or the population capacity is not found
+     * @return {Promise<Number></Number>} the population capacity of the village
      */
-    async checkPopulationCapacity (additionalPopulation) {
+    async getPopulationCapacity () {
       try
       {
-        if (isNaN(additionalPopulation) || additionalPopulation < 0)
-        {
-          throw new Error('Invalid additional population')
-        }
-
         const townAllBuilding = await sequelize.models.Village_building.findOne({
+          attribute: ['building_level_id'],
           where: {
             village_id: this.id,
             type: 'town_all_building'
@@ -150,21 +146,39 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         const populationCapacity = await sequelize.models.Population_capacity.findOne({
+          attribute: ['capacity'],
           where: {
             building_level_id: townAllBuilding.building_level_id
           }
         })
 
-        if (!populationCapacity)
+        if (!populationCapacity || populationCapacity.capacity === 'undefined' || isNaN(populationCapacity.capacity))
         {
           throw new NotFoundError('Population capacity not found')
         }
 
-        // check population in village unit with quantity * unit.population_cost
+        return populationCapacity.capacity;
+      }
+      catch (error)
+      { 
+        throw error;
+      }
+    }
+
+    /**
+     * Get the actual population of village_unit for the village
+     * @throws {NotFoundError} if the village_unit or the unit is not found
+     * @return {Promise<Number>} the actual population of the village
+     */
+    async getPopulation () {
+      try
+      {
         const allVillageUnit = await sequelize.models.Village_unit.findAll({
+          attribute: ['quantity'],
           include: [
             {
               model: sequelize.models.Unit,
+              attribute: ['population_cost'],
               required: true
             }
           ],
@@ -179,52 +193,95 @@ module.exports = (sequelize, DataTypes) => {
           throw new NotFoundError('Village population not found')
         }
 
-        const actualVillagePopulation = 0;
+        let actualVillagePopulation = 0;
 
         for (const villageUnit of allVillageUnit) {
           actualVillagePopulation += villageUnit.quantity * villageUnit.Unit.population_cost
         }
 
-        // check population in actual training
+        return actualVillagePopulation;
+      }
+      catch (error)
+      {
+        throw error;
+      }
+    }
 
+    /**
+     * Get the population in training of village_training_progress for the village
+     * @return {Promise<Number>} the population in training of the village
+     */ 
+    async getPopulationInTraining () {
+      try
+      {
         const allVillageTrainingProgress = await sequelize.models.Village_training_progress.findAll({
+          attribute: ['unit_to_train_count', 'trained_unit_count'],
           include: [
             {
               model: sequelize.models.Village_unit,
+              attribute: ['id'],
               required: true,
               include: [
                 {
                   model: sequelize.models.Unit,
+                  attribute: ['population_cost'],
                   required: true
                 }
               ]
             }
-          ]
+          ],
+          where : {
+            village_id: this.id,
+            enabled: true,
+            archived: false
+          }
         })
 
-        const populationInTraining = 0;
+        let populationInTraining = 0;
 
         if (allVillageTrainingProgress)
         {
           for (const villageTrainingProgress of allVillageTrainingProgress) {
-
+            populationInTraining += (villageTrainingProgress.unit_to_train_count - villageTrainingProgress.trained_unit_count) * villageTrainingProgress.Village_unit.Unit.population_cost
           }
         }
+
+        return populationInTraining;
+      }
+      catch (error)
+      {
+        throw error;
+      }
+    }
+
+    /**
+     * Check if the village has enough population to train the unit 
+     * @param {Number} additionalPopulation - the population unit to add to the village population
+     * @returns {Boolean} true if the village has enough population to train the unit or false if not 
+     */
+    async checkPopulationCapacity (additionalPopulation) {
+      try
+      {
+        if (isNaN(additionalPopulation) || additionalPopulation < 0)
+        {
+          throw new Error('Invalid additional population')
+        }
+
+        // get population capacity, actual village population and population in training for the village
+        const populationCapacity      = await this.getPopulationCapacity();
+        const actualVillagePopulation = await this.getPopulation();
+        const populationInTraining    = await this.getPopulationInTraining();
          
-        
-        // check if it's possible
-        const enoughPopulationCapacity = populationCapacity.capacity >= actualVillagePopulation + populationInTraining + additionalPopulation;
+        // check if village has enough population capacity with boolean
+        const enoughPopulationCapacity = populationCapacity >= actualVillagePopulation + populationInTraining + additionalPopulation;
 
         return enoughPopulationCapacity;
-
       }
       catch (error)
       {
         throw error
       }
     }
-
-
   }
   
   Village.init({
