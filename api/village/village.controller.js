@@ -24,6 +24,7 @@ class VillageController {
             await VillageResourceService.updateAllVillagesResources();
             await villageBuildingService.updateAllVillageBuildingWhenConstructionProgressIsFinished();
             await villageBuildingService.createAllVillageBuildingWhenConstructionProgressIsFinished();
+            await villageUnitService.addUnitAfterTraining();
             /**
              * A retirer par la suite
              */

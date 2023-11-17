@@ -3,6 +3,9 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Village_training_progress extends Model {
+    /**
+     * List of all associations
+     */
     static associate(models) {
       this.belongsTo(models.Village, {
         foreignKey: 'village_id'
@@ -13,6 +16,32 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Village_unit, {
         foreignKey: 'village_unit_id'
       });
+    }
+    /**
+     * List of all class methods
+     */
+
+    /**
+     * Return the total unit trained since the beginning of the training
+     * @returns {Number} - total unit trained since the beginning of the training
+     */
+    getTotalsUnitsTrained() {
+      const startDate                     = new Date(this.training_start);
+      const endDate                       = this.training_end >= new Date() ? new Date() : new Date(this.training_end);
+      const diffInSec                     = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
+      const singleUnitTrainingDuration    = this.single_training_duration;
+      const totalUnitCreated              = Math.floor(diffInSec / singleUnitTrainingDuration);
+      return totalUnitCreated;
+    }
+
+    /**
+     * Return the number of unit trained to create since last update
+     * @returns {Number} - count of unit trained to create since last update
+     */
+    getUnitCountTrainedSinceLastUpdate() {
+      const totalUnitCreated = this.getTotalsUnitsTrained();
+      const unitToCreate     = totalUnitCreated - this.trained_unit_count;
+      return unitToCreate;
     }
   }
 

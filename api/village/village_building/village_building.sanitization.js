@@ -16,10 +16,10 @@ exports.createSanitization = [
         .trim()
         .isString().withMessage('building_name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty'),
-    body('level')
+    body('building_level_id')
         .escape()
         .trim()
-        .isInt().withMessage('level must be a number'),
+        .isInt().withMessage('building_level_id must be a number'),
     validationHandler.errorhandler
 ] 
 
@@ -45,10 +45,10 @@ exports.updateSanitization = [
         .isString().withMessage('building_name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty')
         .optional(),
-    body('level')
+    body('building_level_id')
         .escape()
         .trim()
-        .isInt().withMessage('level must be a number')
+        .isInt().withMessage('building_level_id must be a number')
         .optional(),
     validationHandler.errorhandler
 ]

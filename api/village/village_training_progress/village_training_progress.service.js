@@ -27,7 +27,7 @@ class VillageTrainingProgressService {
     /**
      * Return a village training progress by id
      * @param id - Id of the village training progress
-     * @return {VillageTrainingProgressService}
+     * @return {Promise<VillageTrainingProgressService>}
      */ 
     async getById(id) {
         try
@@ -80,7 +80,7 @@ class VillageTrainingProgressService {
                 throw new BadRequestError('Unit name is invalid.');
             }
 
-            const village_building = await Village_building.findOne({
+            const villageBuilding = await Village_building.findOne({
                 attributes: ['id', 'building_level_id', 'building_name'],
                 where: {
                     village_id: village.id,
@@ -88,13 +88,13 @@ class VillageTrainingProgressService {
                 }
             });
 
-            if (!village_building)
+            if (!villageBuilding)
             {
                 throw new BadRequestError('Village does not have the building required to train the unit.');
             }
 
             // check if the village_building is not under construction, if not throw BadRequestError
-            const village_construction_progress = await Village_construction_progress.findAll({
+            const villageConstructionProgress = await Village_construction_progress.findAll({
                 attributes: ['id'],
                 include: [
                     {
@@ -102,7 +102,7 @@ class VillageTrainingProgressService {
                         attributes: ['id'],
                         required: true,
                         where: {
-                            village_building_id: village_building.id
+                            village_building_id: villageBuilding.id
                         }
                     }
                 ],
@@ -113,28 +113,27 @@ class VillageTrainingProgressService {
                 }
             });
 
-            if (village_construction_progress && village_construction_progress.length > 0)
+            if (villageConstructionProgress && villageConstructionProgress.length > 0)
             {
                 throw new BadRequestError('Village building is under construction.');
             }
-
+            
             // Check if the village_building has no more than 3 village_training_progress, if not throw BadRequestError
             const VillageTrainingProgressCount = await Village_training_progress.count({
-                attributes: ['id'],
                 where: {
-                    village_building_id: village_building.id,
+                    village_building_id: villageBuilding.id,
                     enabled: true,
                     archived: false
                 }
             });
-
+            
             if (VillageTrainingProgressCount >= 3)
             {
                 throw new BadRequestError('Village building has already 3 training progress.');
             }
 
             // check if the village has the village_unit table entry for the unit, if not create one
-            const village_unit = await Village_unit.findOne({
+            const villageUnit = await Village_unit.findOne({
                 attributes: ['id'],
                 where: {
                     village_id: village.id,
@@ -142,7 +141,7 @@ class VillageTrainingProgressService {
                 }
             });
 
-            if (!village_unit)
+            if (!villageUnit)
             {
                 await Village_unit.create({
                     village_id: village.id,
@@ -158,13 +157,13 @@ class VillageTrainingProgressService {
                 }
             });
 
-            const village_resources = await Village_resource.findAll({
+            const villageResources = await Village_resource.findAll({
                 where: {
                     village_id: village.id
                 }
             });
 
-            await this.checkAndUpdateResourcesBeforeTraining(village_resources, unitCosts, data.unit_to_train_count, transaction);
+            await this.checkAndUpdateResourcesBeforeTraining(villageResources, unitCosts, data.unit_to_train_count, transaction);
             
             // check if the village has enough population to train the unit, if not throw BadRequestError
             const hasEnoughPopulation = await village.checkPopulationCapacity(unitToTrain.population_cost * data.unit_to_train_count);
@@ -178,10 +177,10 @@ class VillageTrainingProgressService {
             
             if (VillageTrainingProgressCount && VillageTrainingProgressCount > 0)
             {
-                const village_training_progress = await Village_training_progress.findOne({
+                const villageTrainingProgress = await Village_training_progress.findOne({
                     attributes: ['training_end'],
                     where: {
-                        village_building_id: village_building.id,
+                        village_building_id: villageBuilding.id,
                         enabled: true,
                         archived: false
                     },
@@ -190,29 +189,27 @@ class VillageTrainingProgressService {
                     ]
                 });
 
-                startTrainingDate = village_training_progress.training_end;
+                startTrainingDate = villageTrainingProgress.training_end;
             }
 
             // get the unit_production reduction percentage of the village with the village_building level
-            const unit_production = await Unit_production.findOne({
+            const unitProduction = await Unit_production.findOne({
                 attributes: ['reduction_percent'],
                 where: {
-                    military_building_name: village_building.building_name,
-                    building_level_id: village_building.building_level_id
+                    military_building_name: villageBuilding.building_name,
+                    building_level_id: villageBuilding.building_level_id
                 }
             });
 
-            if (!unit_production || !unit_production.reduction_percent)
+            if (!unitProduction || !unitProduction.reduction_percent)
             {
                 throw new BadRequestError('Unit_production reduction percent not found.');
             }
 
-            const singleTrainingDuration            = unitToTrain.training_time * (1 - unit_production.reduction_percent / 100);
+            const singleTrainingDuration            = unitToTrain.training_time * (1 - unitProduction.reduction_percent / 100);
             const totalTrainingTimeInMilliseconds   = singleTrainingDuration * 1000 * data.unit_to_train_count;
             const endTrainingDate                   = new Date(startTrainingDate.getTime() + totalTrainingTimeInMilliseconds);
             
-            // generate the time to create one unit with the reduction percent
-
             // create the village_training_progress entry
             await Village_training_progress.create({
                 training_start: startTrainingDate,
@@ -221,8 +218,8 @@ class VillageTrainingProgressService {
                 trained_unit_count: 0,
                 village_id: village.id,
                 single_training_duration: singleTrainingDuration,
-                village_building_id: village_building.id,
-                village_unit_id: village_unit.id
+                village_building_id: villageBuilding.id,
+                village_unit_id: villageUnit.id
             }, { transaction });
 
             return transaction.commit();
@@ -319,6 +316,98 @@ class VillageTrainingProgressService {
             throw error;
         }
     }  
+
+    async cancelTrainingProgress (id, currentUser) {
+        const transaction = await sequelize.transaction();  
+        try
+        {
+            // make an update of training progress , create the function in the appropriate service
+
+            // check if the village training progress 
+            const trainingProgressToCancel = await this.getById(id);
+
+            if (!trainingProgressToCancel)
+            {
+                throw new NotFoundError('Village training progress not found');
+            }
+
+            // check if training progress is enabled and not archived
+            if (!trainingProgressToCancel.enabled || trainingProgressToCancel.archived)
+            {
+                throw new BadRequestError('Village training progress is already cancelled');
+            }
+
+            // check if the village exists, if not throw NotFoundError
+            const village = await VillageService.getById(trainingProgressToCancel.village_id)
+
+            // check if current user has the ownership of the village or if he is an admin, if not throw ForbiddenError
+            village.isAdminOrVillageOwner(currentUser);
+
+            // get the count of remaining unit to train
+            const remainingUnitToTrain = trainingProgressToCancel.unit_to_train_count - trainingProgressToCancel.trained_unit_count;
+            
+            // get the cost of single unit
+            const unitCosts = await Unit_cost.findAll({
+                where: {
+                    unit_name: trainingProgressToCancel.unit_name
+                }
+            });
+
+            // get the village resources
+            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', { 
+                replacements: { villageId: village.id },
+                type: sequelize.QueryTypes.SELECT 
+            });
+
+            // calculate the cost * remaining unit to train as resources to refund
+            const promises = [];
+
+            for (const unitCost of unitCosts)
+            {
+                const villageResource = villageResources.find(villageResource => villageResource.resource_name === unitCost.resource_name);
+
+                if (!villageResource)
+                {
+                    throw new NotFoundError(`Village resource ${unitCost.resource_name} not found`);
+                }
+
+                const quantityToRefund = unitCost.quantity * remainingUnitToTrain;
+                const actualQuantity = villageResource.quantity;
+                const maxQuantity = villageResource.village_resource_storage;
+                const quantityAfterRefund = actualQuantity + quantityToRefund > maxQuantity ? maxQuantity : actualQuantity + quantityToRefund;
+                const promise = Village_resource.update({
+                    quantity: quantityAfterRefund
+                }, {
+                    where: {
+                        id: villageResource.village_resource_id
+                    },
+                    transaction
+                });
+                promises.push(promise);
+            }
+
+            // update the village resource with the resources to refund
+            await Promise.all(promises);
+
+            // update the village training progress to disabled and archived
+            await Village_training_progress.update({
+                enabled: false,
+                archived: true
+            }, {
+                where: {
+                    id: trainingProgressToCancel.id
+                },
+                transaction
+            });
+
+            return transaction.commit();
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error;
+        }
+    }
 }
 
 module.exports = new VillageTrainingProgressService();
