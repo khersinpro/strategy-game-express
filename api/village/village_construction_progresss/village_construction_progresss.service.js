@@ -4,6 +4,7 @@ const sequelize         = require('../../../database/index').sequelize;
 const VillageService    = require('../village.service');
 const BuildingService   = require('../../building/building.service');
 const BuildingCostService = require('../../building/building_cost/building_cost.service');
+const { Op } = require('sequelize');
 const { 
     Village_construction_progress, 
     Village_update_construction, 
@@ -371,6 +372,76 @@ class VillageProductionProgressService {
         {
             await resourceTransaction.rollback();
             throw error;
+        }
+    }
+
+    async cancelConstructionProgress(id, currentUser) {
+        try {
+            const constructionToCancel = await Village_construction_progress.findByPk(id, {
+                include: [
+                    {
+                        model: Village_new_construction,
+                        required: true
+                    }
+                ],
+                where: {
+                    enabled: true,
+                    archived: false
+                }
+            });
+    
+            if (!constructionToCancel) {
+                throw new NotFoundError('Village construction progress not found or not enabled');
+            }
+    
+            const village = await VillageService.getById(constructionToCancel.village_id);
+            village.isAdminOrVillageOwner(currentUser);
+    
+            const constructionInProgress = await Village_construction_progress.findAll({
+                where: {
+                    village_id: village.id,
+                    enabled: true,
+                    archived: false,
+                    id: {
+                        [Op.ne]: constructionToCancel.id
+                    }
+                },
+                order: [
+                    ['construction_end', 'ASC']
+                ]
+            });
+    
+            if (constructionInProgress.length) {
+                const constructionBeforeContructionToCancel = constructionInProgress.filter(construction => construction.construction_end < constructionToCancel.construction_end);
+                const constructionAfterContructionToCancel = constructionInProgress.filter(construction => construction.construction_end > constructionToCancel.construction_end);
+    
+                let nextConstructionStartDate = constructionToCancel.construction_end;
+    
+                if (constructionBeforeContructionToCancel.length) {
+                    const lastConstructionBeforeConstructionToCancel = constructionBeforeContructionToCancel[constructionBeforeContructionToCancel.length - 1];
+                    nextConstructionStartDate = lastConstructionBeforeConstructionToCancel.construction_end;
+                }
+    
+                await updateConstructionsDates(constructionAfterContructionToCancel, nextConstructionStartDate);
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    async updateConstructionsDates(constructions, nextConstructionStartDate) {
+        for (const constructionToUpdate of constructions) {
+            const constructionTimeLength = constructionToUpdate.construction_end.getTime() - constructionToUpdate.construction_start.getTime();
+    
+            const newConstructionStartDate = new Date(nextConstructionStartDate);
+            const newConstructionEndDate = new Date(newConstructionStartDate.getTime() + constructionTimeLength);
+    
+            nextConstructionStartDate = newConstructionEndDate;
+    
+            await constructionToUpdate.update({
+                construction_start: newConstructionStartDate,
+                construction_end: newConstructionEndDate
+            });
         }
     }
 
