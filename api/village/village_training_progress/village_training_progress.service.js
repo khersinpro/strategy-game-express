@@ -54,7 +54,7 @@ class VillageTrainingProgressService {
      * @param {String} data.unit_name - name of the unit
      * @param {Number} data.unit_to_train_count - number of unit to train
      * @param {User} currentUser - Current user
-     * @returns {Promise<Sequelize.Transaction>} - Promise of the transaction to commit
+     * @returns {Promise<Village_training_progress>}
      */
     async create(data, currentUser) {
         const transaction = await sequelize.transaction();
@@ -211,7 +211,7 @@ class VillageTrainingProgressService {
             const endTrainingDate                   = new Date(startTrainingDate.getTime() + totalTrainingTimeInMilliseconds);
             
             // create the village_training_progress entry
-            await Village_training_progress.create({
+            const villageTrainingProgress = await Village_training_progress.create({
                 training_start: startTrainingDate,
                 training_end: endTrainingDate,
                 unit_to_train_count: data.unit_to_train_count,
@@ -222,7 +222,8 @@ class VillageTrainingProgressService {
                 village_unit_id: villageUnit.id
             }, { transaction });
 
-            return transaction.commit();
+            await transaction.commit();
+            return villageTrainingProgress;
         }
         catch (error)
         {
@@ -321,10 +322,16 @@ class VillageTrainingProgressService {
         const transaction = await sequelize.transaction();  
         try
         {
-            // make an update of training progress , create the function in the appropriate service
-
             // check if the village training progress 
-            const trainingProgressToCancel = await this.getById(id);
+            const trainingProgressToCancel = await Village_training_progress.findByPk(id, {
+                include: [
+                    {
+                        attributes: ['id', 'unit_name'],
+                        model: Village_unit,
+                        required: true,
+                    }
+                ]
+            });
 
             if (!trainingProgressToCancel)
             {
@@ -349,14 +356,13 @@ class VillageTrainingProgressService {
             // get the cost of single unit
             const unitCosts = await Unit_cost.findAll({
                 where: {
-                    unit_name: trainingProgressToCancel.unit_name
+                    unit_name: trainingProgressToCancel.Village_unit.unit_name
                 }
             });
-
+            
             // get the village resources
             const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', { 
-                replacements: { villageId: village.id },
-                type: sequelize.QueryTypes.SELECT 
+                replacements: { villageId: village.id }
             });
 
             // calculate the cost * remaining unit to train as resources to refund
@@ -364,6 +370,8 @@ class VillageTrainingProgressService {
 
             for (const unitCost of unitCosts)
             {
+                console.log('unitCost', unitCost);
+
                 const villageResource = villageResources.find(villageResource => villageResource.resource_name === unitCost.resource_name);
 
                 if (!villageResource)
@@ -372,9 +380,10 @@ class VillageTrainingProgressService {
                 }
 
                 const quantityToRefund = unitCost.quantity * remainingUnitToTrain;
-                const actualQuantity = villageResource.quantity;
+                const actualQuantity = villageResource.village_resource_quantity;
                 const maxQuantity = villageResource.village_resource_storage;
                 const quantityAfterRefund = actualQuantity + quantityToRefund > maxQuantity ? maxQuantity : actualQuantity + quantityToRefund;
+                
                 const promise = Village_resource.update({
                     quantity: quantityAfterRefund
                 }, {

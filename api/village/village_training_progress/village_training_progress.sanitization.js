@@ -56,6 +56,18 @@ exports.updateSanitization = [
     validationHandler.errorhandler
 ]
 
+exports.cancelerTrainingSanitization = [
+    param('id')
+        .trim()
+        .escape()
+        .isInt().withMessage('id must be an integer'),
+    param('village_id')
+        .trim()
+        .escape()
+        .isInt().withMessage('village_id must be an integer'),
+    validationHandler.errorhandler
+]
+
 exports.idParamSanitization = [
     param('id')
         .trim()

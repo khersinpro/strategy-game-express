@@ -1,4 +1,5 @@
 const VillageTrainingProgressService = require('../village_training_progress/village_training_progress.service');
+const VillageUnitService = require('../village_unit/village_unit.service');
 
 class VillageTrainingProgressController {
     async getAll (req, res, next) {
@@ -64,6 +65,29 @@ class VillageTrainingProgressController {
         {
             return next(error);
         }
+    }
+
+    /**
+     * Cancel a training
+     * @param {Number} req.params.id - village_training_progress id
+     * @param {Number} req.params.village_id - village id
+     */
+    async cancelTraining (req, res, next) {
+        try 
+        {
+            console.log('id',req.params.id, req.params.village_id);
+            // Updates units before deleting the training progress
+            await VillageUnitService.addUnitAfterTraining(req.params.village_id);
+
+            // Cancel the training progress
+            await VillageTrainingProgressService.cancelTrainingProgress(req.params.id, req.user);
+
+            res.status(204).end();
+        }
+        catch (error)
+        {
+            return next(error);
+        }   
     }
 }
 
