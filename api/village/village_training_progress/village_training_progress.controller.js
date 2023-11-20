@@ -74,7 +74,6 @@ class VillageTrainingProgressController {
     async cancelTraining (req, res, next) {
         try 
         {
-            await VillageUnitService.addUnitAfterTraining(req.params.village_id);
             await VillageTrainingProgressService.cancelTrainingProgress(req.params.id, req.user);
             res.status(204).end();
         }

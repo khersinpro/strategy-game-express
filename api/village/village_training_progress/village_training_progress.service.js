@@ -3,6 +3,7 @@ const BadRequestError = require('../../../errors/bad-request');
 const ForbiddenError = require('../../../errors/forbidden');
 const sequelize = require('../../../database/index').sequelize;
 const VillageService = require('../village.service');
+const VillageUnitService = require('../village_unit/village_unit.service');
 const { 
     Village_training_progress, 
     Unit, 
@@ -349,6 +350,9 @@ class VillageTrainingProgressService {
 
             // check if current user has the ownership of the village or if he is an admin, if not throw ForbiddenError
             village.isAdminOrVillageOwner(currentUser);
+
+            // Update the village_unit quantity before cancelling the training progress
+            await VillageUnitService.addUnitAfterTraining(village.id);
 
             // get the count of remaining unit to train
             const remainingUnitToTrain = trainingProgressToCancel.unit_to_train_count - trainingProgressToCancel.trained_unit_count;
