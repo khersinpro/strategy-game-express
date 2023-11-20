@@ -58,7 +58,6 @@ class VillageTrainingProgressController {
         try
         {
             await VillageTrainingProgressService.delete(req.params.id);
-
             return res.status(204).end();
         }
         catch (error)
@@ -75,13 +74,8 @@ class VillageTrainingProgressController {
     async cancelTraining (req, res, next) {
         try 
         {
-            console.log('id',req.params.id, req.params.village_id);
-            // Updates units before deleting the training progress
             await VillageUnitService.addUnitAfterTraining(req.params.village_id);
-
-            // Cancel the training progress
             await VillageTrainingProgressService.cancelTrainingProgress(req.params.id, req.user);
-
             res.status(204).end();
         }
         catch (error)

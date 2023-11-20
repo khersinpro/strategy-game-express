@@ -1,5 +1,6 @@
 const NotFoundError = require('../../../errors/not-found');
 const ForbiddenError = require('../../../errors/forbidden');
+const sequelize =  require('../../../database/index').sequelize;
 const { Building_cost, Village_resource } = require('../../../database').models;
 
 class BuildingCostService {
@@ -119,6 +120,61 @@ class BuildingCostService {
             }
             
             return Promise.all(villageResourcesUpdatePromises);
+        }
+        catch (error)
+        {
+            throw error;
+        }
+    }
+
+    /**
+     * Refund the resources after stop a building_construction_progress
+     * @param {Number} villageId - village id
+     * @param {Building_cost[]} buildingCosts - array of building_cost
+     * @param {Sequelize.Transaction} transaction - sequelize transaction
+     * @throws {NotFoundError} when resource not found
+     * @returns {Promise<void>}
+     */ 
+    async refundResourcesAfterDelete (villageId, buildingCosts, transaction = null) {
+        try
+        {
+            if (!villageId || isNaN(villageId)) 
+            {
+                throw new Error('Village id is required');
+            }
+
+            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', { 
+                replacements: { villageId }
+            });
+            
+            const promises = [];
+
+            for (const buildingCost of buildingCosts)
+            {
+                const villageResource = villageResources.find(villageResource => villageResource.resource_name === buildingCost.resource_name);
+
+                if (!villageResource)
+                {
+                    throw new NotFoundError(`Village resource ${buildingCost.resource_name} not found`);
+                }
+
+                const quantityToRefund = buildingCost.quantity;
+                const actualQuantity = villageResource.village_resource_quantity;
+                const maxQuantity = villageResource.village_resource_storage;
+                const quantityAfterRefund = actualQuantity + quantityToRefund > maxQuantity ? maxQuantity : actualQuantity + quantityToRefund;
+                
+                const promise = Village_resource.update({
+                    quantity: quantityAfterRefund
+                }, {
+                    where: {
+                        id: villageResource.village_resource_id
+                    },
+                    transaction
+                });
+                promises.push(promise);
+            }
+
+            await Promise.all(promises);
         }
         catch (error)
         {

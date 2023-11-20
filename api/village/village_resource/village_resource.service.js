@@ -1,5 +1,9 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Village_resource, Village_construction_progress, Village_update_construction, Village_building, Building_level, Storage_capacity, Resource_production } = require('../../../database/index').models;
+const { 
+    Village_resource, 
+    Village_construction_progress, 
+    Village_building,
+} = require('../../../database/index').models;
 const { sequelize }  = require('../../../database/index'); 
 const { Op, Transaction } = require('sequelize');
 

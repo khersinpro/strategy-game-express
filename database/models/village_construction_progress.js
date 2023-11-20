@@ -21,6 +21,25 @@ module.exports = (sequelize, DataTypes) => {
         }
       })
     }
+
+    /**
+     *  Methods
+     */
+
+    /**
+     * Get the herited association of the construction progress
+     * @returns {Promise<Village_update_construction | Village_new_construction>} The herited construction progress
+     */
+    async getHeritedConstructionProgress() {
+      if (this.type === 'village_new_construction') 
+      {
+        return  this.getVillage_new_construction();
+      } 
+      else if (this.type === 'village_update_construction') 
+      {
+        return  this.getVillage_update_construction();
+      }
+    }
   }
 
   Village_construction_progress.init({

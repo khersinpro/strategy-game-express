@@ -95,6 +95,21 @@ class VillageUnitController {
             next(error)
         }
     }
+
+    /**
+     * cancel a village_construction_progresss
+     */
+    async cancelConstruction (req, res, next) {
+        try
+        {
+            await VillageConstructionProgressService.cancelConstructionProgress(req.params.id, req.user);
+            res.status(204).end();
+        }
+        catch (error)
+        {
+            next(error)
+        }
+    }
 }
 
 module.exports = new VillageUnitController();

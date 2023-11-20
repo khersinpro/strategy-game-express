@@ -1,9 +1,10 @@
-const ForbiddenError    = require('../../../errors/forbidden');
-const NotFoundError     = require('../../../errors/not-found');
-const sequelize         = require('../../../database/index').sequelize;
-const VillageService    = require('../village.service');
-const BuildingService   = require('../../building/building.service');
-const BuildingCostService = require('../../building/building_cost/building_cost.service');
+const ForbiddenError            = require('../../../errors/forbidden');
+const NotFoundError             = require('../../../errors/not-found');
+const sequelize                 = require('../../../database/index').sequelize;
+const VillageService            = require('../village.service');
+const BuildingService           = require('../../building/building.service');
+const BuildingCostService       = require('../../building/building_cost/building_cost.service');
+const VillageResourceService    = require('../village_resource/village_resource.service');
 const { Op } = require('sequelize');
 const { 
     Village_construction_progress, 
@@ -375,74 +376,115 @@ class VillageProductionProgressService {
         }
     }
 
+    /**
+     * Cancel a village_production_progresss in progress
+     * @param {Number} id - village_production_progresss id
+     * @param {Object} currentUser - Current User
+     * @throws {NotFoundError} - when village_production_progresss not found
+     * @return {Promise<void>} - Sequelize transaction
+     */
     async cancelConstructionProgress(id, currentUser) {
-        try {
-            const constructionToCancel = await Village_construction_progress.findByPk(id, {
-                include: [
-                    {
-                        model: Village_new_construction,
-                        required: true
-                    }
-                ],
-                where: {
-                    enabled: true,
-                    archived: false
-                }
-            });
+        const transaction = await sequelize.transaction();
+        try 
+        {
+            const constructionToCancel = await Village_construction_progress.findByPk(id);
     
-            if (!constructionToCancel) {
-                throw new NotFoundError('Village construction progress not found or not enabled');
+            if (!constructionToCancel) 
+            {
+                throw new NotFoundError('Village construction progress not found.');
+            }
+            else if (!constructionToCancel.enabled)
+            {
+                throw new ForbiddenError('Village construction progress is already canceled.');
             }
     
             const village = await VillageService.getById(constructionToCancel.village_id);
             village.isAdminOrVillageOwner(currentUser);
     
-            const constructionInProgress = await Village_construction_progress.findAll({
+            const constructionAfterCanceledConstruction = await Village_construction_progress.count({
                 where: {
                     village_id: village.id,
                     enabled: true,
                     archived: false,
                     id: {
                         [Op.ne]: constructionToCancel.id
+                    },
+                    construction_start: {
+                        [Op.gte]: constructionToCancel.construction_end
                     }
                 },
                 order: [
                     ['construction_end', 'ASC']
                 ]
             });
-    
-            if (constructionInProgress.length) {
-                const constructionBeforeContructionToCancel = constructionInProgress.filter(construction => construction.construction_end < constructionToCancel.construction_end);
-                const constructionAfterContructionToCancel = constructionInProgress.filter(construction => construction.construction_end > constructionToCancel.construction_end);
-    
-                let nextConstructionStartDate = constructionToCancel.construction_end;
-    
-                if (constructionBeforeContructionToCancel.length) {
-                    const lastConstructionBeforeConstructionToCancel = constructionBeforeContructionToCancel[constructionBeforeContructionToCancel.length - 1];
-                    nextConstructionStartDate = lastConstructionBeforeConstructionToCancel.construction_end;
-                }
-    
-                await updateConstructionsDates(constructionAfterContructionToCancel, nextConstructionStartDate);
+
+            if (constructionAfterCanceledConstruction && constructionAfterCanceledConstruction > 0) 
+            { 
+                throw new ForbiddenError('There are constructions in progress after the construction to cancel, you can\'t cancel this construction');
             }
-        } catch (error) {
+    
+            const heritedConstructionProgress = await constructionToCancel.getHeritedConstructionProgress();
+
+            if (!heritedConstructionProgress) 
+            {
+                throw new NotFoundError('Herited construction progress not found');
+            }
+
+            const buildingCosts =  await Building_cost.findAll({
+                where: {
+                    building_level_id: heritedConstructionProgress.building_level_id
+                }
+            });
+
+            if (!buildingCosts.length)
+            {
+                throw new NotFoundError('Building costs not found.');
+            }
+
+            await VillageResourceService.updateVillageResource(village.id);
+            await BuildingCostService.refundResourcesAfterDelete(village.id, buildingCosts, transaction);
+
+            await constructionToCancel.update({
+                enabled: false,
+                archived: true
+            }, { transaction });
+
+            return transaction.commit();
+        } 
+        catch (error) 
+        {
+            await transaction.rollback();
             throw error;
         }
     }
     
-    async updateConstructionsDates(constructions, nextConstructionStartDate) {
-        for (const constructionToUpdate of constructions) {
+    /**
+     * Updateds village_production_progresss construction _start and construction_end dates when a village_production_progresss is canceled
+     * @param {Village_construction_progress[]} constructionsToUpdate - Array of village construction progress to update
+     * @param {Date} nextConstructionStartDate - Date of the next construction start
+     * @param {Sequelize.Transaction} transaction - Transaction
+     * @returns {Promise<void>}
+     */
+    async updateConstructionsDates(constructionsToUpdate, nextConstructionStartDate, transaction) {
+        const promises = [];
+
+        for (const constructionToUpdate of constructionsToUpdate) {
             const constructionTimeLength = constructionToUpdate.construction_end.getTime() - constructionToUpdate.construction_start.getTime();
     
             const newConstructionStartDate = new Date(nextConstructionStartDate);
             const newConstructionEndDate = new Date(newConstructionStartDate.getTime() + constructionTimeLength);
     
             nextConstructionStartDate = newConstructionEndDate;
-    
-            await constructionToUpdate.update({
+
+            const promise =  constructionToUpdate.update({
                 construction_start: newConstructionStartDate,
                 construction_end: newConstructionEndDate
-            });
+            }, { transaction });
+
+            promises.push(promise);
         }
+
+        return Promise.all(promises);
     }
 
     /**
