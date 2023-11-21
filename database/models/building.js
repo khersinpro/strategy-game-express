@@ -37,6 +37,57 @@ module.exports = (sequelize, DataTypes) => {
         as: 'levels'
       });
     }
+
+    /**
+     * Methods
+     */
+
+    /**
+     * Get the herited building if is_common is false
+     * @returns {Promise<> | null}
+     */
+    async getHeritedBuilding() {
+      try
+      {
+        if (this.is_common) {
+          return null;
+        }
+
+        const buildingType =  this.type.charAt(0).toUpperCase() + this.type.slice(1);
+
+        const heritedBuilding = await sequelize.models[buildingType].findOne({
+          where: {
+            name: this.name
+          }
+        });
+  
+        return heritedBuilding;
+      }
+      catch (error)
+      {
+        throw error;
+      }
+    }
+
+    /**
+     * Get the civilization of herited building if is_common is false
+     * @returns {Promise<> | null}
+     */
+    async getCivilization() {
+      try
+      {
+        if (this.is_common) {
+          return null;
+        }
+  
+        const heritedBuilding = await this.getHeritedBuilding();
+        return heritedBuilding.civilization_name;
+      }
+      catch (error)
+      {
+        throw error;
+      }
+    }
   }
   
   Building.init({
@@ -51,6 +102,11 @@ module.exports = (sequelize, DataTypes) => {
         model: 'building_type',
         key: 'name'
       },
+      allowNull: false
+    },
+    is_common: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
       allowNull: false
     }
   }, {

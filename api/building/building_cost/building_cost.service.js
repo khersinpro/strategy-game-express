@@ -1,7 +1,11 @@
 const NotFoundError = require('../../../errors/not-found');
 const ForbiddenError = require('../../../errors/forbidden');
 const sequelize =  require('../../../database/index').sequelize;
-const { Building_cost, Village_resource } = require('../../../database').models;
+const VillageResourceService = require('../../village/village_resource/village_resource.service');
+const { 
+    Building_cost, 
+    Village_resource 
+} = require('../../../database').models;
 
 class BuildingCostService {
 
@@ -70,19 +74,51 @@ class BuildingCostService {
 
 
     /**
-     * Check if the village has enough resources to create or update a building and update the resources with or without transaction
-     * WARNING: if transaction is not passed, the function will save the resources
-     * WARNING: if transaction is passed, the function will not commit the transaction
-     * @param {Village_resource} villageResource array of village_resource
-     * @param {Building_cost[]} buildingCost array of building_cost
-     * @param {Sequelize.Transaction} transaction sequelize transaction
-     * @throws {NotFoundError} when resource not found
-     * @throws {ForbiddenError} when user user is not allowed to update or create a building
+     * Check if the village has enough resources to create or update a building and update the resources
+     * @param {Number} villageId - Id of the village
+     * @param {buildingLevelId} buildingLevelId - Id of the building level related to the building cost
+     * @param {Sequelize.Transaction} transaction - Sequelize transaction
+     * @throws {NotFoundError} - When village resources or building costs are not found
+     * @throws {ForbiddenError} - When village does not have enough resources
      * @returns {Promise<Village_resource[]>}
      */
-    async checkAndUpdateResourcesBeforeCreate (villageResources, buildingCosts, transaction = null) {
+    async checkAndUpdateResourcesBeforeCreate (villageId, buildingLevelId, transaction) {
         try 
         {
+            if (!villageId || isNaN(villageId))
+            {
+                throw new Error('Village id is required');
+            }
+            else if (!buildingLevelId || isNaN(buildingLevelId))
+            {
+                throw new Error('Building level id is required');
+            }
+
+            // Update the village resources
+            await VillageResourceService.updateVillageResource(villageId);
+
+            const villageResources = await Village_resource.findAll({
+                where: {
+                    village_id: villageId
+                }
+            });
+
+            if (!villageResources || villageResources.length === 0)
+            {
+                throw new NotFoundError(`Village resources with village id : ${villageId} not found`);
+            }
+
+            const buildingCosts = await Building_cost.findAll({
+                where: {
+                    building_level_id: buildingLevelId
+                }
+            });
+
+            if (!buildingCosts || buildingCosts.length === 0)
+            {
+                throw new NotFoundError(`Building costs with building level id : ${buildingLevelId} not found`);
+            }
+
             const villageResourcesMap   = new Map();
             const buildingCostMap       = new Map();
 
@@ -116,7 +152,7 @@ class BuildingCostService {
     
             for (const villageResource of villageResourcesMap.values())
             {
-                villageResourcesUpdatePromises.push(villageResource.save(transaction ? { transaction } : {}));
+                villageResourcesUpdatePromises.push(villageResource.save({ transaction }));
             }
             
             return Promise.all(villageResourcesUpdatePromises);
@@ -129,13 +165,14 @@ class BuildingCostService {
 
     /**
      * Refund the resources after stop a building_construction_progress
-     * @param {Number} villageId - village id
-     * @param {Building_cost[]} buildingCosts - array of building_cost
-     * @param {Sequelize.Transaction} transaction - sequelize transaction
-     * @throws {NotFoundError} when resource not found
+     * @param {Number} villageId - Village id to refund
+     * @param {Number} buildingLevelId - Building level id to get the building costs to refund
+     * @param {Sequelize.Transaction} transaction - Sequelize transaction
+     * @throws {NotFoundError} - When village resources or building costs are not found
+     * @throws {ForbiddenError} - When village does not have enough resources
      * @returns {Promise<void>}
      */ 
-    async refundResourcesAfterDelete (villageId, buildingCosts, transaction = null) {
+    async refundResourcesAfterCancel (villageId, buildingLevelId, transaction) {
         try
         {
             if (!villageId || isNaN(villageId)) 
@@ -143,10 +180,29 @@ class BuildingCostService {
                 throw new Error('Village id is required');
             }
 
+            // Update the village resources
+            await VillageResourceService.updateVillageResource(villageId);
+
             const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', { 
                 replacements: { villageId }
             });
-            
+
+            if (!villageResources || villageResources.length === 0)
+            {
+                throw new NotFoundError(`Village resources with village id : ${villageId} not found`);
+            }
+
+            const buildingCosts = await Building_cost.findAll({
+                where: {
+                    building_level_id: buildingLevelId
+                }
+            });
+
+            if (!buildingCosts || buildingCosts.length === 0)
+            {
+                throw new NotFoundError(`Building costs with building level id : ${buildingLevelId} not found`);
+            }
+
             const promises = [];
 
             for (const buildingCost of buildingCosts)
@@ -171,6 +227,7 @@ class BuildingCostService {
                     },
                     transaction
                 });
+
                 promises.push(promise);
             }
 

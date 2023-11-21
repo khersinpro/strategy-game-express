@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   Unit_cost.init({
     unit_name: {
       type: DataTypes.STRING,
+      allowNull: false,
       references: {
         model: 'unit',
         key: 'name'
@@ -23,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     resource_name: {
       type: DataTypes.STRING,
+      allowNull: false,
       references: {
         model: 'resource',
         key: 'name'

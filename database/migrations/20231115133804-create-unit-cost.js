@@ -11,6 +11,7 @@ module.exports = {
       },
       unit_name: {
         type: Sequelize.STRING,
+        allowNull: false,
         references: {
           model: 'unit',
           key: 'name'
@@ -19,6 +20,7 @@ module.exports = {
       },
       resource_name: {
         type: Sequelize.STRING,
+        allowNull: false,
         references: {
           model: 'resource',
           key: 'name'

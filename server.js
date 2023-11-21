@@ -36,13 +36,14 @@ const buildingTypeRouter = require('./api/building/building_type/building_type.r
 const mapRouter = require('./api/map/map.router');
 const mapPositionRouter = require('./api/map/map_position/map_position.router');
 const villageTrainingProgressRouter = require('./api/village/village_training_progress/village_training_progress.router');
+const unitCostRouter = require('./api/unit/unit_cost/unit_cost.router');
 
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
 const { loginSanitization } = require('./api/user/user.sanitization');
 
-// Déclaratioon du serveur et configuration de socket.io
+// Déclaration du serveur et configuration de socket.io
 const server = http.createServer(app);
 const io = new Server(server);
 
@@ -91,6 +92,7 @@ app.use('/api/building-type', auth, buildingTypeRouter);
 app.use('/api/map', auth, mapRouter);
 app.use('/api/map-position', auth, mapPositionRouter);
 app.use('/api/village-training-progress', auth, villageTrainingProgressRouter);
+app.use('/api/unit-cost', auth, unitCostRouter);
 
 
 /**

@@ -37,12 +37,14 @@ const military_buildings = [
   {
     name: 'barrack',
     type: 'military_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'stable',
     type: 'military_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -52,24 +54,28 @@ const resource_buildings = [
   {
     name: 'wood cutter',
     type: 'resource_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'stone mine',
     type: 'resource_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'iron mine',
     type: 'resource_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'wheat fields',
     type: 'resource_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -79,18 +85,21 @@ const wall_building = [
   {
     name: 'greek wall',
     type: 'wall_building',
+    is_common: false,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'egyptian wall',
     type: 'wall_building',
+    is_common: false,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'norse wall',
     type: 'wall_building',
+    is_common: false,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -100,6 +109,7 @@ const town_all_building = [
   {
     name: 'town all',
     type: 'town_all_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -109,18 +119,21 @@ const special_buildings = [
   {
     name: 'greek Academy',
     type: 'special_building',
+    is_common: false,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'egyptian Academy',
     type: 'special_building',
+    is_common: false,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: "norse Academy",
     type: 'special_building',
+    is_common: false,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -130,24 +143,28 @@ const storage_building = [
   {
     name: 'wood storage',
     type: 'storage_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'stone storage',
     type: 'storage_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'iron storage',
     type: 'storage_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     name: 'wheat storage',
     type: 'storage_building',
+    is_common: true,
     createdAt: new Date(),
     updatedAt: new Date()
   }

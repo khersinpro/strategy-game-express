@@ -12,6 +12,10 @@ exports.createSanitization = [
         .trim()
         .isString().withMessage('type must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('type must not be empty'),
+    body('is_common')
+        .escape()
+        .trim()
+        .isBoolean().withMessage('is_common must be a boolean'),
     validationHandler.errorhandler
 ] 
 
@@ -32,6 +36,11 @@ exports.updateSanitization = [
         .trim()
         .isString().withMessage('type must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('type must not be empty')
+        .optional(),
+    body('is_common')
+        .escape()
+        .trim()
+        .isBoolean().withMessage('is_common must be a boolean')
         .optional(),
     validationHandler.errorhandler
 ]
