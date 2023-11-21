@@ -5,7 +5,8 @@ const {
     Village_building,
     Village_construction_progress,
     Village_new_construction,
-    Village_update_construction 
+    Village_update_construction,
+    Building 
 } = require('../../../database/index').models;
 class VillageBuildingService {
 
@@ -257,8 +258,11 @@ class VillageBuildingService {
 
             for (const villageNewConstruction of villageNewConstructions)
             {
+                const building = await Building.findByPk(villageNewConstruction.Village_new_construction.building_name);
+                
                 const newConstructionPromise = Village_building.create({
                     village_id: villageNewConstruction.village_id,
+                    type: building.type,
                     building_name: villageNewConstruction.Village_new_construction.building_name,
                     building_level_id: villageNewConstruction.Village_new_construction.building_level_id
                 }, { transaction })
