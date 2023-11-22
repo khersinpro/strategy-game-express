@@ -144,7 +144,7 @@ class VillageTrainingProgressService {
                 await Village_unit.create({
                     village_id: village.id,
                     unit_name: unitToTrain.name,
-                    quantity: 0
+                    total_quantity: 0
                 });
             }
 

@@ -112,7 +112,8 @@ class VillageUnitService {
                 const villageUnit = await this.getById(villageTrainingProgress.village_unit_id);
 
                 // Create the unit in the village
-                villageUnit.quantity += unitToCreate;
+                villageUnit.total_quantity += unitToCreate;
+                villageUnit.present_quantity += unitToCreate;
                 villageUnit.save({ transaction: transacton});
 
                 // Check if the total unit created is less than the unit to train in village_training_progress then update the trained_unit_count

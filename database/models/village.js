@@ -174,7 +174,7 @@ module.exports = (sequelize, DataTypes) => {
       try
       {
         const allVillageUnit = await sequelize.models.Village_unit.findAll({
-          attribute: ['quantity'],
+          attribute: ['total_quantity'],
           include: [
             {
               model: sequelize.models.Unit,
@@ -196,7 +196,7 @@ module.exports = (sequelize, DataTypes) => {
         let actualVillagePopulation = 0;
 
         for (const villageUnit of allVillageUnit) {
-          actualVillagePopulation += villageUnit.quantity * villageUnit.Unit.population_cost
+          actualVillagePopulation += villageUnit.total_quantity * villageUnit.Unit.population_cost
         }
 
         return actualVillagePopulation;
@@ -411,7 +411,10 @@ module.exports = (sequelize, DataTypes) => {
       await models.Village_unit.create({
         village_id: village.id,
         unit_name: unit.name,
-        quantity: 0,
+        total_quantity: 0,
+        present_quantity: 0,
+        in_attack_quantity: 0,
+        in_support_quantity: 0,
       })
     }
   });

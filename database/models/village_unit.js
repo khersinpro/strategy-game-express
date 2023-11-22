@@ -14,10 +14,6 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Village_unit.init({
-    quantity: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
-    },
     village_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -33,6 +29,26 @@ module.exports = (sequelize, DataTypes) => {
         model: 'unit',
         key: 'name'
       }
+    },
+    total_quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    present_quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    in_attack_quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    in_support_quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
     }
   }, {
     indexes: [

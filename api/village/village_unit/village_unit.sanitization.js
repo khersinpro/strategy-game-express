@@ -11,7 +11,7 @@ exports.createSanitization = [
         .trim()
         .isString().withMessage('unit_name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('unit_name must not be empty'),
-    body('quantity')
+    body('total_quantity')
         .escape()
         .trim()
         .isInt().withMessage('quantity must be a number'),
@@ -34,7 +34,7 @@ exports.updateSanitization = [
         .isString().withMessage('unit_name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('unit_name must not be empty')
         .optional(),
-    body('quantity')
+    body('total_quantity')
         .escape()
         .trim()
         .isInt().withMessage('quantity must be a number')

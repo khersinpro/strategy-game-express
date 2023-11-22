@@ -100,7 +100,7 @@ class UnitCostService {
             }
 
             // Update the village resources
-            await VillageResourceService.updateResources(villageId);
+            await VillageResourceService.updateVillageResource(villageId);
 
             const villageResources = await Village_resource.findAll({
                 where: {
@@ -207,7 +207,7 @@ class UnitCostService {
             }
 
             // Update the village resources
-            await VillageResourceService.updateResources(villageId);
+            await VillageResourceService.updateVillageResource(villageId);
             
             // Get the village resources
             const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', { 

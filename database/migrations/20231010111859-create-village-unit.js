@@ -9,9 +9,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      quantity: {
-        type: Sequelize.INTEGER,
-        defaultValue: 0
+      unit_name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        references: {
+          model: 'unit',
+          key: 'name'
+        }
       },
       village_id: {
         type: Sequelize.INTEGER,
@@ -21,13 +25,25 @@ module.exports = {
           key: 'id'
         }
       },
-      unit_name: {
-        type: Sequelize.STRING,
+      total_quantity: {
+        type: Sequelize.INTEGER,
         allowNull: false,
-        references: {
-          model: 'unit',
-          key: 'name'
-        }
+        defaultValue: 0
+      },
+      present_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
+      in_attack_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
+      in_support_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
       },
       createdAt: {
         allowNull: false,
