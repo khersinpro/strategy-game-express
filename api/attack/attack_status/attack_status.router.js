@@ -15,7 +15,7 @@ const {
  * Auth routes
  */
 router.get('/',  AttackStatusController.getAll);
-router.get('/:name', nameParamSanitization, AttackStatusController.getById);
+router.get('/:name', nameParamSanitization, AttackStatusController.get);
 
 /**
  * Admin routes

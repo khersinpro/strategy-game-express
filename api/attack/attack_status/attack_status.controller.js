@@ -20,7 +20,7 @@ class AttackStatusController {
      * Returns attack status by name
      * @param {String} req.params.name - The attack status name
      */ 
-    async getById(req, res, next) {
+    async get(req, res, next) {
         try
         {
             const attackStatus = await AttackStatusService.getByName(req.params.name);
