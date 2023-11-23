@@ -1,4 +1,4 @@
-const AttackService = require('./attack.service');
+const AttackService = require('./attack_status.service');
 
 class AttackController {
 
@@ -6,7 +6,7 @@ class AttackController {
         try
         {
             const attacks = await AttackService.getAll();
-            res.status(200).json(attacks);
+            res.json(attacks);
         }
         catch(error)
         {
@@ -18,7 +18,7 @@ class AttackController {
         try
         {
             const attack = await AttackService.getById(req.params.id);
-            res.status(200).json(attack);
+            res.json(attack);
         }
         catch(error)
         {
@@ -30,7 +30,7 @@ class AttackController {
         try
         {
             const attack = await AttackService.create(req.body);
-            res.status(201).json(attack);
+            res.json(attack);
         }
         catch(error)
         {
@@ -42,7 +42,7 @@ class AttackController {
         try
         {
             const attack = await AttackService.update(req.params.id, req.body);
-            res.status(200).json(attack);
+            res.json(attack);
         }
         catch(error)
         {
@@ -54,7 +54,7 @@ class AttackController {
         try
         {
             const attack = await AttackService.delete(req.params.id);
-            res.status(200).json(attack);
+            res.json(attack);
         }
         catch(error)
         {

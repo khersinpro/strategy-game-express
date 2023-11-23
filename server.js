@@ -38,6 +38,7 @@ const mapPositionRouter = require('./api/map/map_position/map_position.router');
 const villageTrainingProgressRouter = require('./api/village/village_training_progress/village_training_progress.router');
 const unitCostRouter = require('./api/unit/unit_cost/unit_cost.router');
 const attackRouter = require('./api/attack/attack.router');
+const attackUnitRouter = require('./api/attack/attack_unit/attack_unit.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -94,6 +95,8 @@ app.use('/api/map-position', auth, mapPositionRouter);
 app.use('/api/village-training-progress', auth, villageTrainingProgressRouter);
 app.use('/api/unit-cost', auth, unitCostRouter);
 app.use('/api/attack', auth, attackRouter);
+app.use('/api/attack-unit', auth, attackUnitRouter);
+
 
 
 /**
