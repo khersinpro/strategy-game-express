@@ -39,6 +39,7 @@ const villageTrainingProgressRouter = require('./api/village/village_training_pr
 const unitCostRouter = require('./api/unit/unit_cost/unit_cost.router');
 const attackRouter = require('./api/attack/attack.router');
 const attackUnitRouter = require('./api/attack/attack_unit/attack_unit.router');
+const attackStatusRouter = require('./api/attack/attack_status/attack_status.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -96,7 +97,7 @@ app.use('/api/village-training-progress', auth, villageTrainingProgressRouter);
 app.use('/api/unit-cost', auth, unitCostRouter);
 app.use('/api/attack', auth, attackRouter);
 app.use('/api/attack-unit', auth, attackUnitRouter);
-
+app.use('/api/attack-status', auth, attackStatusRouter);
 
 
 /**

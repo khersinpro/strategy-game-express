@@ -1,99 +1,38 @@
 const { body, param } = require('express-validator');
-const validationHandler = require('../../utils/validationHandler'); 
+const validationHandler = require('../../../utils/validationHandler'); 
 
 exports.createSanitization = [
-    body('attacked_village_id')
+    body('name')
         .escape()
         .trim()
-        .isInt().withMessage('attacked_village_id must be an integer'),
-    body('attacking_village_id')
-        .escape()
-        .trim()
-        .isInt().withMessage('attacking_village_id must be an integer'),
-    body('departure_date')
-        .escape()
-        .trim()
-        .isDate().withMessage('departure_date must be a date'),
-    body('arrival_date')
-        .escape()
-        .trim()
-        .isDate().withMessage('arrival_date must be a date'),
-    body('return_date')
-        .escape()
-        .trim()
-        .isDate().withMessage('return_date must be a date')
-        .optional(),
-    body('attacker_report')
-        .escape()
-        .trim()
-        .isBoolean().withMessage('attacker_report must be a boolean')
-        .optional(),
-    body('attacked_report')
-        .escape()
-        .trim()
-        .isBoolean().withMessage('attacked_report must be a boolean')
-        .optional(),
-    body('attack_status')
-        .escape()
-        .trim()
-        .isString().withMessage('attack_status must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('attack_status must not be empty'),
+        .isString().withMessage('Name must be a string')
+        .isLength({ min: 1, max: 45 }).withMessage('Name must be between 1 and 45 characters')
+        .exists().withMessage('Name is required'),
     validationHandler.errorhandler
 ] 
 
 exports.updateSanitization = [    
-    param('id')
+    param('name')
         .escape()
         .trim()
-        .isInt().withMessage('Id must be an integer'),
-    body('attacked_village_id')
+        .isString().withMessage('Name must be a string')
+        .isLength({ min: 1, max: 45 }).withMessage('Name must be between 1 and 45 characters'),
+    body('name')
         .escape()
         .trim()
-        .isInt().withMessage('attacked_village_id must be an integer')
-        .optional(),
-    body('attacking_village_id')
-        .escape()
-        .trim()
-        .isInt().withMessage('attacking_village_id must be an integer')
-        .optional(),
-    body('departure_date')
-        .escape()
-        .trim()
-        .isDate().withMessage('departure_date must be a date')
-        .optional(),
-    body('arrival_date')
-        .escape()
-        .trim()
-        .isDate().withMessage('arrival_date must be a date')
-        .optional(),
-    body('return_date')
-        .escape()
-        .trim()
-        .isDate().withMessage('return_date must be a date')
-        .optional(),
-    body('attacker_report')
-        .escape()
-        .trim()
-        .isBoolean().withMessage('attacker_report must be a boolean')
-        .optional(),
-    body('attacked_report')
-        .escape()
-        .trim()
-        .isBoolean().withMessage('attacked_report must be a boolean')
-        .optional(),
-    body('attack_status')
-        .escape()
-        .trim()
-        .isString().withMessage('attack_status must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('attack_status must not be empty')
+        .isString().withMessage('Name must be a string')
+        .isLength({ min: 1, max: 45 }).withMessage('Name must be between 1 and 45 characters')
         .optional(),
     validationHandler.errorhandler
 ]
 
-exports.idParamSanitization = [
-    param('id')
+exports.nameParamSanitization = [
+    param('name')
         .escape()
         .trim()
-        .isInt().withMessage('Id must be an integer'),
+        .isString().withMessage('Name must be a string')
+        .isLength({ min: 1, max: 45 }).withMessage('Name must be between 1 and 45 characters')
+        .exists().withMessage('Name is required')
+        .notEmpty().withMessage('Name must not be empty'),
     validationHandler.errorhandler
 ]

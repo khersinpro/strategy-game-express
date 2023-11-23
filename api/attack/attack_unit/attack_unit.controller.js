@@ -1,7 +1,9 @@
 const AttackUnitService = require('./attack_unit.service');
 
 class AttackUnitController {
-
+    /**
+     * Returns all attack units
+     */ 
     async getAll(req, res, next) {
         try
         {
@@ -14,6 +16,10 @@ class AttackUnitController {
         }
     }
 
+    /**
+     * Returns attack unit by id
+     * @param {Number} req.params.id - The attack unit id 
+     */ 
     async getById(req, res, next) {
         try
         {
@@ -26,6 +32,10 @@ class AttackUnitController {
         }
     }
 
+    /**
+     * Create a attack unit
+     * @param {Object} req.body - Data to create an attack unit
+     */  
     async create(req, res, next) {
         try
         {
@@ -38,6 +48,11 @@ class AttackUnitController {
         }
     }
 
+    /**
+     * Update a attack unit
+     * @param {Number} req.params.id - The attack unit id
+     * @param {Object} req.body - Data to update an attack unit
+     */
     async update(req, res, next) {
         try
         {
@@ -50,6 +65,10 @@ class AttackUnitController {
         }
     }
 
+    /**
+     * Delete an attack unit
+     * @param {Number} req.params.id - The attack unit id
+     */
     async delete(req, res, next) {
         try
         {

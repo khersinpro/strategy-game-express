@@ -1,12 +1,14 @@
-const AttackService = require('./attack_status.service');
+const AttackStatusService = require('./attack_status.service');
 
-class AttackController {
-
+class AttackStatusController {
+    /**
+     * Returns all attack status
+     */ 
     async getAll(req, res, next) {
         try
         {
-            const attacks = await AttackService.getAll();
-            res.json(attacks);
+            const attackStatus = await AttackStatusService.getAll();
+            res.json(attackStatus);
         }
         catch(error)
         {
@@ -14,11 +16,15 @@ class AttackController {
         }
     }
 
+    /**
+     * Returns attack status by name
+     * @param {String} req.params.name - The attack status name
+     */ 
     async getById(req, res, next) {
         try
         {
-            const attack = await AttackService.getById(req.params.id);
-            res.json(attack);
+            const attackStatus = await AttackStatusService.getByName(req.params.name);
+            res.json(attackStatus);
         }
         catch(error)
         {
@@ -26,11 +32,15 @@ class AttackController {
         }
     }
 
+    /**
+     * Create a attack status
+     * @param {Object} req.body - Data to create an attack status
+     */ 
     async create(req, res, next) {
         try
         {
-            const attack = await AttackService.create(req.body);
-            res.json(attack);
+            const attackStatus = await AttackStatusService.create(req.body);
+            res.json(attackStatus);
         }
         catch(error)
         {
@@ -38,11 +48,16 @@ class AttackController {
         }
     }
 
+    /**
+     * Update a attack status
+     * @param {String} req.params.name - The attack status name
+     * @param {Object} req.body - Data to update an attack status
+     */
     async update(req, res, next) {
         try
         {
-            const attack = await AttackService.update(req.params.id, req.body);
-            res.json(attack);
+            const attackStatus = await AttackStatusService.update(req.params.name, req.body);
+            res.json(attackStatus);
         }
         catch(error)
         {
@@ -50,11 +65,15 @@ class AttackController {
         }
     }
 
+    /**
+     * Delete an attack status
+     * @param {String} req.params.name - The attack status name
+     */
     async delete(req, res, next) {
         try
         {
-            const attack = await AttackService.delete(req.params.id);
-            res.json(attack);
+            const attackStatus = await AttackStatusService.delete(req.params.name);
+            res.json(attackStatus);
         }
         catch(error)
         {
@@ -63,4 +82,4 @@ class AttackController {
     }
 }
 
-module.exports = new AttackController();
+module.exports = new AttackStatusController();

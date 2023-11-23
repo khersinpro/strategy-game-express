@@ -1,86 +1,81 @@
-const NotFoundError = require('../../errors/not-found');
+const NotFoundError = require('../../../errors/not-found');
+const { Attack_status } = require('../../../database/index').models;
 
-const { Attack } = require('../../database/index').models;
-
-class AttackService {
+class AttackStatusService {
     /**
-     * Returns all attacks
-     * @returns {Promise<Attack[]>}
+     * Returns all attack status
+     * @returns {Promise<Attack_status[]>}
      */ 
     getAll() {
-        return Attack.findAll();
+        return Attack_status.findAll();
     }
 
     /**
-     * Returns attack by id
-     * @param {Number} id - The attack id
-     * @throws {NotFoundError} when attack not found
-     * @returns {Promise<Attack>}
+     * Returns attack status by name
+     * @param {String} name - The attack status name
+     * @throws {NotFoundError} when attack status not found
+     * @returns {Promise<Attack_status>}
      */ 
-    async getById(id) {
+    async getByName(name) {
         try
         {
-            const attack = await Attack.findByPk(id);
+            console.log("name : " + name);
+            const attackStatus = await Attack_status.findByPk(name);
 
-            if (!attack) 
+            if (!attackStatus) 
             {
-                throw new NotFoundError('Attack not found');
+                throw new NotFoundError('Attack_status not found');
             }
 
-            return attack;
+            return attackStatus;
         }
         catch(error)
         {
-            throw new NotFoundError('Attack not found');
+            throw new NotFoundError('Attack_status not found');
         }
     }
 
     /**
-     * Create a attack
-     * @param {Object} data - Data to create an attack
-     * @returns {Promise<Attack>}
+     * Create a attack status
+     * @param {Object} data - Data to create an attack status
+     * @returns {Promise<Attack_status>}
      */
     create(data) {
-        return Attack.create(data);
+        return Attack_status.create(data);
     }
 
     /**
-     * Update a attack
-     * @param {Number} id - The attack id
-     * @param {Object} data - Data to update an attack
-     * @returns {Promise<Attack>}
+     * Update a attack status
+     * @param {String} name - The attack status name
+     * @param {Object} data - Data to update an attack status
+     * @returns {Promise<Attack_status>}
      */
-    update(id, data) {
-        return Attack.update(data, {
+    update(name, data) {
+        return Attack_status.update(data, {
             where: {
-                id: id
+                name: name
             }
         });
     }
 
     /**
-     * Delete an attack
-     * @param {Number} id - The attack id
-     * @throws {NotFoundError} when attack not found
-     * @returns {Promise<Attack>}
+     * Delete an attack status
+     * @param {String} name - The attack status name
+     * @throws {NotFoundError} when attack status not found
+     * @returns {Promise<Attack_status>}
      */
-    async delete(id) {
+    async delete(name) {
         try
         {
-            const attack = await this.getById(id);
+            const attackStatus = await this.getByName(name);
 
-            if (!attack) 
-            {
-                throw new NotFoundError('Attack not found');
-            }
-
-            return attack.destroy();
+            return attackStatus.destroy();
         }
         catch(error)
         {
-            throw new NotFoundError('Attack not found');
+            throw new NotFoundError('Attack_status not found');
         }
     }
 }
 
-module.exports = new AttackService();
+module.exports = new AttackStatusService();

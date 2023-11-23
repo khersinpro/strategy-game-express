@@ -1,27 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const AttackController = require('./attack.controller');
+const AttackStatusController = require('./attack_status.controller');
 const { 
     isAdmin 
-} = require('../../middlewares/auth');
+} = require('../../../middlewares/auth');
 const { 
     createSanitization, 
     updateSanitization, 
-    idParamSanitization 
+    nameParamSanitization
 } = require('./attack_status.sanitization');
 
 
 /**
  * Auth routes
  */
-router.get('/',  AttackController.getAll);
-router.get('/:id', idParamSanitization, AttackController.getById);
-router.post('/', createSanitization, AttackController.create);
-router.put('/:id', idParamSanitization, updateSanitization, AttackController.update);
+router.get('/',  AttackStatusController.getAll);
+router.get('/:name', nameParamSanitization, AttackStatusController.getById);
 
 /**
  * Admin routes
- */
-router.delete('/:id', isAdmin, idParamSanitization, AttackController.delete);
+*/
+router.post('/', isAdmin, createSanitization, AttackStatusController.create);
+router.put('/:name', isAdmin, nameParamSanitization, updateSanitization, AttackStatusController.update);
+router.delete('/:name', isAdmin, nameParamSanitization, AttackStatusController.delete);
 
 module.exports = router;
