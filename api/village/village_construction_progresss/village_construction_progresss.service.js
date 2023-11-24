@@ -477,6 +477,8 @@ class VillageProductionProgressService {
 
         return Promise.all(promises);
     }
+
+    
 }
 
 module.exports = new VillageProductionProgressService();
