@@ -2,7 +2,7 @@ const { sequelize } = require('../../database/index');
 const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
 const VillageService = require('../village/village.service');
-const { Attack, Village_unit, Unit, Attack_unit } = require('../../database/index').models;
+const { Attack, Village_unit, Unit, Attack_unit, Map_position, Village } = require('../../database/index').models;
 
 class AttackService {
     /**
@@ -85,6 +85,7 @@ class AttackService {
     }
 
     /**
+     * Generate an attack with the data provided
      * @param {Object} data - Data to create an attack
      * @param {Number} data.attackedVillageId - The village id of the target
      * @param {Number} data.attackingVillageId - The village id of the attacker
@@ -100,8 +101,24 @@ class AttackService {
         const transaction = await sequelize.transaction();
         try
         {
-            const attackedVillage = await VillageService.getById(data.attackedVillageId);
-            const attackingVillage = await VillageService.getById(data.attackingVillageId);
+            const attackedVillage  = await Village.findByPk(data.attackedVillageId, {
+                include: [
+                    {
+                        model: Map_position,
+                        required: true
+                    }
+                ]
+            });
+
+            const attackingVillage = await Village.findByPk(data.attackingVillageId, {
+                include: [
+                    {
+                        model: Map_position,
+                        required: true
+                    }
+                ]
+            });
+
             attackingVillage.isAdminOrVillageOwner(currentUser);
 
             if (!attackedVillage || !attackingVillage) 
@@ -121,10 +138,11 @@ class AttackService {
                 throw new BadRequestError('You cannot attack without units');
             }
 
+            // Create the attack with the status pending
             const attack = await this.create({
                 attacked_village_id: attackedVillage.id,
                 attacking_village_id: attackingVillage.id,
-                attack_status: 'in progress',
+                attack_status: 'pending',
                 departure_date: new Date(),
                 arrival_date: new Date() 
             });
@@ -171,7 +189,7 @@ class AttackService {
                     attack_id: attack.id,
                     village_unit_id: villageUnit.id,
                     sent_quantity: villageUnit.quantity
-                }, { transaction });
+                },);
 
                 await villageUnitData.update({
                     present_quantity: villageUnitData.present_quantity - villageUnit.quantity,
@@ -184,20 +202,26 @@ class AttackService {
                 throw new Error('Unit speed cannot be 0.');
             }
 
-            // date + 1 day for ariaval date
-            const datetest = new Date(Date.now() + 24*60*60*1000);
-            attack.arrival_date = datetest;
-            console.log("la", attack);
+            // calculate the distance between the two villages 
+            const attackingVillageXPosition = attackingVillage.Map_position.x;
+            const attackingVillageYPosition = attackingVillage.Map_position.y;
+            const attackedVillageXPosition  = attackedVillage.Map_position.x;
+            const attackedVillageYPosition  = attackedVillage.Map_position.y;
+            const distance                  = this.euclideanDistance(attackingVillageXPosition, attackingVillageYPosition, attackedVillageXPosition, attackedVillageYPosition);
+            const estimatedTravelTime       = this.estimateTravelTime(distance, slowestUnitSpeed);
+            const arrivalTime               = this.calculateArrivalTime(attack.departure_date, estimatedTravelTime);
+            attack.arrival_date             = arrivalTime;
+            attack.attack_status            = 'attacking';
             await attack.save();
             
-            if (attack.arrival_date < new Date() || attack.arrival_date !== datetest)
+            // Control if the date is saved correctly
+            if (attack.arrival_date < new Date() || attack.arrival_date !== arrivalTime || attack.attack_status !== 'attacking')
             {
-                console.log("ici ?");
                 await attack.destroy()
-                throw new Error('Invalid arrival date');
+                throw new Error('Invalid arrival date or attack status.');
             }
+            
             await transaction.commit();
-
             return attack;
         }
         catch (error)
@@ -205,6 +229,46 @@ class AttackService {
             transaction.rollback();
             throw error;
         }
+    }
+
+    /**
+     * Calcule the distance between two villages
+     * @param {Number} x1 - The x position of the first village
+     * @param {Number} y1 - The y position of the first village
+     * @param {Number} x2 - The x position of the second village
+     * @param {Number} y2 - The y position of the second village
+     * @returns {Number} - The distance between the two villages 
+     */
+    euclideanDistance(x1, y1, x2, y2) {
+        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        return distance;
+    }
+
+    /**
+     * Calcule the estimated travel time with the slowest unit speed
+     * @param {Number} distance - The distance between the two villages
+     * @param {Number} speed - The slowest unit speed
+     * @returns - The estimated travel time
+     */
+    estimateTravelTime(distance, speed) {
+        const travelTime = distance / speed;
+        return travelTime;
+    }
+
+    /**
+     * Calcule the arrival time
+     * @param {Date} currentDateTime - The current date and time
+     * @param {Number} estimatedTravelTime - The estimated travel time
+     * @returns - The arrival time
+     */
+    calculateArrivalTime(currentDateTime, estimatedTravelTime) {
+        // Parse the current date and time string to a Date object
+        const startDate = new Date(currentDateTime);
+      
+        // Calculate the arrival time by adding the estimated travel time (in hours) to the start date
+        const arrivalTime = new Date(startDate.getTime() + estimatedTravelTime * 60 * 60 * 1000); // Convert hours to milliseconds
+      
+        return arrivalTime;
     }
 }
 

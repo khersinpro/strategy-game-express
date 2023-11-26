@@ -12,6 +12,7 @@ module.exports = {
       attack_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        onDelete: 'CASCADE',
         references: {
           model: 'attack',
           key: 'id'

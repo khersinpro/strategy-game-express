@@ -118,24 +118,30 @@ class AttackController {
         const defense_unit_3 = req.query.defense_unit_3;
 
         const totalAttackPower = (attack_unit_1 * unit_1.attack) + (attack_unit_2 * unit_2.attack) + (attack_unit_3 * unit_3.attack);
-        // const unit1TotalAttackPower = attack_unit_1 * unit_1.attack;
-        // const unit2TotalAttackPower = attack_unit_2 * unit_2.attack;
-        // const unit3TotalAttackPower = attack_unit_3 * unit_3.attack;
+        const unit1TotalAttackPower = attack_unit_1 * unit_1.attack;
+        const unit2TotalAttackPower = attack_unit_2 * unit_2.attack;
+        const unit3TotalAttackPower = attack_unit_3 * unit_3.attack;
 
         const totalDefensePower = (defense_unit_1 * unit_1.defense.unit_1) + (defense_unit_2 * unit_2.defense.unit_2) + (defense_unit_3 * unit_3.defense.unit_3);
-        // const unit1TotalDefensePower = defense_unit_1 * unit_1.defense.unit_1;
-        // const unit2TotalDefensePower = defense_unit_2 * unit_2.defense.unit_2;
-        // const unit3TotalDefensePower = defense_unit_3 * unit_3.defense.unit_3;
+        const unit1TotalDefensePower = defense_unit_1 * unit_1.defense.unit_1;
+        const unit2TotalDefensePower = defense_unit_2 * unit_2.defense.unit_2;
+        const unit3TotalDefensePower = defense_unit_3 * unit_3.defense.unit_3;
 
         // const totalAttackPower = 1500
         // const totalDefensePower = 2500
         // Calculate defense losses
         // (Valeur totale de l’attaque / Valeur totale de la défense)^1,5 * 100% (5)
-        let battleRatio
+        let unit1ratio, unit2ratio, unit3ratio;
         if (totalDefensePower > totalAttackPower) {
-            battleRatio = Math.pow((totalAttackPower / totalDefensePower), 1.5) * 100;
+            // battleRatio = Math.pow((totalAttackPower / totalDefensePower), 1.5) * 100;
+            unit1ratio = Math.pow((unit1TotalAttackPower / unit1TotalDefensePower), 1,5) * 100;
+            unit2ratio = Math.pow((unit2TotalAttackPower / unit2TotalDefensePower), 1,5) * 100;
+            unit3ratio = Math.pow((unit3TotalAttackPower / unit3TotalDefensePower), 1,5) * 100;
         } else {
-            battleRatio = Math.pow((totalDefensePower / totalAttackPower), 1.5) * 100;            
+            // battleRatio = Math.pow((totalDefensePower / totalAttackPower), 1.5) * 100;   
+            unit1ratio = Math.pow((unit1TotalDefensePower / unit1TotalAttackPower), 1,5) * 100;
+            unit2ratio = Math.pow((unit2TotalDefensePower / unit2TotalAttackPower), 1,5) * 100;
+            unit3ratio = Math.pow((unit3TotalDefensePower / unit3TotalAttackPower), 1,5) * 100;         
         }
         // battleRatio = Math.pow((totalAttackPower / totalDefensePower), 1.5) * 100;
         let unit_1_atk_alive;
@@ -146,17 +152,17 @@ class AttackController {
         let unit_3_def_alive;
         if (totalDefensePower < totalAttackPower) {
             // Attackers win
-            unit_1_atk_alive = Math.round(attack_unit_1 * (1 - battleRatio / 100));
-            unit_2_atk_alive = Math.round(attack_unit_2 * (1 - battleRatio / 100));
-            unit_3_atk_alive = Math.round(attack_unit_3 * (1 - battleRatio / 100));
+            unit_1_atk_alive = Math.round(attack_unit_1 * (1 - unit1ratio / 100));
+            unit_2_atk_alive = Math.round(attack_unit_2 * (1 - unit2ratio / 100));
+            unit_3_atk_alive = Math.round(attack_unit_3 * (1 - unit3ratio / 100));
             unit_1_def_alive = 0;
             unit_2_def_alive = 0;
             unit_3_def_alive = 0;
         } else {
             // Defenders win
-            unit_1_def_alive = Math.round(defense_unit_1 * (1 - battleRatio / 100));
-            unit_2_def_alive = Math.round(defense_unit_2 * (1 - battleRatio / 100));
-            unit_3_def_alive = Math.round(defense_unit_3 * (1 - battleRatio / 100));
+            unit_1_def_alive = Math.round(defense_unit_1 * (1 - unit1ratio / 100));
+            unit_2_def_alive = Math.round(defense_unit_2 * (1 - unit2ratio / 100));
+            unit_3_def_alive = Math.round(defense_unit_3 * (1 - unit3ratio / 100));
             unit_1_atk_alive = 0;
             unit_2_atk_alive = 0;
             unit_3_atk_alive = 0;
@@ -165,7 +171,13 @@ class AttackController {
         const result = {
             totalAttackPower,
             totalDefensePower,
-            battleRatio,
+            // battleRatio,
+            unit1TotalAttackPower,
+            unit2TotalAttackPower,
+            unit3TotalAttackPower,
+            unit1TotalDefensePower,
+            unit2TotalDefensePower,
+            unit3TotalDefensePower,
             unit_1_atk_alive,
             unit_2_atk_alive,
             unit_3_atk_alive,

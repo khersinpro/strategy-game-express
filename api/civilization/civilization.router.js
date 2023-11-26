@@ -11,5 +11,4 @@ router.post('/', isAdmin, createSanitization, civilizationController.create);
 router.put('/:name', isAdmin, updateSanitization, civilizationController.update);
 router.delete('/:name', isAdmin, nameParamSanitization, civilizationController.delete);
 
-
 module.exports = router;

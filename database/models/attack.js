@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       });
       this.hasMany(models.Attack_unit, {
         foreignKey: 'attack_id',
+        onDelete: 'CASCADE'
       });
     }
   }
