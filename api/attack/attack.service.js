@@ -1,8 +1,17 @@
 const { sequelize } = require('../../database/index');
+const attack = require('../../database/models/attack');
 const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
-const VillageService = require('../village/village.service');
-const { Attack, Village_unit, Unit, Attack_unit, Map_position, Village } = require('../../database/index').models;
+const { 
+    Attack, 
+    Village_unit, 
+    Unit, 
+    Attack_unit, 
+    Map_position, Village, 
+    Wall_defense, 
+    Village_building, 
+    Defense_type 
+} = require('../../database/index').models;
 
 class AttackService {
     /**
@@ -237,13 +246,23 @@ class AttackService {
     async generateIncomingAttackResults(villageId) {
         try 
         {
-            const attackedVillage = await Village.findByPk(villageId);
-
             const incomingAttacks = await Attack.findAll({
                 includes: [
                     {
                         model: Attack_unit,
-                        required: true
+                        required: true,
+                        include: [
+                            {
+                                model: Village_unit,
+                                required: true,
+                                include: [
+                                    {
+                                        model: Unit,
+                                        required: true,
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ],
                 where: {
@@ -255,8 +274,96 @@ class AttackService {
                 }
             });
 
+            if (!incomingAttacks)
+            {
+                return;
+            }
+
+            const attackedVillage = await Village.findByPk(villageId, {
+                include: [
+                    {
+                        model: Village_unit,
+                        where: {
+                            present_quantity: {
+                                [Op.gt] : 0
+                            }
+                        },
+                        include: [
+                            {
+                                model: Unit,
+                                required: true,
+                                include: [
+                                    {
+                                        model: Defense_type,
+                                        required: true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        model: Village_building,
+                        where: {
+                            type: 'wall_building'
+                        }
+                    }
+                ] 
+            });
+
+            if (!attackedVillage)
+            {
+                throw new NotFoundError('Village not found');
+            }
+
+            let wallDefenseIncrease = 0;
+
+            if (attackedVillage.village_buildings.length > 0 && attackedVillage.village_buildings[0].level_id)
+            {
+                const wallDefenseLevel = attackedVillage.village_buildings[0].level_id;
+
+                const wallDefense = await Wall_defense.findOne({
+                    where: {
+                        building_level_id: wallDefenseLevel
+                    }
+                });
+
+                if (wallDefense)
+                {
+                    wallDefenseIncrease = wallDefense.defense_percent;
+                }
+            }
+
             for (const incomingAttack of incomingAttacks)
             {
+                // update the village resourse with the incoming attack date
+                // update the village units with the incoming attack date
+
+                const incomingAttackUnits = incomingAttack.Attack_units;
+                const attackPowerStats    = incomingAttackUnits.reduce((attackStats, attackUnit) => {
+                    if (attackStats[attackUnit.Village_unit.Unit.attack_type] === undefined)
+                    {
+                        attackStats[attackUnit.Village_unit.Unit.attack_type] = 0;
+                    }
+                    attackStats[attackUnit.Village_unit.Unit.attack_type] += attackUnit.sent_quantity * attackUnit.Village_unit.Unit.attack;
+                    return attackStats;
+                }, {});
+
+
+                const defenseAttackUnits = attackedVillage.Village_units || [];
+                const defensePowerStats  = defenseAttackUnits.reduce((defenseStats, defenseUnit) => {
+                    const defenses = defenseUnit.Unit.Defense_types;
+                    for (const defense of defenses)
+                    {
+                        if (defenseStats[defense.type] === undefined)
+                        {
+                            defenseStats[defense.type] = 0;
+                        }
+                        defenseStats[defense.type] += defenseUnit.present_quantity * defense.defense;
+                    }
+                    return defenseStats;
+                }, {});
+
+
 
             }
                 
@@ -280,6 +387,17 @@ class AttackService {
         {
 
         }
+    }
+
+    calculateDefensePower (villageUnits) {
+        let defensePower = 0;
+
+        for (const villageUnit of villageUnits)
+        {
+            defensePower += villageUnit.present_quantity * villageUnit.Unit.defense;
+        }
+
+        return defensePower;
     }
 
 
