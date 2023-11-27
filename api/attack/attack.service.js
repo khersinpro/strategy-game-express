@@ -230,6 +230,59 @@ class AttackService {
             throw error;
         }
     }
+    /**
+     * Calculate the incoming attack results
+     * @param {Number} villageId - The village id where the attack is incoming
+     */
+    async generateIncomingAttackResults(villageId) {
+        try 
+        {
+            const attackedVillage = await Village.findByPk(villageId);
+
+            const incomingAttacks = await Attack.findAll({
+                includes: [
+                    {
+                        model: Attack_unit,
+                        required: true
+                    }
+                ],
+                where: {
+                    attacked_village_id: villageId,
+                    attack_status: 'attacking',
+                    arrival_date: {
+                        [Op.lt]: new Date()
+                    }
+                }
+            });
+
+            for (const incomingAttack of incomingAttacks)
+            {
+
+            }
+                
+        }
+        catch (error)
+        {
+            throw error;
+        }
+    }
+
+    /**
+     * Calculate the outgoing attack results
+     * @param {Number} attack - The attack
+     */
+    generateOutgoingAttackResults(attack) {
+        try 
+        {
+
+        }
+        catch (error)
+        {
+
+        }
+    }
+
+
 
     /**
      * Calcule the distance between two villages
