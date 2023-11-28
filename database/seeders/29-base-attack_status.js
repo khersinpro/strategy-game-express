@@ -17,6 +17,11 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        name: 'lost',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
         name: 'returning',
         createdAt: new Date(),
         updatedAt: new Date()

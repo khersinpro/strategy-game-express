@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { sequelize } = require('../../database/index');
 const attack = require('../../database/models/attack');
 const BadRequestError = require('../../errors/bad-request');
@@ -7,7 +8,8 @@ const {
     Village_unit, 
     Unit, 
     Attack_unit, 
-    Map_position, Village, 
+    Map_position, 
+    Village, 
     Wall_defense, 
     Village_building, 
     Defense_type 
@@ -246,8 +248,12 @@ class AttackService {
     async generateIncomingAttackResults(villageId) {
         try 
         {
+            const attackReport = {
+
+            }
+
             const incomingAttacks = await Attack.findAll({
-                includes: [
+                include: [
                     {
                         model: Attack_unit,
                         required: true,
@@ -279,36 +285,7 @@ class AttackService {
                 return;
             }
 
-            const attackedVillage = await Village.findByPk(villageId, {
-                include: [
-                    {
-                        model: Village_unit,
-                        where: {
-                            present_quantity: {
-                                [Op.gt] : 0
-                            }
-                        },
-                        include: [
-                            {
-                                model: Unit,
-                                required: true,
-                                include: [
-                                    {
-                                        model: Defense_type,
-                                        required: true
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        model: Village_building,
-                        where: {
-                            type: 'wall_building'
-                        }
-                    }
-                ] 
-            });
+            const attackedVillage = await Village.findByPk(villageId);
 
             if (!attackedVillage)
             {
@@ -316,10 +293,16 @@ class AttackService {
             }
 
             let wallDefenseIncrease = 0;
+            const attackedVillageWall = await Village_building.findOne({
+                where: {
+                    village_id: attackedVillage.id, 
+                    type: 'wall_building'
+                }
+            });
 
-            if (attackedVillage.village_buildings.length > 0 && attackedVillage.village_buildings[0].level_id)
+            if (attackedVillageWall)
             {
-                const wallDefenseLevel = attackedVillage.village_buildings[0].level_id;
+                const wallDefenseLevel = attackedVillageWall.level_id;
 
                 const wallDefense = await Wall_defense.findOne({
                     where: {
@@ -337,19 +320,60 @@ class AttackService {
             {
                 // update the village resourse with the incoming attack date
                 // update the village units with the incoming attack date
-
                 const incomingAttackUnits = incomingAttack.Attack_units;
-                const attackPowerStats    = incomingAttackUnits.reduce((attackStats, attackUnit) => {
-                    if (attackStats[attackUnit.Village_unit.Unit.attack_type] === undefined)
-                    {
-                        attackStats[attackUnit.Village_unit.Unit.attack_type] = 0;
+                const attackUnitQuantity = incomingAttackUnits.reduce((quantity, attackUnit) => {
+
+                    if (quantity[attackUnit.Village_unit.Unit.unit_type] === undefined) {
+                        quantity[attackUnit.Village_unit.Unit.unit_type] = 0;
                     }
-                    attackStats[attackUnit.Village_unit.Unit.attack_type] += attackUnit.sent_quantity * attackUnit.Village_unit.Unit.attack;
+                    quantity[attackUnit.Village_unit.Unit.unit_type] += attackUnit.sent_quantity;
+                    quantity.totalQuantity += attackUnit.sent_quantity;
+                    return quantity;
+                }, {totalQuantity: 0});
+
+                const attackPowerStats    = incomingAttackUnits.reduce((attackStats, attackUnit) => {
+                    if (attackStats[attackUnit.Village_unit.Unit.unit_type] === undefined)
+                    {
+                        attackStats[attackUnit.Village_unit.Unit.unit_type] = 0;
+                    }
+                    attackStats[attackUnit.Village_unit.Unit.unit_type] += attackUnit.sent_quantity * attackUnit.Village_unit.Unit.attack;
+                    attackStats.totalAttack += attackUnit.sent_quantity * attackUnit.Village_unit.Unit.attack;
                     return attackStats;
-                }, {});
+                }, {totalAttack: 0});
 
+                attackReport.attackPowerTotal = attackPowerStats;
+                attackReport.attackUnitQuantity = attackUnitQuantity;
 
-                const defenseAttackUnits = attackedVillage.Village_units || [];
+                const defenseAttackUnits = await Village_unit.findAll({ 
+                    include: [
+                        {
+                            model: Unit,
+                            required: true,
+                            include: [
+                                {
+                                    model: Defense_type,
+                                    required: true
+                                }
+                            ]
+                        }
+                    ],
+                    where: {
+                        village_id: attackedVillage.id,
+                        present_quantity: {
+                            [Op.gt]: 0
+                        }
+                    }
+                });
+
+                const defenseUnitQuantity = defenseAttackUnits.reduce((quantity, defenseUnit) => {
+                    if (quantity[defenseUnit.Unit.unit_type] === undefined) {
+                        quantity[defenseUnit.Unit.unit_type] = 0;
+                    }
+                    quantity[defenseUnit.Unit.unit_type] += defenseUnit.present_quantity;
+                    quantity.totalQuantity               += defenseUnit.present_quantity;
+                    return quantity;
+                }, {totalQuantity: 0});
+
                 const defensePowerStats  = defenseAttackUnits.reduce((defenseStats, defenseUnit) => {
                     const defenses = defenseUnit.Unit.Defense_types;
                     for (const defense of defenses)
@@ -358,14 +382,75 @@ class AttackService {
                         {
                             defenseStats[defense.type] = 0;
                         }
-                        defenseStats[defense.type] += defenseUnit.present_quantity * defense.defense;
+                        defenseStats[defense.type] += defenseUnit.present_quantity * defense.defense_value;
+                        defenseStats.totalDefense  += defenseUnit.present_quantity * defense.defense_value;
                     }
                     return defenseStats;
-                }, {});
+                }, {totalDefense: 0});
 
 
+                attackReport.defensePowerTotal = defensePowerStats;
+                attackReport.defenseUnitQuantity = defenseUnitQuantity;
 
+
+                const attackPower               = attackPowerStats.totalAttack;
+                const defensePowerWithoutWall   = defensePowerStats.totalDefense;
+                const defensePower              = defensePowerWithoutWall + (defensePowerWithoutWall * (wallDefenseIncrease / 100));
+                let attackWin                   = attackPower > defensePower;
+                let battleRatio                 = 0;
+
+                attackReport.attackWin = attackWin;
+                attackReport.defensePowerWithoutWall = defensePowerWithoutWall;
+                attackReport.defensePower = defensePower;
+                attackReport.attackPower = attackPower;
+
+                if (attackWin)
+                {
+                    battleRatio = Math.pow((defensePower / attackPower), 1.5) * 100;  
+                }
+                else if (!attackWin)
+                {
+                    battleRatio = Math.pow((attackPower / defensePower), 1.5) * 100;
+                }
+                else 
+                {
+                    battleRatio = 100;
+                }
+
+                attackReport.battleRatio = battleRatio;
+
+                // ATTACK UNITS
+                for (const attackUnit of incomingAttackUnits) 
+                {
+                    const aliveQuantity = attackWin ? Math.round(attackUnit.sent_quantity * (1 - battleRatio / 100)) : 0;
+                    const lostQuantity  = attackWin ? attackUnit.sent_quantity - aliveQuantity : attackUnit.sent_quantity;
+                    attackUnit.lost_quantity = lostQuantity;
+                    await attackUnit.save();
+
+                    const villageUnit = await Village_unit.findByPk(attackUnit.village_unit_id);
+                    villageUnit.in_attack_quantity -= attackUnit.lost_quantity;
+                    villageUnit.total_quantity -= attackUnit.lost_quantity;
+                    await villageUnit.save();
+                }
+
+                // DEFENSE UNITS
+                for (const defenseUnit of defenseAttackUnits)
+                {
+                    const aliveQuantity = !attackWin ? Math.round(defenseUnit.present_quantity * (1 - battleRatio / 100)) : 0;
+                    const lostQuantity  = !attackWin ? defenseUnit.present_quantity - aliveQuantity : defenseUnit.present_quantity;
+                    const villageUnit = await Village_unit.findByPk(defenseUnit.id);
+                    villageUnit.present_quantity -= lostQuantity;
+                    villageUnit.total_quantity   -= lostQuantity;
+                    await villageUnit.save();
+                }
+
+                incomingAttack.attack_status = attackWin ? 'returning' : 'lost';
+                const attackTravelDuration   = incomingAttack.arrival_date - incomingAttack.departure_date;
+                incomingAttack.return_date   = attackWin ? new Date(incomingAttack.arrival_date.getTime() + attackTravelDuration) : null;
+                await incomingAttack.save();
             }
+
+            return attackReport;
                 
         }
         catch (error)
