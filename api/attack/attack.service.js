@@ -320,6 +320,8 @@ class AttackService {
             {
                 // update the village resourse with the incoming attack date
                 // update the village units with the incoming attack date
+
+                // GENERATE THE ATTACK STATS FOR CALCULS
                 const incomingAttackUnits = incomingAttack.Attack_units;
                 const attackUnitQuantity = incomingAttackUnits.reduce((quantity, attackUnit) => {
 
@@ -344,6 +346,7 @@ class AttackService {
                 attackReport.attackPowerTotal = attackPowerStats;
                 attackReport.attackUnitQuantity = attackUnitQuantity;
 
+                // GENERATE THE DEFENSE STATS FOR CALCULS
                 const defenseAttackUnits = await Village_unit.findAll({ 
                     include: [
                         {
