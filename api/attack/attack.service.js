@@ -292,62 +292,31 @@ class AttackService {
                 throw new NotFoundError('Village not found');
             }
 
-            let wallDefenseIncrease = 0;
-            const attackedVillageWall = await Village_building.findOne({
-                where: {
-                    village_id: attackedVillage.id, 
-                    type: 'wall_building'
-                }
-            });
-
-            if (attackedVillageWall)
-            {
-                const wallDefenseLevel = attackedVillageWall.level_id;
-
-                const wallDefense = await Wall_defense.findOne({
-                    where: {
-                        building_level_id: wallDefenseLevel
-                    }
-                });
-
-                if (wallDefense)
-                {
-                    wallDefenseIncrease = wallDefense.defense_percent;
-                }
-            }
-
             for (const incomingAttack of incomingAttacks)
             {
                 // update the village resourse with the incoming attack date
                 // update the village units with the incoming attack date
+                // Mise a jour des batiments avec dates d'arrivée de l'attaque
 
-                // GENERATE THE ATTACK STATS FOR CALCULS
-                const incomingAttackUnits = incomingAttack.Attack_units;
-                const attackUnitQuantity = incomingAttackUnits.reduce((quantity, attackUnit) => {
+                const attackerTypes     = [];
+                let winner              = null;
+                let round               = 1;
+                let defensePercentWall  = 0;
 
-                    if (quantity[attackUnit.Village_unit.Unit.unit_type] === undefined) {
-                        quantity[attackUnit.Village_unit.Unit.unit_type] = 0;
-                    }
-                    quantity[attackUnit.Village_unit.Unit.unit_type] += attackUnit.sent_quantity;
-                    quantity.totalQuantity += attackUnit.sent_quantity;
-                    return quantity;
-                }, {totalQuantity: 0});
+                // Get the unit of incoming attack
+                const attackerUnits = incomingAttack.Attack_units;
 
-                const attackPowerStats    = incomingAttackUnits.reduce((attackStats, attackUnit) => {
-                    if (attackStats[attackUnit.Village_unit.Unit.unit_type] === undefined)
+                // Get the type of units in attack
+                for (const attackUnit of attackerUnits)
+                {
+                    if (!attackerTypes.includes(attackUnit.Village_unit.Unit.unit_type))
                     {
-                        attackStats[attackUnit.Village_unit.Unit.unit_type] = 0;
+                        attackerTypes.push(attackUnit.Village_unit.Unit.unit_type);
                     }
-                    attackStats[attackUnit.Village_unit.Unit.unit_type] += attackUnit.sent_quantity * attackUnit.Village_unit.Unit.attack;
-                    attackStats.totalAttack += attackUnit.sent_quantity * attackUnit.Village_unit.Unit.attack;
-                    return attackStats;
-                }, {totalAttack: 0});
+                }
 
-                attackReport.attackPowerTotal = attackPowerStats;
-                attackReport.attackUnitQuantity = attackUnitQuantity;
-
-                // GENERATE THE DEFENSE STATS FOR CALCULS
-                const defenseAttackUnits = await Village_unit.findAll({ 
+                // Get the defense units of the attacked village
+                const defenderUnits = await Village_unit.findAll({ 
                     include: [
                         {
                             model: Unit,
@@ -368,89 +337,153 @@ class AttackService {
                     }
                 });
 
-                const defenseUnitQuantity = defenseAttackUnits.reduce((quantity, defenseUnit) => {
-                    if (quantity[defenseUnit.Unit.unit_type] === undefined) {
-                        quantity[defenseUnit.Unit.unit_type] = 0;
+                // Get the wall defense percent if the wall level is specified and set it to the defensePercentWall variable
+                const attackedVillageWall = await Village_building.findOne({
+                    where: {
+                        village_id: attackedVillage.id, 
+                        type: 'wall_building'
                     }
-                    quantity[defenseUnit.Unit.unit_type] += defenseUnit.present_quantity;
-                    quantity.totalQuantity               += defenseUnit.present_quantity;
-                    return quantity;
-                }, {totalQuantity: 0});
-
-                const defensePowerStats  = defenseAttackUnits.reduce((defenseStats, defenseUnit) => {
-                    const defenses = defenseUnit.Unit.Defense_types;
-                    for (const defense of defenses)
-                    {
-                        if (defenseStats[defense.type] === undefined)
-                        {
-                            defenseStats[defense.type] = 0;
+                });
+    
+                if (attackedVillageWall)
+                {
+                    const wallDefenseLevel = attackedVillageWall.level_id;
+    
+                    const wallDefense = await Wall_defense.findOne({
+                        where: {
+                            building_level_id: wallDefenseLevel
                         }
-                        defenseStats[defense.type] += defenseUnit.present_quantity * defense.defense_value;
-                        defenseStats.totalDefense  += defenseUnit.present_quantity * defense.defense_value;
+                    });
+    
+                    if (wallDefense)
+                    {
+                        defensePercentWall = wallDefense.defense_percent;
                     }
-                    return defenseStats;
-                }, {totalDefense: 0});
-
-
-                attackReport.defensePowerTotal = defensePowerStats;
-                attackReport.defenseUnitQuantity = defenseUnitQuantity;
-
-
-                const attackPower               = attackPowerStats.totalAttack;
-                const defensePowerWithoutWall   = defensePowerStats.totalDefense;
-                const defensePower              = defensePowerWithoutWall + (defensePowerWithoutWall * (wallDefenseIncrease / 100));
-                let attackWin                   = attackPower > defensePower;
-                let battleRatio                 = 0;
-
-                attackReport.attackWin = attackWin;
-                attackReport.defensePowerWithoutWall = defensePowerWithoutWall;
-                attackReport.defensePower = defensePower;
-                attackReport.attackPower = attackPower;
-
-                if (attackWin)
-                {
-                    battleRatio = Math.pow((defensePower / attackPower), 1.5) * 100;  
-                }
-                else if (!attackWin)
-                {
-                    battleRatio = Math.pow((attackPower / defensePower), 1.5) * 100;
-                }
-                else 
-                {
-                    battleRatio = 100;
                 }
 
-                attackReport.battleRatio = battleRatio;
-
-                // ATTACK UNITS
-                for (const attackUnit of incomingAttackUnits) 
+                // if the attacked village has no units in defense, the attacker win
+                if (defenderUnits.length === 0)
                 {
-                    const aliveQuantity = attackWin ? Math.round(attackUnit.sent_quantity * (1 - battleRatio / 100)) : 0;
-                    const lostQuantity  = attackWin ? attackUnit.sent_quantity - aliveQuantity : attackUnit.sent_quantity;
-                    attackUnit.lost_quantity = lostQuantity;
-                    await attackUnit.save();
-
-                    const villageUnit = await Village_unit.findByPk(attackUnit.village_unit_id);
-                    villageUnit.in_attack_quantity -= attackUnit.lost_quantity;
-                    villageUnit.total_quantity -= attackUnit.lost_quantity;
-                    await villageUnit.save();
+                    winner = 'attacker';
                 }
 
-                // DEFENSE UNITS
-                for (const defenseUnit of defenseAttackUnits)
+                while(winner === null)
                 {
-                    const aliveQuantity = !attackWin ? Math.round(defenseUnit.present_quantity * (1 - battleRatio / 100)) : 0;
-                    const lostQuantity  = !attackWin ? defenseUnit.present_quantity - aliveQuantity : defenseUnit.present_quantity;
-                    const villageUnit = await Village_unit.findByPk(defenseUnit.id);
-                    villageUnit.present_quantity -= lostQuantity;
-                    villageUnit.total_quantity   -= lostQuantity;
-                    await villageUnit.save();
+                    // Get the total attack power of the attacker
+                    const roundTotalAtk = attackerUnits.reduce((total, unit) => {
+                        const unitAtk       =  unit.Village_unit.Unit.attack;
+                        const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                        const totalAtk      = aliveQuantity * unitAtk;
+                        return total + totalAtk;
+                    }, 0);
+    
+                    // Total of units in attack for the type of weapon in progress
+                    for (const type of attackerTypes) 
+                    {
+                        const roundAtkUnits = attackerUnits.reduce((total, unit) => {
+                            const unitType = unit.Village_unit.Unit.unit_type;
+                            if (unitType === type && unit.sent_quantity > unit.lost_quantity) 
+                            {
+                                const unitAtk       =  unit.Village_unit.Unit.attack;
+                                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                                total.attack_power  += (aliveQuantity * unitAtk);
+                                total.sent_quantity += aliveQuantity;
+                            }
+                            return total;
+                        }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
+    
+    
+                        // Percentage of units in attack for the type of weapon in progress
+                        const roundAtkAlocationPercent = roundAtkUnits.attack_power / roundTotalAtk;
+    
+                        // Total of units in defense for the type of weapon in progress
+                        const roundDefUnits = defenderUnits.reduce((total, unit) => {
+                            if (unit.present_quantity > 0) 
+                            {
+                                const sent_quantity = Math.round(unit.present_quantity * roundAtkAlocationPercent);
+                                const unit_defense  = unit.Unit.Defense_type.find(defense => defense.type === type);
+                                const base_defense  = sent_quantity * unit_defense.defense_value;
+                                total.units.push({
+                                    unit_name: unit.unit_name,
+                                    sent_quantity: sent_quantity,
+                                    alive_quantity: 0,
+                                    lost_quantity: 0,
+                                    base_defense: base_defense,
+                                });
+    
+                                total.total_defense += base_defense;
+                            }   
+                            return total;
+                        }, {total_defense: 0, units: []});
+    
+                        // Attack and defense comparison with alive percent
+                        const defWithWallBonus        = roundDefUnits.total_defense + (roundDefUnits.total_defense * defensePercentWall / 100);
+                        const atkPowerComparison      = roundAtkUnits.attack_power - defWithWallBonus;
+                        const atkUnitAlivePercent     = atkPowerComparison / roundAtkUnits.attack_power;
+                        const defensePowerComparison  = defWithWallBonus - roundAtkUnits.attack_power;
+                        const defenseUnitAlivePercent = defensePowerComparison / defWithWallBonus;
+    
+    
+                        // Calculs of the number of units lost for the attacker 
+                        roundAtkUnits.alive_quantity  =  atkPowerComparison > 0 ? Math.round(atkUnitAlivePercent * roundAtkUnits.sent_quantity) : 0;
+                        roundAtkUnits.lost_quantity   = roundAtkUnits.sent_quantity - roundAtkUnits.alive_quantity;
+    
+                        for (const attackUnit of attackerUnits) 
+                        {
+                            if (attackUnit.unit_type === type && attackUnit.sent_quantity > attackUnit.lost_quantity) 
+                            {
+                                const unitsAlive         = atkPowerComparison > 0 ? Math.round(atkUnitAlivePercent * attackUnit.sent_quantity) : 0;
+                                const lostQuantity       = attackUnit.sent_quantity - unitsAlive;
+                                attackUnit.lost_quantity += lostQuantity;
+                            }
+                        }
+                        console.log(roundDefUnits);
+                        // Calculs of the number of units lost for the defender
+                        for (const defenseUnit of defenderUnits) 
+                        {
+                            if (defenseUnit.present_quantity > 0) 
+                            {
+                                console.log(roundDefUnits);
+                                const unitSent = roundDefUnits.units.find(unit => unit.unit_name === defenseUnit.unit_name);
+                                unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.round(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
+                                unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
+                                defenseUnit.present_quantity  -= unitSent.lost_quantity;
+                            }
+                        }
+    
+                        // roundDefUnits.units.forEach(unit => {
+                        //     unit.alive_quantity = defensePowerComparison > 0 ? Math.round(defenseUnitAlivePercent * unit.sent_quantity) : 0;
+                        //     unit.lost_quantity  = unit.sent_quantity - unit.alive_quantity;
+                        // });
+    
+                        // Set the results of the round
+                        attackReport[`round_${round}`] = {
+                            roundAtkUnits,
+                            roundDefUnits,
+                        };
+    
+                        // Remove the type of weapon if the attack power is negative or equal to 0
+                        if (atkPowerComparison <= 0) {
+                            attackerTypes.splice(attackerTypes.indexOf(type), 1);
+                        }
+    
+                    }
+                    
+                    // Check if there is a winner
+                    if (attackerUnits.every(unit => unit.lost_quantity === unit.sent_quantity)) {
+                        winner = 'defender';
+                        break;
+                    }
+                    else if (defenderUnits.every(unit => unit.present_quantity === 0)) {
+                        winner = 'attacker';
+                        break;
+                    }
+    
+                    round++;
+                    if (round > 20) {
+                        throw new Error('Too many rounds');
+                    }
                 }
-
-                incomingAttack.attack_status = attackWin ? 'returning' : 'lost';
-                const attackTravelDuration   = incomingAttack.arrival_date - incomingAttack.departure_date;
-                incomingAttack.return_date   = attackWin ? new Date(incomingAttack.arrival_date.getTime() + attackTravelDuration) : null;
-                await incomingAttack.save();
             }
 
             return attackReport;
@@ -528,6 +561,230 @@ class AttackService {
         const arrivalTime = new Date(startDate.getTime() + estimatedTravelTime * 60 * 60 * 1000); // Convert hours to milliseconds
       
         return arrivalTime;
+    }
+
+    /**
+     * Attack simulation
+     * @param {Array.<{name: String, quantity: Number}>} attackUnits - The units in attack
+     * @param {Array.<{name: String, quantity: Number}>} defenseUnits - The units in defense
+     * @param {Object} wallLevel - The wall level
+     * @param {Number} wallLevel.level_id - The wall level id
+     * @throws {NotFoundError} - When the resource is not found
+     * @throws {BadRequestError} - When the request is not valid
+     * @returns {Promise<Object>}
+     */ 
+    async attackSimulation(attackUnits, defenseUnits, wallLevel) {
+        try 
+        {
+            const attackerUnits     = [];
+            const attackerTypes     = [];
+            const results           = {};
+            const defenderUnits     = [];
+            let winner              = null;
+            let round               = 1;
+            let defensePercentWall  = 0;
+
+            // Get the units in attack and set it to the attackerUnits array
+            for (const attackUnit of attackUnits) 
+            {
+                const unit = await Unit.findByPk(attackUnit.name, {
+                    attributes: ['name', 'attack', 'unit_type'],
+                });
+
+                if (!unit) 
+                {
+                    throw new NotFoundError(`Attack unit ${attackUnit.name} not found.`);
+                }
+
+                if (!attackerTypes.includes(unit.unit_type)) 
+                {
+                    attackerTypes.push(unit.unit_type);
+                }
+
+                attackerUnits.push({
+                    unit_name: unit.name,
+                    attack: unit.attack,
+                    unit_type: unit.unit_type,
+                    quantity: attackUnit.quantity,
+                });
+            }
+            
+            if (attackerUnits.length === 0) 
+            {
+                throw new BadRequestError('No attack units.');
+            }
+
+            // Get the units in defense and set it to the defenderUnits array
+            for (const defenseUnit of defenseUnits) 
+            {
+                const unit = await Unit.findByPk(defenseUnit.name, {
+                    include: {
+                        model: Defense_type,
+                        required: true
+                    }
+                });
+
+                if (!unit)
+                {
+                    throw new NotFoundError(`Dénfense unit ${defenseUnit.name} not found.`);
+                }
+
+                const completeUnit = {
+                    unit_name: unit.name,
+                    attack: unit.attack,
+                    unit_type: unit.unit_type,
+                    quantity: defenseUnit.quantity,
+                    defense: {}
+                };
+
+                unit.Defense_types.map(defenseType => {
+                    return completeUnit.defense[defenseType.type] = defenseType.defense_value;
+                })
+
+                defenderUnits.push(completeUnit);
+            }
+
+            if (defenderUnits.length === 0)
+            {
+                winner = 'attacker';
+            }
+
+            // Get the wall defense percent if the wall level is specified
+            if (wallLevel && wallLevel.level_id) 
+            {
+                const wall = await Wall_defense.findOne({
+                    where: {
+                        building_level_id: wallLevel.level_id
+                    }
+                });
+
+                if (!wall)
+                {
+                    throw new NotFoundError(`Wall level ${wallLevel.level_id} not found.`);
+                }
+
+                defensePercentWall = wall.defense_percent;
+            }
+
+            // Attack simulation loop 
+            while(winner === null)
+            {
+                // Get the total attack power of the attacker
+                const roundTotalAtk = attackerUnits.reduce((total, unit) => {
+                    return total + (unit.quantity * unit.attack);
+                }, 0);
+
+                for (const type of attackerTypes) {
+                    // Total of units in attack for the type of weapon in progress
+                    const roundAtkUnits = attackerUnits.reduce((total, unit) => {
+                        if (unit.unit_type === type && unit.quantity > 0) 
+                        {
+                            total.attack_power  += (unit.quantity * unit.attack);
+                            total.sent_quantity += unit.quantity;
+                            return total;
+                        }
+                        return total;
+                    }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
+
+
+                    // Percentage of units in attack for the type of weapon in progress
+                    const roundAtkAlocationPercent = roundAtkUnits.attack_power / roundTotalAtk;
+
+                    // Total of units in defense for the type of weapon in progress
+                    const roundDefUnits = defenderUnits.reduce((total, unit) => {
+                        if (unit.quantity > 0) 
+                        {
+                            const sent_quantity = Math.round(unit.quantity * roundAtkAlocationPercent);
+                            const base_defense  = sent_quantity * unit.defense[type];
+                            total.units.push({
+                                unit_name: unit.unit_name,
+                                sent_quantity: sent_quantity,
+                                alive_quantity: 0,
+                                lost_quantity: 0,
+                                base_defense: base_defense,
+                            });
+
+                            total.total_defense += base_defense;
+                        }   
+                        return total;
+                    }, {total_defense: 0, units: []});
+
+                    // Attack and defense comparison with alive percent
+                    const defWithWallBonus        = roundDefUnits.total_defense + (roundDefUnits.total_defense * defensePercentWall / 100);
+                    const atkPowerComparison      = roundAtkUnits.attack_power - defWithWallBonus;
+                    const atkUnitAlivePercent     = atkPowerComparison / roundAtkUnits.attack_power;
+                    const defensePowerComparison  = defWithWallBonus - roundAtkUnits.attack_power;
+                    const defenseUnitAlivePercent = defensePowerComparison / defWithWallBonus;
+
+
+                    // Calculs of the number of units lost for the attacker 
+                    roundAtkUnits.alive_quantity  =  atkPowerComparison > 0 ? Math.round(atkUnitAlivePercent * roundAtkUnits.sent_quantity) : 0;
+                    roundAtkUnits.lost_quantity   = roundAtkUnits.sent_quantity - roundAtkUnits.alive_quantity;
+
+                    for (const attackUnit of attackerUnits) {
+                        if (attackUnit.unit_type === type) {
+                            const unitsAlive = atkPowerComparison > 0 ? Math.round(atkUnitAlivePercent * attackUnit.quantity) : 0;
+                            attackUnit.quantity = unitsAlive;
+                        }
+                    }
+
+                    // Calculs of the number of units lost for the defender
+                    for (const defenseUnit of defenderUnits) {
+                        if (defenseUnit.quantity > 0) {
+                            const unitSent = roundDefUnits.units.find(unit => unit.unit_name === defenseUnit.unit_name);
+                            unitSent.alive_quantity = defensePowerComparison > 0 ? Math.round(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
+                            unitSent.lost_quantity  = unitSent.sent_quantity - unitSent.alive_quantity;
+                            defenseUnit.quantity    -= unitSent.lost_quantity;
+                        }
+                    }
+
+                    roundDefUnits.units.forEach(unit => {
+                        unit.alive_quantity = defensePowerComparison > 0 ? Math.round(defenseUnitAlivePercent * unit.sent_quantity) : 0;
+                        unit.lost_quantity  = unit.sent_quantity - unit.alive_quantity;
+                    });
+
+                    // Set the results of the round
+                    results[`round_${round}`] = {
+                        roundAtkUnits,
+                        roundDefUnits,
+                    };
+
+                    // Remove the type of weapon if the attack power is negative or equal to 0
+                    if (atkPowerComparison <= 0) {
+                        attackerTypes.splice(attackerTypes.indexOf(type), 1);
+                    }
+
+                }
+                
+                // Check if there is a winner
+                if (attackerUnits.every(unit => unit.quantity === 0)) {
+                    winner = 'defender';
+                    break;
+                }
+                else if (defenderUnits.every(unit => unit.quantity === 0)) {
+                    winner = 'attacker';
+                    break;
+                }
+
+                round++;
+                if (round > 20) {
+                    throw new Error('Too many rounds');
+                }
+            }
+
+            const attackReport = {
+                defenderUnits,
+                attackerUnits,
+                winner: winner,
+                results,
+            };
+
+            return attackReport;
+        }
+        catch (error)
+        {
+            throw error;
+        }
     }
 }
 

@@ -14,11 +14,12 @@ const {
 /**
  * Auth routes
  */
-router.get('/simulate', AttackController.attackSimulation);
 router.get('/',  AttackController.getAll);
 router.get('/:id', idParamSanitization, AttackController.getById);
+router.get('/village/:id', idParamSanitization, AttackController.generateIncomingAttackResults);
 router.post('/', createSanitization, AttackController.create);
 router.post('/generate', AttackController.generate);
+router.post('/simulate', AttackController.attackSimulation);
 router.put('/:id', idParamSanitization, updateSanitization, AttackController.update);
 /**
  * Admin routes
