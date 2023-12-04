@@ -344,7 +344,7 @@ class AttackService {
                         type: 'wall_building'
                     }
                 });
-    
+
                 if (attackedVillageWall)
                 {
                     const wallDefenseLevel = attackedVillageWall.level_id;
@@ -391,17 +391,16 @@ class AttackService {
                             }
                             return total;
                         }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
-    
-    
+
                         // Percentage of units in attack for the type of weapon in progress
                         const roundAtkAlocationPercent = roundAtkUnits.attack_power / roundTotalAtk;
-    
+
                         // Total of units in defense for the type of weapon in progress
                         const roundDefUnits = defenderUnits.reduce((total, unit) => {
                             if (unit.present_quantity > 0) 
                             {
                                 const sent_quantity = Math.round(unit.present_quantity * roundAtkAlocationPercent);
-                                const unit_defense  = unit.Unit.Defense_type.find(defense => defense.type === type);
+                                const unit_defense  = unit.Unit.Defense_types.find(defense => defense.type === type);
                                 const base_defense  = sent_quantity * unit_defense.defense_value;
                                 total.units.push({
                                     unit_name: unit.unit_name,
@@ -410,11 +409,13 @@ class AttackService {
                                     lost_quantity: 0,
                                     base_defense: base_defense,
                                 });
-    
+
                                 total.total_defense += base_defense;
                             }   
                             return total;
                         }, {total_defense: 0, units: []});
+
+                        console.log(roundDefUnits);
     
                         // Attack and defense comparison with alive percent
                         const defWithWallBonus        = roundDefUnits.total_defense + (roundDefUnits.total_defense * defensePercentWall / 100);
@@ -425,39 +426,33 @@ class AttackService {
     
     
                         // Calculs of the number of units lost for the attacker 
-                        roundAtkUnits.alive_quantity  =  atkPowerComparison > 0 ? Math.round(atkUnitAlivePercent * roundAtkUnits.sent_quantity) : 0;
+                        roundAtkUnits.alive_quantity  =  atkPowerComparison > 0 ? Math.floor(atkUnitAlivePercent * roundAtkUnits.sent_quantity) : 0;
                         roundAtkUnits.lost_quantity   = roundAtkUnits.sent_quantity - roundAtkUnits.alive_quantity;
     
                         for (const attackUnit of attackerUnits) 
                         {
-                            if (attackUnit.unit_type === type && attackUnit.sent_quantity > attackUnit.lost_quantity) 
+                            if (attackUnit.Village_unit.Unit.unit_type === type && attackUnit.sent_quantity > attackUnit.lost_quantity) 
                             {
-                                const unitsAlive         = atkPowerComparison > 0 ? Math.round(atkUnitAlivePercent * attackUnit.sent_quantity) : 0;
+                                const unitsAlive         = atkPowerComparison > 0 ? Math.floor(atkUnitAlivePercent * attackUnit.sent_quantity) : 0;
                                 const lostQuantity       = attackUnit.sent_quantity - unitsAlive;
                                 attackUnit.lost_quantity += lostQuantity;
                             }
                         }
-                        console.log(roundDefUnits);
+
                         // Calculs of the number of units lost for the defender
                         for (const defenseUnit of defenderUnits) 
                         {
                             if (defenseUnit.present_quantity > 0) 
                             {
-                                console.log(roundDefUnits);
                                 const unitSent = roundDefUnits.units.find(unit => unit.unit_name === defenseUnit.unit_name);
-                                unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.round(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
+                                unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
                                 unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
                                 defenseUnit.present_quantity  -= unitSent.lost_quantity;
                             }
                         }
     
-                        // roundDefUnits.units.forEach(unit => {
-                        //     unit.alive_quantity = defensePowerComparison > 0 ? Math.round(defenseUnitAlivePercent * unit.sent_quantity) : 0;
-                        //     unit.lost_quantity  = unit.sent_quantity - unit.alive_quantity;
-                        // });
-    
                         // Set the results of the round
-                        attackReport[`round_${round}`] = {
+                        attackReport[`round_${round}_${type}`] = {
                             roundAtkUnits,
                             roundDefUnits,
                         };
@@ -470,20 +465,27 @@ class AttackService {
                     }
                     
                     // Check if there is a winner
-                    if (attackerUnits.every(unit => unit.lost_quantity === unit.sent_quantity)) {
+                    if (attackerUnits.every(unit => unit.lost_quantity === unit.sent_quantity)) 
+                    {
                         winner = 'defender';
                         break;
                     }
-                    else if (defenderUnits.every(unit => unit.present_quantity === 0)) {
+                    else if (defenderUnits.every(unit => unit.present_quantity === 0)) 
+                    {
                         winner = 'attacker';
                         break;
                     }
     
                     round++;
-                    if (round > 20) {
+                    if (round > 20) 
+                    {
                         throw new Error('Too many rounds');
                     }
                 }
+
+                attackReport.winner = winner;
+                attackReport.defenderUnits = defenderUnits;
+                attackReport.attackerUnits = attackerUnits;
             }
 
             return attackReport;
