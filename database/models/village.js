@@ -67,6 +67,14 @@ module.exports = (sequelize, DataTypes) => {
           as: 'attack'
         }
       })
+      this.hasMany(models.Village_support, {
+        foreignKey: 'supporting_village_id',
+        as: 'supporting_village'
+      })
+      this.hasMany(models.Village_support, {
+        foreignKey: 'supported_village_id',
+        as: 'supported_village'
+      })
 
       //  Polimorphic association
       this.hasOne(models.Map_position, {

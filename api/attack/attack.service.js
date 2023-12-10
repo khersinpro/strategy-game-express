@@ -12,7 +12,8 @@ const {
     Village, 
     Wall_defense, 
     Village_building, 
-    Defense_type 
+    Defense_type,
+    Defense_unit 
 } = require('../../database/index').models;
 
 class AttackService {
@@ -241,6 +242,7 @@ class AttackService {
             throw error;
         }
     }
+
     /**
      * Calculate the incoming attack results
      * @param {Number} villageId - The village id where the attack is incoming
@@ -337,6 +339,22 @@ class AttackService {
                     }
                 });
 
+                const defenseUnits = [];
+                
+                // Création des unité du village en défense lié a l'attaque ( utile pour le rapport de fin de combat)
+                for (const defenderUnit of defenderUnits)
+                {
+                    const present_quantity = defenderUnit.present_quantity;
+                    const defenseUnit = await Defense_unit.create({
+                        sent_quantity: present_quantity,
+                        lost_quantity: 0,
+                        attack_id: incomingAttack.id,
+                        village_unit_id: defenderUnit.village_id
+                    });
+
+                    defenseUnits.push(defenseUnit);
+                }
+
                 // Get the wall defense percent if the wall level is specified and set it to the defensePercentWall variable
                 const attackedVillageWall = await Village_building.findOne({
                     where: {
@@ -396,6 +414,26 @@ class AttackService {
                         const roundAtkAlocationPercent = roundAtkUnits.attack_power / roundTotalAtk;
 
                         // Total of units in defense for the type of weapon in progress
+                        // const roundDefUnits = defenderUnits.reduce((total, unit) => {
+                        //     if (unit.present_quantity > 0) 
+                        //     {
+                        //         const sent_quantity = Math.round(unit.present_quantity * roundAtkAlocationPercent);
+                        //         const unit_defense  = unit.Unit.Defense_types.find(defense => defense.type === type);
+                        //         const base_defense  = sent_quantity * unit_defense.defense_value;
+                        //         total.units.push({
+                        //             unit_name: unit.unit_name,
+                        //             sent_quantity: sent_quantity,
+                        //             alive_quantity: 0,
+                        //             lost_quantity: 0,
+                        //             base_defense: base_defense,
+                        //         });
+
+                        //         total.total_defense += base_defense;
+                        //     }   
+                        //     return total;
+                        // }, {total_defense: 0, units: []});
+
+                        // modification en ajoutant l'id de l'unité a la place du nom pour pourvoir set les defense_unit du rapport de fin de combat
                         const roundDefUnits = defenderUnits.reduce((total, unit) => {
                             if (unit.present_quantity > 0) 
                             {
@@ -403,7 +441,7 @@ class AttackService {
                                 const unit_defense  = unit.Unit.Defense_types.find(defense => defense.type === type);
                                 const base_defense  = sent_quantity * unit_defense.defense_value;
                                 total.units.push({
-                                    unit_name: unit.unit_name,
+                                    unit_id: unit.id,
                                     sent_quantity: sent_quantity,
                                     alive_quantity: 0,
                                     lost_quantity: 0,
@@ -440,7 +478,20 @@ class AttackService {
                         }
 
                         // Calculs of the number of units lost for the defender
-                        for (const defenseUnit of defenderUnits) 
+                        // for (const defenseUnit of defenderUnits) 
+                        // {
+                        //     if (defenseUnit.present_quantity > 0) 
+                        //     {
+                        //         const unitSent = roundDefUnits.units.find(unit => unit.unit_name === defenseUnit.unit_name);
+                        //         unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
+                        //         unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
+                        //         defenseUnit.present_quantity  -= unitSent.lost_quantity;
+                        //     }
+                        // }
+
+                        // Refactorisation du calcul pour set les defense_unit du rapport de fin de combat a la place de set directement le village_unit
+                        // TODO a faire
+                        for (const defenseUnit of defenseUnits) 
                         {
                             if (defenseUnit.present_quantity > 0) 
                             {

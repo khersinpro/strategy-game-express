@@ -1,26 +1,54 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  class defense_unit extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class Defense_unit extends Model {
     static associate(models) {
-      // define association here
+      this.belongsTo(models.Attack, {
+        foreignKey: 'attack_id',
+      });
+      this.belongsTo(models.Village_unit, {
+        foreignKey: 'village_unit_id',
+      });
     }
   }
-  defense_unit.init({
-    sent_quantity: DataTypes.INTEGER,
-    lost_quantity: DataTypes.INTEGER,
-    attack_id: DataTypes.INTEGER,
-    village_unit_id: DataTypes.INTEGER
+  
+  Defense_unit.init({
+    sent_quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    lost_quantity: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    attack_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'attack',
+        key: 'id'
+      }
+    },
+    village_unit_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'village_unit',
+        key: 'id'
+      }
+    }
   }, {
     sequelize,
-    modelName: 'defense_unit',
+    modelName: 'Defense_unit',
+    tableName: 'defense_unit',
+    indexes: [
+      {
+        unique: true,
+        fields: ['attack_id', 'village_unit_id']
+      }
+    ]
   });
-  return defense_unit;
+
+  return Defense_unit;
 };

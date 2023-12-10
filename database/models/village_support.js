@@ -1,26 +1,65 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  class village_support extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class Village_support extends Model {
     static associate(models) {
-      // define association here
+      this.belongsTo(models.Village, {
+        foreignKey: 'supported_village_id',
+        as: 'supported_village'
+      });
+      this.belongsTo(models.Village, {
+        foreignKey: 'supporting_village_id',
+        as: 'supporting_village'
+      });
+      this.belongsTo(models.Village_unit, {
+        foreignKey: 'village_unit_id',
+        as: 'village_unit'
+      });
     }
   }
-  village_support.init({
-    quantity: DataTypes.INTEGER,
-    supported_village_id: DataTypes.INTEGER,
-    supporting_village_id: DataTypes.INTEGER,
-    village_unit_id: DataTypes.INTEGER
+
+  Village_support.init({
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    supported_village_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'village',
+        key: 'id'
+      }
+    },
+    supporting_village_id: {
+      type: DataTypes.INTEGER,
+      aallowNull: false,
+      references: {
+        model: 'village',
+        key: 'id'
+      }
+    },
+    village_unit_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'village_unit',
+        key: 'id'
+      }
+    }
   }, {
     sequelize,
-    modelName: 'village_support',
+    modelName: 'Village_support',
+    tableName: 'village_support',
+    validate: {
+      async checkSameVillage() {
+        if (this.supported_village_id && this.supporting_village_id && this.supported_village_id === this.supporting_village_id) {
+          throw new Error('Village cannot support itself');
+        }
+      }
+    }
   });
-  return village_support;
+
+  return Village_support;
 };

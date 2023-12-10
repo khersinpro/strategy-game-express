@@ -13,6 +13,13 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.Attack_unit, {
         foreignKey: 'village_unit_id',
       });
+      this.hasMany(models.Village_support, {
+        foreignKey: 'village_unit_id',
+      });
+      this.hasMany(models.Defense_unit, {
+        foreignKey: 'village_unit_id',
+      });
+      
     }
   }
 

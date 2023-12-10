@@ -20,6 +20,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'attack_id',
         onDelete: 'CASCADE'
       });
+      this.hasMany(models.Defense_unit, {
+        foreignKey: 'attack_id',
+        onDelete: 'CASCADE'
+      });
+      this.hasMany(models.Defense_support, {
+        foreignKey: 'attack_id',
+        onDelete: 'CASCADE'
+      });
     }
   }
 
