@@ -254,6 +254,8 @@ class AttackService {
 
             }
 
+            console.log("villageId", villageId);
+
             const incomingAttacks = await Attack.findAll({
                 include: [
                     {
@@ -293,7 +295,7 @@ class AttackService {
             {
                 throw new NotFoundError('Village not found');
             }
-
+console.log(incomingAttacks);
             for (const incomingAttack of incomingAttacks)
             {
                 // update the village resourse with the incoming attack date
@@ -351,6 +353,9 @@ class AttackService {
                         attack_id: incomingAttack.id,
                         village_unit_id: defenderUnit.village_id
                     });
+
+                    // Add the défense to the defenseUnit for next steps
+                    defenseUnit.Defense_types = defenderUnit.Unit.Defense_types;
 
                     defenseUnits.push(defenseUnit);
                 }
@@ -434,14 +439,15 @@ class AttackService {
                         // }, {total_defense: 0, units: []});
 
                         // modification en ajoutant l'id de l'unité a la place du nom pour pourvoir set les defense_unit du rapport de fin de combat
-                        const roundDefUnits = defenderUnits.reduce((total, unit) => {
-                            if (unit.present_quantity > 0) 
+                        const roundDefUnits = defenseUnits.reduce((total, unit) => {
+                            if (unit.sent_quantity > unit.lost_quantity) 
                             {
-                                const sent_quantity = Math.round(unit.present_quantity * roundAtkAlocationPercent);
-                                const unit_defense  = unit.Unit.Defense_types.find(defense => defense.type === type);
+                                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                                const sent_quantity = Math.round(aliveQuantity * roundAtkAlocationPercent);
+                                const unit_defense  = unit.Defense_types.find(defense => defense.type === type);
                                 const base_defense  = sent_quantity * unit_defense.defense_value;
                                 total.units.push({
-                                    unit_id: unit.id,
+                                    unit_id: unit.village_unit_id,
                                     sent_quantity: sent_quantity,
                                     alive_quantity: 0,
                                     lost_quantity: 0,
@@ -493,12 +499,12 @@ class AttackService {
                         // TODO a faire
                         for (const defenseUnit of defenseUnits) 
                         {
-                            if (defenseUnit.present_quantity > 0) 
+                            if (defenseUnit.sent_quantity > defenseUnit.lost_quantity) 
                             {
-                                const unitSent = roundDefUnits.units.find(unit => unit.unit_name === defenseUnit.unit_name);
+                                const unitSent = roundDefUnits.units.find(unit => unit.unit_id === defenseUnit.village_unit_id);
                                 unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
                                 unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
-                                defenseUnit.present_quantity  -= unitSent.lost_quantity;
+                                defenseUnit.lost_quantity  += unitSent.lost_quantity;
                             }
                         }
     
@@ -521,7 +527,7 @@ class AttackService {
                         winner = 'defender';
                         break;
                     }
-                    else if (defenderUnits.every(unit => unit.present_quantity === 0)) 
+                    else if (defenseUnits.every(unit => unit.lost_quantity === unit.sent_quantity)) 
                     {
                         winner = 'attacker';
                         break;
@@ -532,6 +538,11 @@ class AttackService {
                     {
                         throw new Error('Too many rounds');
                     }
+                }
+
+                for (const defenseUnit of defenseUnits)
+                {
+                    await defenseUnit.save()
                 }
 
                 attackReport.winner = winner;
