@@ -43,10 +43,10 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Defense_unit',
     tableName: 'defense_unit',
     indexes: [
-      {
-        unique: true,
-        fields: ['attack_id', 'village_unit_id']
-      }
+      // {
+      //   unique: true,
+      //   // fields: ['attack_id', 'village_unit_id']
+      // }
     ]
   });
 

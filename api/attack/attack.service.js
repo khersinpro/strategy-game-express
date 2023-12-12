@@ -295,7 +295,7 @@ class AttackService {
             {
                 throw new NotFoundError('Village not found');
             }
-console.log(incomingAttacks);
+
             for (const incomingAttack of incomingAttacks)
             {
                 // update the village resourse with the incoming attack date
@@ -351,15 +351,14 @@ console.log(incomingAttacks);
                         sent_quantity: present_quantity,
                         lost_quantity: 0,
                         attack_id: incomingAttack.id,
-                        village_unit_id: defenderUnit.village_id
+                        village_unit_id: defenderUnit.id
                     });
-
                     // Add the défense to the defenseUnit for next steps
                     defenseUnit.Defense_types = defenderUnit.Unit.Defense_types;
 
                     defenseUnits.push(defenseUnit);
                 }
-
+                console.log("aprés defense unit");
                 // Get the wall defense percent if the wall level is specified and set it to the defensePercentWall variable
                 const attackedVillageWall = await Village_building.findOne({
                     where: {
@@ -540,10 +539,21 @@ console.log(incomingAttacks);
                     }
                 }
 
+                // Save the defense global lost quantity
                 for (const defenseUnit of defenseUnits)
                 {
                     await defenseUnit.save()
                 }
+
+                // Save the attacker units
+                for (const attackUnit of attackerUnits)
+                {
+                    await attackUnit.save();
+                }
+
+                // Save the attack report
+
+                // Save both villages losts
 
                 attackReport.winner = winner;
                 attackReport.defenderUnits = defenderUnits;
@@ -555,6 +565,7 @@ console.log(incomingAttacks);
         }
         catch (error)
         {
+            console.error('error', error)
             throw error;
         }
     }
