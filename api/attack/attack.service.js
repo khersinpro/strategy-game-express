@@ -302,6 +302,8 @@ class AttackService {
                 // update the village units with the incoming attack date
                 // Mise a jour des batiments avec dates d'arrivée de l'attaque
 
+                const attackingVillage  = await Village.findByPk(incomingAttack.attacking_village_id);
+
                 const attackerTypes     = [];
                 let winner              = null;
                 let round               = 1;
@@ -355,10 +357,9 @@ class AttackService {
                     });
                     // Add the défense to the defenseUnit for next steps
                     defenseUnit.Defense_types = defenderUnit.Unit.Defense_types;
-
                     defenseUnits.push(defenseUnit);
                 }
-                console.log("aprés defense unit");
+
                 // Get the wall defense percent if the wall level is specified and set it to the defensePercentWall variable
                 const attackedVillageWall = await Village_building.findOne({
                     where: {
@@ -384,7 +385,7 @@ class AttackService {
                 }
 
                 // if the attacked village has no units in defense, the attacker win
-                if (defenderUnits.length === 0)
+                if (defenseUnits.length === 0)
                 {
                     winner = 'attacker';
                 }
@@ -418,26 +419,6 @@ class AttackService {
                         const roundAtkAlocationPercent = roundAtkUnits.attack_power / roundTotalAtk;
 
                         // Total of units in defense for the type of weapon in progress
-                        // const roundDefUnits = defenderUnits.reduce((total, unit) => {
-                        //     if (unit.present_quantity > 0) 
-                        //     {
-                        //         const sent_quantity = Math.round(unit.present_quantity * roundAtkAlocationPercent);
-                        //         const unit_defense  = unit.Unit.Defense_types.find(defense => defense.type === type);
-                        //         const base_defense  = sent_quantity * unit_defense.defense_value;
-                        //         total.units.push({
-                        //             unit_name: unit.unit_name,
-                        //             sent_quantity: sent_quantity,
-                        //             alive_quantity: 0,
-                        //             lost_quantity: 0,
-                        //             base_defense: base_defense,
-                        //         });
-
-                        //         total.total_defense += base_defense;
-                        //     }   
-                        //     return total;
-                        // }, {total_defense: 0, units: []});
-
-                        // modification en ajoutant l'id de l'unité a la place du nom pour pourvoir set les defense_unit du rapport de fin de combat
                         const roundDefUnits = defenseUnits.reduce((total, unit) => {
                             if (unit.sent_quantity > unit.lost_quantity) 
                             {
@@ -457,8 +438,6 @@ class AttackService {
                             }   
                             return total;
                         }, {total_defense: 0, units: []});
-
-                        console.log(roundDefUnits);
     
                         // Attack and defense comparison with alive percent
                         const defWithWallBonus        = roundDefUnits.total_defense + (roundDefUnits.total_defense * defensePercentWall / 100);
@@ -476,26 +455,17 @@ class AttackService {
                         {
                             if (attackUnit.Village_unit.Unit.unit_type === type && attackUnit.sent_quantity > attackUnit.lost_quantity) 
                             {
-                                const unitsAlive         = atkPowerComparison > 0 ? Math.floor(atkUnitAlivePercent * attackUnit.sent_quantity) : 0;
-                                const lostQuantity       = attackUnit.sent_quantity - unitsAlive;
+                                const unitsAlive         = atkPowerComparison > 0 ? Math.floor(atkUnitAlivePercent * (attackUnit.sent_quantity - attackUnit.lost_quantity)) : 0;
+                                console.log("unitsAlive", unitsAlive);
+                                const lostQuantity       = (attackUnit.sent_quantity - attackUnit.lost_quantity) - unitsAlive;
+                                console.log("lostQuantity", lostQuantity);
                                 attackUnit.lost_quantity += lostQuantity;
+                                console.log("attackUnit.lost_quantity", attackUnit.lost_quantity);
+                                console.log("attackUnit.sent_quantity", attackUnit.sent_quantity);
                             }
                         }
 
                         // Calculs of the number of units lost for the defender
-                        // for (const defenseUnit of defenderUnits) 
-                        // {
-                        //     if (defenseUnit.present_quantity > 0) 
-                        //     {
-                        //         const unitSent = roundDefUnits.units.find(unit => unit.unit_name === defenseUnit.unit_name);
-                        //         unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
-                        //         unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
-                        //         defenseUnit.present_quantity  -= unitSent.lost_quantity;
-                        //     }
-                        // }
-
-                        // Refactorisation du calcul pour set les defense_unit du rapport de fin de combat a la place de set directement le village_unit
-                        // TODO a faire
                         for (const defenseUnit of defenseUnits) 
                         {
                             if (defenseUnit.sent_quantity > defenseUnit.lost_quantity) 
@@ -521,20 +491,22 @@ class AttackService {
                     }
                     
                     // Check if there is a winner
-                    if (attackerUnits.every(unit => unit.lost_quantity === unit.sent_quantity)) 
+                    if (attackerUnits.every(unit => unit.lost_quantity >= unit.sent_quantity)) 
                     {
                         winner = 'defender';
                         break;
                     }
-                    else if (defenseUnits.every(unit => unit.lost_quantity === unit.sent_quantity)) 
+                    else if (defenseUnits.every(unit => unit.lost_quantity >= unit.sent_quantity)) 
                     {
                         winner = 'attacker';
                         break;
                     }
     
                     round++;
+                    console.log("round", round);
                     if (round > 20) 
                     {
+                        console.log(attackerUnits);
                         throw new Error('Too many rounds');
                     }
                 }
@@ -546,12 +518,42 @@ class AttackService {
                 }
 
                 // Save the attacker units
+                let slowestUnitSpeed = 0;
                 for (const attackUnit of attackerUnits)
                 {
+                    if (winner === 'attacker' && attackUnit.sent_quantity > attackUnit.lost_quantity)
+                    {
+                        const unitSpeed = attackUnit.Village_unit.Unit.movement_speed;
+                        if (slowestUnitSpeed < unitSpeed)
+                        {
+                            slowestUnitSpeed = unitSpeed;
+                        }
+                    }
                     await attackUnit.save();
                 }
 
+                // Get the stolen resources if the attacker win
+                if (winner === 'attacker')
+                {
+                    // Créer une entité stolen_resources lié a l'attaque
+                    // checker les ressources du village attaqué
+                    // calculer les ressources volées ex :  stolen_capacity = 1000 , si 4 resources alors 250 de chaque
+                    // mettre a jour les ressources du village attaqué
+
+                    // Calculer la distance entre les deux villages
+                    // const attackingVillagePosition = await attackingVillage.getMap_position();
+                    // const attackedVillagePosition  = await attackedVillage.getMap_position();
+
+                    // const distance = this.euclideanDistance(attackedVillagePosition.x, attackedVillagePosition.y, attackingVillagePosition.x, attackingVillagePosition.y);
+                    // const travelTime = this.estimateTravelTime(distance, slowestUnitSpeed);
+                    // const arrivalTime = this.calculateArrivalTime(incomingAttack.arrival_date, travelTime);
+                    // incomingAttack.arrival_date = arrivalTime;
+
+                }
+
                 // Save the attack report
+                // incomingAttack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
+
 
                 // Save both villages losts
 
