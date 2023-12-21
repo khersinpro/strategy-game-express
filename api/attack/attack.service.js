@@ -5,6 +5,7 @@ const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
 const { 
     Attack, 
+    Village_support,
     Village_unit, 
     Unit, 
     Attack_unit, 
@@ -13,7 +14,8 @@ const {
     Wall_defense, 
     Village_building, 
     Defense_type,
-    Defense_unit 
+    Defense_unit,
+    Defense_support
 } = require('../../database/index').models;
 
 class AttackService {
@@ -245,6 +247,7 @@ class AttackService {
 
     /**
      * Calculate the incoming attack results
+     * Rename to handle incoming attack
      * @param {Number} villageId - The village id where the attack is incoming
      */
     async generateIncomingAttackResults(villageId) {
@@ -253,8 +256,6 @@ class AttackService {
             const attackReport = {
 
             }
-
-            console.log("villageId", villageId);
 
             const incomingAttacks = await Attack.findAll({
                 include: [
@@ -358,6 +359,49 @@ class AttackService {
                     // Add the défense to the defenseUnit for next steps
                     defenseUnit.Defense_types = defenderUnit.Unit.Defense_types;
                     defenseUnits.push(defenseUnit);
+                }
+
+                // Get the support units of the attacked village
+                const defenderSupportUnits = await Village_support.findAll({
+                    include: [
+                        {
+                            model: Village_unit,
+                            required: true,
+                            include: [
+                                {
+                                    model: Unit,
+                                    required: true,
+                                    include: [
+                                        {
+                                            model: Defense_type,
+                                            required: true
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    where: {
+                        supported_village_id: attackedVillage.id,
+                        present_quantity: {
+                            [Op.gt]: 0
+                        }
+                    }
+                });
+
+                // Création des unité en support du village en défense lié a l'attaque ( utile pour le rapport de fin de combat)
+                for (const defenderSupportUnit of defenderSupportUnits)
+                {
+                    const present_quantity = defenderSupportUnit.present_quantity;
+                    const defenseSupport = await Defense_support.create({
+                        sent_quantity: present_quantity,
+                        lost_quantity: 0,
+                        attack_id: incomingAttack.id,
+                        village_support_id: defenderSupportUnit.id
+                    });
+                    // Add the défense to the defenseUnit for next steps
+                    defenseSupport.Defense_types = defenderSupportUnit.Village_unit.Unit.Defense_types;
+                    defenseUnits.push(defenseSupport);
                 }
 
                 // Get the wall defense percent if the wall level is specified and set it to the defensePercentWall variable
@@ -499,10 +543,8 @@ class AttackService {
                     }
     
                     round++;
-                    console.log("round", round);
                     if (round > 20) 
                     {
-                        console.log(attackerUnits);
                         throw new Error('Too many rounds');
                     }
                 }
@@ -538,11 +580,23 @@ class AttackService {
                 // Get the stolen resources if the attacker win
                 if (winner === 'attacker')
                 {
-                    // Créer une entité stolen_resources lié a l'attaque
-                    
                     // checker les ressources du village attaqué
-                    // calculer les ressources volées ex :  stolen_capacity = 1000 , si 4 resources alors 250 de chaque
                     // mettre a jour les ressources du village attaqué
+                    // const defenseVillageResources = await attackedVillage.getVillage_resources();
+
+                    // const totalDefenseResources = defenseVillageResources.reduce((total, resource) => {
+                    //     return total + resource.quantity;
+                    // }, 0);
+
+                    // for (const resource of defenseVillageResources)
+                    // {
+                    //     // y ajouter les resources volé a l'attaque
+                    //     const resourceQuantity  = resource.quantity;
+                    //     const stolenQuantity    = Math.floor(resourceQuantity * (stolenCapacity / totalDefenseResources));
+                    //     resource.quantity       -= stolenQuantity;
+                    //     resource.updated_at     = incomingAttack.arrival_date;
+                    //     await resource.save();
+                    // }
 
                     // Calculer la distance entre les deux villages
                     const attackingVillagePosition = await attackingVillage.getMap_position();
@@ -557,13 +611,55 @@ class AttackService {
                 // Save the attack report
                 incomingAttack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
 
-                await incomingAttack.save()
+                await incomingAttack.save();
+
+                // Save the attacked village village_units
+                // for (const defenderUnit of defenderUnits)
+                // {
+                //     const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderUnit.id);
+                //     defenderUnit.present_quantity   -= unitInDefense.lost_quantity;
+                //     defenderUnit.total_quantity     -= unitInDefense.lost_quantity;
+                //     await defenseUnits.save();
+                // }
+
+                // Save de support units
+                // for (const defenderSupportUnit of defenderSupportUnits)
+                // {
+                //     const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderSupportUnit.id);
+                //     defenderSupportUnit.quantity -= unitInDefense.lost_quantity;
+
+                //     if (defenderSupportUnit.quantity === 0)
+                //     {
+                //         await defenderSupportUnit.destroy();
+                //     }
+                //     else
+                //     {
+                //         await defenderSupportUnit.save();
+                //     }
+
+                //     const village_unit                  = defenderSupportUnit.getVillage_unit();
+                //     village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
+                //     village_unit.total_quantity         -= unitInDefense.lost_quantity;
+                //     await village_unit.save();
+                // }
+
+                    
+                // Save the attacker village_units
+                // const villageAttackUnit = await attackingVillage.getVillage_units();
+                // for (const villageUnit of villageAttackUnit)
+                // {
+                //     const unitInAttack = attackerUnits.find(unit => unit.village_unit_id === villageUnit.id);
+                //     villageUnit.total_quantity -= unitInAttack.lost_quantity;
+                //     villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
+                //     await villageUnit.save();
+                // }
+
 
                 // Save both villages losts
                 attackReport.stolenCapacity = stolenCapacity;
-                attackReport.winner = winner;
-                attackReport.defenderUnits = defenderUnits;
-                attackReport.attackerUnits = attackerUnits;
+                attackReport.winner         = winner;
+                attackReport.defenderUnits  = defenderUnits;
+                attackReport.attackerUnits  = attackerUnits;
             }
 
             return attackReport;
@@ -571,7 +667,6 @@ class AttackService {
         }
         catch (error)
         {
-            console.error('error', error)
             throw error;
         }
     }
