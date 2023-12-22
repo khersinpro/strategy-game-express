@@ -256,7 +256,7 @@ class AttackService {
             const attackReport = {
 
             }
-            console.log("dans le service");
+
             const incomingAttacks = await Attack.findAll({
                 include: [
                     {
@@ -637,7 +637,6 @@ class AttackService {
                     // Save the support units
                     defenderSupportUnit.quantity -= unitInDefense.lost_quantity;
                     defenderSupportUnit.enabled  = defenderSupportUnit.quantity === 0 ? 0 : 1;
-                    console.log(defenderSupportUnit);
                     await defenderSupportUnit.save();
 
                     // Save the support village_units
@@ -657,6 +656,7 @@ class AttackService {
                     {
                         continue;
                     }
+
                     villageUnit.total_quantity -= unitInAttack.lost_quantity;
                     villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
                     await villageUnit.save();

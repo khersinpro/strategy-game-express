@@ -4,7 +4,6 @@ const config = require('../config/database.js');
 const db = {};
 const sequelize = new Sequelize(config.database, config.username, config.password, config);
 
-
 // Récupération des models
 const modelList = [
   require('./models/civilization'),
@@ -47,6 +46,7 @@ const modelList = [
   require('./models/defense_unit.js'),
   require('./models/defense_support.js'),
   require('./models/village_support.js'),
+  require('./models/attack_stolen_resource.js')
 ];
 
 // Déclaration des models a sequelize
