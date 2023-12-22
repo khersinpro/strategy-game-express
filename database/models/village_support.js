@@ -27,8 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
-    },
-    supported_village_id: {
+    },    supported_village_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {

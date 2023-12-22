@@ -15,7 +15,8 @@ const {
     Village_building, 
     Defense_type,
     Defense_unit,
-    Defense_support
+    Defense_support,
+    Attack_stolen_resource,
 } = require('../../database/index').models;
 
 class AttackService {
@@ -581,23 +582,29 @@ class AttackService {
                 // Get the stolen resources if the attacker win
                 if (winner === 'attacker')
                 {
-                    // checker les ressources du village attaqué
-                    // mettre a jour les ressources du village attaqué
-                    // const defenseVillageResources = await attackedVillage.getVillage_resources();
+                    const defenseVillageResources = await attackedVillage.getVillage_resources();
 
-                    // const totalDefenseResources = defenseVillageResources.reduce((total, resource) => {
-                    //     return total + resource.quantity;
-                    // }, 0);
+                    const totalDefenseResources = defenseVillageResources.reduce((total, resource) => {
+                        return total + resource.quantity;
+                    }, 0);
 
-                    // for (const resource of defenseVillageResources)
-                    // {
-                    //     // y ajouter les resources volé a l'attaque
-                    //     const resourceQuantity  = resource.quantity;
-                    //     const stolenQuantity    = Math.floor(resourceQuantity * (stolenCapacity / totalDefenseResources));
-                    //     resource.quantity       -= stolenQuantity;
-                    //     resource.updated_at     = incomingAttack.arrival_date;
-                    //     await resource.save();
-                    // }
+                    for (const resource of defenseVillageResources)
+                    {
+                        // y ajouter les resources volé a l'attaque
+                        const resourceQuantity  = resource.quantity;
+                        const stolenQuantity    = Math.floor(resourceQuantity * (stolenCapacity / totalDefenseResources));
+                        const realStolenQuantity = stolenQuantity > resourceQuantity ? resourceQuantity : stolenQuantity;
+                        resource.quantity       -= realStolenQuantity;
+                        resource.updated_at     = incomingAttack.arrival_date;
+                        await resource.save();
+
+                        // Save the stolen resources
+                        await Attack_stolen_resource.create({
+                            attack_id: incomingAttack.id,
+                            resource_name: resource.resource_name,
+                            quantity: realStolenQuantity
+                        }); 
+                    }
 
                     // Calculer la distance entre les deux villages
                     const attackingVillagePosition = await attackingVillage.getMap_position();

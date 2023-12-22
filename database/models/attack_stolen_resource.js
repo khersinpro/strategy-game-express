@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'attack_id',
       });
       this.belongsTo(models.Resource, {
-        foreignKey: 'resource_type',
+        foreignKey: 'resource_name',
       });
     }
   }
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    resource_type: {
+    resource_name: {
       type: DataTypes.STRING,
       allowNull: false,
       references: {
@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     indexes: [
       {
         unique: true,
-        fields: ['attack_id', 'resource_type']
+        fields: ['attack_id', 'resource_name']
       }
     ]
   });

@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      resource_type: {
+      resource_name: {
         type: Sequelize.STRING,
         allowNull: false,
         references: {
@@ -41,7 +41,7 @@ module.exports = {
       indexes: [
         {
           unique: true,
-          fields: ['attack_id', 'resource_type']
+          fields: ['attack_id', 'resource_name']
         }
       ]
     });
