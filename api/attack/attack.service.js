@@ -256,7 +256,7 @@ class AttackService {
             const attackReport = {
 
             }
-
+            console.log("dans le service");
             const incomingAttacks = await Attack.findAll({
                 include: [
                     {
@@ -383,7 +383,7 @@ class AttackService {
                     ],
                     where: {
                         supported_village_id: attackedVillage.id,
-                        present_quantity: {
+                        quantity: {
                             [Op.gt]: 0
                         }
                     }
@@ -392,14 +392,15 @@ class AttackService {
                 // Création des unité en support du village en défense lié a l'attaque ( utile pour le rapport de fin de combat)
                 for (const defenderSupportUnit of defenderSupportUnits)
                 {
-                    const present_quantity = defenderSupportUnit.present_quantity;
+                    const present_quantity = defenderSupportUnit.quantity;
                     const defenseSupport = await Defense_support.create({
                         sent_quantity: present_quantity,
                         lost_quantity: 0,
                         attack_id: incomingAttack.id,
-                        village_support_id: defenderSupportUnit.id
+                        village_support_id: defenderSupportUnit.id,
                     });
                     // Add the défense to the defenseUnit for next steps
+                    defenseSupport.village_unit_id = defenderSupportUnit.village_unit_id
                     defenseSupport.Defense_types = defenderSupportUnit.Village_unit.Unit.Defense_types;
                     defenseUnits.push(defenseSupport);
                 }
@@ -614,45 +615,52 @@ class AttackService {
                 await incomingAttack.save();
 
                 // Save the attacked village village_units
-                // for (const defenderUnit of defenderUnits)
-                // {
-                //     const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderUnit.id);
-                //     defenderUnit.present_quantity   -= unitInDefense.lost_quantity;
-                //     defenderUnit.total_quantity     -= unitInDefense.lost_quantity;
-                //     await defenseUnits.save();
-                // }
+                for (const defenderUnit of defenderUnits)
+                {
+                    const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderUnit.id);
+
+                    defenderUnit.present_quantity   -= unitInDefense.lost_quantity;
+                    defenderUnit.total_quantity     -= unitInDefense.lost_quantity;
+                    await defenderUnit.save();
+                }
 
                 // Save de support units
-                // for (const defenderSupportUnit of defenderSupportUnits)
-                // {
-                //     const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderSupportUnit.id);
-                //     defenderSupportUnit.quantity -= unitInDefense.lost_quantity;
+                for (const defenderSupportUnit of defenderSupportUnits)
+                {
+                    const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderSupportUnit.village_unit_id);
 
-                //     if (defenderSupportUnit.quantity === 0)
-                //     {
-                //         await defenderSupportUnit.destroy();
-                //     }
-                //     else
-                //     {
-                //         await defenderSupportUnit.save();
-                //     }
+                    if (!unitInDefense) 
+                    {
+                        continue;
+                    }
 
-                //     const village_unit                  = defenderSupportUnit.getVillage_unit();
-                //     village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
-                //     village_unit.total_quantity         -= unitInDefense.lost_quantity;
-                //     await village_unit.save();
-                // }
+                    // Save the support units
+                    defenderSupportUnit.quantity -= unitInDefense.lost_quantity;
+                    defenderSupportUnit.enabled  = defenderSupportUnit.quantity === 0 ? 0 : 1;
+                    console.log(defenderSupportUnit);
+                    await defenderSupportUnit.save();
+
+                    // Save the support village_units
+                    const village_unit                  = await defenderSupportUnit.getVillage_unit();
+                    village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
+                    village_unit.total_quantity         -= unitInDefense.lost_quantity;
+                    await village_unit.save();
+                }
 
                     
                 // Save the attacker village_units
-                // const villageAttackUnit = await attackingVillage.getVillage_units();
-                // for (const villageUnit of villageAttackUnit)
-                // {
-                //     const unitInAttack = attackerUnits.find(unit => unit.village_unit_id === villageUnit.id);
-                //     villageUnit.total_quantity -= unitInAttack.lost_quantity;
-                //     villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
-                //     await villageUnit.save();
-                // }
+                const villageAttackUnit = await attackingVillage.getVillage_units();
+                for (const villageUnit of villageAttackUnit)
+                { 
+                    const unitInAttack = attackerUnits.find(unit => unit.village_unit_id === villageUnit.id);
+                    if (!unitInAttack)
+                    {
+                        continue;
+                    }
+                    villageUnit.total_quantity -= unitInAttack.lost_quantity;
+                    villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
+                    await villageUnit.save();
+                }
 
 
                 // Save both villages losts
@@ -667,6 +675,7 @@ class AttackService {
         }
         catch (error)
         {
+            console.error(error);
             throw error;
         }
     }
@@ -841,6 +850,8 @@ class AttackService {
 
                 defensePercentWall = wall.defense_percent;
             }
+
+            console.log('avant la boucle');
 
             // Attack simulation loop 
             while(winner === null)

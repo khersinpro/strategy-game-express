@@ -13,8 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         as: 'supporting_village'
       });
       this.belongsTo(models.Village_unit, {
-        foreignKey: 'village_unit_id',
-        as: 'village_unit'
+        foreignKey: 'village_unit_id'
       });
     }
   }
@@ -23,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
     },
     supported_village_id: {
       type: DataTypes.INTEGER,
