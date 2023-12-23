@@ -1,6 +1,6 @@
-const AttackUnitService = require('./attack_unit.service');
+const AttackUnitService = require('./attack_attacker_unit.service');
 
-class AttackUnitController {
+class AttackAttackerUnitController {
     /**
      * Returns all attack units
      */ 
@@ -82,4 +82,4 @@ class AttackUnitController {
     }
 }
 
-module.exports = new AttackUnitController();
+module.exports = new AttackAttackerUnitController();

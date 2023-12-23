@@ -2,29 +2,12 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('attack_unit', {
+    await queryInterface.createTable('attack_defenser_support', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
-      },
-      attack_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        onDelete: 'CASCADE',
-        references: {
-          model: 'attack',
-          key: 'id'
-        }
-      },
-      village_unit_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'village_unit',
-          key: 'id'
-        }
       },
       sent_quantity: {
         type: Sequelize.INTEGER,
@@ -32,8 +15,24 @@ module.exports = {
       },
       lost_quantity: {
         type: Sequelize.INTEGER,
+        defaultValue: 0,
+        allowNull: false
+      },
+      attack_id: {
+        type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 0
+        references: {
+          model: 'attack',
+          key: 'id'
+        }
+      },
+      village_support_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'village_support',
+          key: 'id'
+        }
       },
       createdAt: {
         allowNull: false,
@@ -45,13 +44,14 @@ module.exports = {
       }
     }, {
       uniqueKeys: {
-        unique_attack_unit: {
-          fields: ['attack_id', 'village_unit_id']
+        unique_attack_defenser_support: {
+          fields: ['attack_id', 'village_support_id']
         }
       }
+    
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('attack_unit');
+    await queryInterface.dropTable('attack_defenser_support');
   }
 };

@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('defense_support', {
+    await queryInterface.createTable('attack_defenser_unit', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -15,22 +15,21 @@ module.exports = {
       },
       lost_quantity: {
         type: Sequelize.INTEGER,
-        defaultValue: 0,
-        allowNull: false
+        allowNull: false,
+        defaultValue: 0
       },
       attack_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
         references: {
           model: 'attack',
           key: 'id'
         }
       },
-      village_support_id: {
+      village_unit_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'village_support',
+          model: 'village_unit',
           key: 'id'
         }
       },
@@ -44,14 +43,13 @@ module.exports = {
       }
     }, {
       uniqueKeys: {
-        unique_defense_support: {
-          fields: ['attack_id', 'village_support_id']
+        unique_attack_defenser_unit: {
+          fields: ['attack_id', 'village_unit_id']
         }
       }
-    
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('defense_support');
+    await queryInterface.dropTable('attack_defenser_unit');
   }
 };

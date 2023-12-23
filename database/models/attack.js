@@ -16,15 +16,15 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Attack_status, {
         foreignKey: 'attack_status',
       });
-      this.hasMany(models.Attack_unit, {
+      this.hasMany(models.Attack_attacker_unit, {
         foreignKey: 'attack_id',
         onDelete: 'CASCADE'
       });
-      this.hasMany(models.Defense_unit, {
+      this.hasMany(models.Attack_defenser_unit, {
         foreignKey: 'attack_id',
         onDelete: 'CASCADE'
       });
-      this.hasMany(models.Defense_support, {
+      this.hasMany(models.Attack_defenser_support, {
         foreignKey: 'attack_id',
         onDelete: 'CASCADE'
       });

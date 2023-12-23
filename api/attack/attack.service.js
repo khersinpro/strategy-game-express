@@ -8,14 +8,14 @@ const {
     Village_support,
     Village_unit, 
     Unit, 
-    Attack_unit, 
+    Attack_attacker_unit, 
     Map_position, 
     Village, 
     Wall_defense, 
     Village_building, 
     Defense_type,
-    Defense_unit,
-    Defense_support,
+    Attack_defenser_unit,
+    Attack_defenser_support,
     Attack_stolen_resource,
 } = require('../../database/index').models;
 
@@ -200,7 +200,7 @@ class AttackService {
                     slowestUnitSpeed = villageUnitData.Unit.movement_speed;
                 }
 
-                await Attack_unit.create({
+                await Attack_attacker_unit.create({
                     attack_id: attack.id,
                     village_unit_id: villageUnit.id,
                     sent_quantity: villageUnit.quantity
@@ -262,7 +262,7 @@ class AttackService {
             const incomingAttacks = await Attack.findAll({
                 include: [
                     {
-                        model: Attack_unit,
+                        model: Attack_attacker_unit,
                         required: true,
                         include: [
                             {
@@ -313,7 +313,7 @@ class AttackService {
                 let defensePercentWall  = 0;
 
                 // Get the unit of incoming attack
-                const attackerUnits = incomingAttack.Attack_units;
+                const attackerUnits = incomingAttack.Attack_attacker_units;
 
                 // Get the type of units in attack
                 for (const attackUnit of attackerUnits)
@@ -352,7 +352,7 @@ class AttackService {
                 for (const defenderUnit of defenderUnits)
                 {
                     const present_quantity = defenderUnit.present_quantity;
-                    const defenseUnit = await Defense_unit.create({
+                    const defenseUnit = await Attack_defenser_unit.create({
                         sent_quantity: present_quantity,
                         lost_quantity: 0,
                         attack_id: incomingAttack.id,
@@ -395,7 +395,7 @@ class AttackService {
                 for (const defenderSupportUnit of defenderSupportUnits)
                 {
                     const present_quantity = defenderSupportUnit.quantity;
-                    const defenseSupport = await Defense_support.create({
+                    const defenseSupport = await Attack_defenser_support.create({
                         sent_quantity: present_quantity,
                         lost_quantity: 0,
                         attack_id: incomingAttack.id,

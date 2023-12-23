@@ -41,10 +41,10 @@ const modelList = [
   require('./models/village_training_progress.js'),
   require('./models/unit_cost.js'),
   require('./models/attack.js'),
-  require('./models/attack_unit.js'),
+  require('./models/attack_attacker_unit.js'),
   require('./models/attack_status.js'),
-  require('./models/defense_unit.js'),
-  require('./models/defense_support.js'),
+  require('./models/attack_defenser_unit.js'),
+  require('./models/attack_defenser_support.js'),
   require('./models/village_support.js'),
   require('./models/attack_stolen_resource.js')
 ];

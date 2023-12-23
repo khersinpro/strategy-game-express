@@ -38,7 +38,7 @@ const mapPositionRouter = require('./api/map/map_position/map_position.router');
 const villageTrainingProgressRouter = require('./api/village/village_training_progress/village_training_progress.router');
 const unitCostRouter = require('./api/unit/unit_cost/unit_cost.router');
 const attackRouter = require('./api/attack/attack.router');
-const attackUnitRouter = require('./api/attack/attack_unit/attack_unit.router');
+const attackUnitRouter = require('./api/attack/attack_attacker_unit/attack_attacker_unit.router');
 const attackStatusRouter = require('./api/attack/attack_status/attack_status.router');
 
 const usersController = require('./api/user/user.controller');

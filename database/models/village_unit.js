@@ -10,16 +10,15 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Unit, {
         foreignKey: 'unit_name',
       });
-      this.hasMany(models.Attack_unit, {
+      this.hasMany(models.Attack_attacker_unit, {
         foreignKey: 'village_unit_id',
       });
       this.hasMany(models.Village_support, {
         foreignKey: 'village_unit_id',
       });
-      this.hasMany(models.Defense_unit, {
+      this.hasMany(models.Attack_defenser_unit, {
         foreignKey: 'village_unit_id',
-      });
-      
+      });    
     }
   }
 

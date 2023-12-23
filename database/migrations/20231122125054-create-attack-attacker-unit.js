@@ -2,24 +2,17 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('defense_unit', {
+    await queryInterface.createTable('attack_attacker_unit', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      sent_quantity: {
-        type: Sequelize.INTEGER,
-        allowNull: false
-      },
-      lost_quantity: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 0
-      },
       attack_id: {
         type: Sequelize.INTEGER,
+        allowNull: false,
+        onDelete: 'CASCADE',
         references: {
           model: 'attack',
           key: 'id'
@@ -33,6 +26,15 @@ module.exports = {
           key: 'id'
         }
       },
+      sent_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
+      lost_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -43,13 +45,13 @@ module.exports = {
       }
     }, {
       uniqueKeys: {
-        unique_defense_unit: {
+        unique_attack_attacker_unit: {
           fields: ['attack_id', 'village_unit_id']
         }
       }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('defense_unit');
+    await queryInterface.dropTable('attack_attacker_unit');
   }
 };
