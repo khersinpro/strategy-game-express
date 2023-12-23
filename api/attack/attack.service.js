@@ -252,6 +252,7 @@ class AttackService {
      * @param {Number} villageId - The village id where the attack is incoming
      */
     async generateIncomingAttackResults(villageId) {
+        const transaction = await sequelize.transaction();
         try 
         {
             const attackReport = {
@@ -582,7 +583,13 @@ class AttackService {
                 // Get the stolen resources if the attacker win
                 if (winner === 'attacker')
                 {
-                    const defenseVillageResources = await attackedVillage.getVillage_resources();
+                    const defenseVillageResources = await attackedVillage.getVillage_resources({
+                        where: {
+                            quantity: {
+                                [Op.gte]: 1
+                            }
+                        }
+                    });
 
                     const totalDefenseResources = defenseVillageResources.reduce((total, resource) => {
                         return total + resource.quantity;
@@ -595,15 +602,18 @@ class AttackService {
                         const stolenQuantity    = Math.floor(resourceQuantity * (stolenCapacity / totalDefenseResources));
                         const realStolenQuantity = stolenQuantity > resourceQuantity ? resourceQuantity : stolenQuantity;
                         resource.quantity       -= realStolenQuantity;
-                        resource.updated_at     = incomingAttack.arrival_date;
-                        await resource.save();
+                        // resource.updated_at     = incomingAttack.arrival_date;
+                        await resource.save({
+                            silent: true,
+                            transaction
+                        });
 
                         // Save the stolen resources
                         await Attack_stolen_resource.create({
                             attack_id: incomingAttack.id,
                             resource_name: resource.resource_name,
                             quantity: realStolenQuantity
-                        }); 
+                        }, { transaction }); 
                     }
 
                     // Calculer la distance entre les deux villages
@@ -619,7 +629,7 @@ class AttackService {
                 // Save the attack report
                 incomingAttack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
 
-                await incomingAttack.save();
+                await incomingAttack.save({ transaction });
 
                 // Save the attacked village village_units
                 for (const defenderUnit of defenderUnits)
@@ -628,7 +638,7 @@ class AttackService {
 
                     defenderUnit.present_quantity   -= unitInDefense.lost_quantity;
                     defenderUnit.total_quantity     -= unitInDefense.lost_quantity;
-                    await defenderUnit.save();
+                    await defenderUnit.save({silent: true, transaction});
                 }
 
                 // Save de support units
@@ -644,13 +654,13 @@ class AttackService {
                     // Save the support units
                     defenderSupportUnit.quantity -= unitInDefense.lost_quantity;
                     defenderSupportUnit.enabled  = defenderSupportUnit.quantity === 0 ? 0 : 1;
-                    await defenderSupportUnit.save();
+                    await defenderSupportUnit.save({ transaction });
 
                     // Save the support village_units
                     const village_unit                  = await defenderSupportUnit.getVillage_unit();
                     village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
                     village_unit.total_quantity         -= unitInDefense.lost_quantity;
-                    await village_unit.save();
+                    await village_unit.save({silent: true, transaction});
                 }
 
                     
@@ -666,7 +676,7 @@ class AttackService {
 
                     villageUnit.total_quantity -= unitInAttack.lost_quantity;
                     villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
-                    await villageUnit.save();
+                    await villageUnit.save({silent: true, transaction});
                 }
 
 
@@ -677,11 +687,13 @@ class AttackService {
                 attackReport.attackerUnits  = attackerUnits;
             }
 
+            await transaction.commit();
             return attackReport;
                 
         }
         catch (error)
         {
+            transaction.rollback();
             console.error(error);
             throw error;
         }
