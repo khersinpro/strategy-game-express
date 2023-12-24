@@ -692,6 +692,502 @@ class AttackService {
     }
 
     /**
+     * Return an array of the type of units in the attack
+     * @param {Attack_attacker_unit[]} attackUnits array of attack_attacker_unit with the included village_unit and unit
+     * @returns {String[]}
+     */
+    getTypeOfAttackUnits (attackUnits) {
+        const types = attackUnits.reduce((types, unit) => {
+            if (!types.includes(unit.Village_unit.Unit.unit_type))
+            {
+                types.push(unit.Village_unit.Unit.unit_type);
+            }
+            return types;
+        }, []);
+
+        return types;
+    }
+
+    /**
+     * 
+     * @param {number} attackId 
+     * @returns {Promise<Attack_attacker_unit[]>}
+     */
+    getAttackerUnits (attackId) {
+        return Attack_attacker_unit.findAll({
+            include: [
+                {
+                    model: Village_unit,
+                    required: true,
+                    include: [
+                        {
+                            model: Unit,
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            where: {
+                attack_id: attackId
+            }
+        });
+    }
+
+    /**
+     * 
+     * @param {number} attackedVillageId 
+     * @returns {Promise<Village_unit[]>}
+     */
+    getAttackedVillageUnits (attackedVillageId) {
+        return Village_unit.findAll({
+            include: [
+                {
+                    model: Unit,
+                    required: true,
+                    include: [
+                        {
+                            model: Defense_type,
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            where: {
+                village_id: attackedVillageId,
+                present_quantity: {
+                    [Op.gt]: 0
+                }
+            }
+        });
+    }
+
+    /**
+     * 
+     * @param {number} attackedVillageId
+     * @returns {Promise<Village_support[]>}
+     */
+    getAttackedVillageSupport (attackedVillageId) {
+        return Village_support.findAll({
+            include: [
+                {
+                    model: Village_unit,
+                    required: true,
+                    include: [
+                        {
+                            model: Unit,
+                            required: true,
+                            include: [
+                                {
+                                    model: Defense_type,
+                                    required: true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            where: {
+                supported_village_id: attackedVillageId,
+                enabled: 1
+            }
+        });
+    }
+
+    async getAttackedVillageWallDefensePercent (attackedVillageId) {
+        try
+        {
+            const wall = await Village_building.findOne({
+                where: {
+                    village_id: attackedVillageId,
+                    type: 'wall_building'
+                }
+            });
+
+            if (!wall)
+            {
+                return 0;
+            }
+
+            const wallDefense = await Wall_defense.findOne({
+                where: {
+                    building_level_id: wall.level_id
+                }
+            });
+
+            if (!wallDefense)
+            {
+                return 0;
+            }
+
+            return wallDefense.defense_percent;
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to get defense percent for village ${attackedVillageId}: ${error.message}`);
+        }
+    }
+
+    async generateAttackDefenserUnits (attackId, defenserVillageUnits) {
+        try 
+        {
+            const attackDefenserUnits = [];
+
+            for (const defenserVillageUnit of defenserVillageUnits)
+            {
+                const attackDefenserUnit = await Attack_defenser_unit.create({
+                    attack_id: attackId,
+                    village_unit_id: defenserVillageUnit.id,
+                    sent_quantity: defenserVillageUnit.present_quantity,
+                    lost_quantity: 0
+                });
+
+                attackDefenserUnit.Defense_types = defenserVillageUnit.Unit.Defense_types;
+                attackDefenserUnits.push(attackDefenserUnit);
+            }
+
+            return attackDefenserUnits;
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to generate attack defenser units for attack ${attackId}: ${error.message}`);
+        }
+    }
+
+    async generateAttackDefenserSupport (attackId, defenserVillageSupport) {
+        try
+        {
+            const attackDefenserSupport = [];
+
+            for (const defenserVillageSupportUnit of defenserVillageSupport)
+            {
+                const attackDefenserSupportUnit = await Attack_defenser_support.create({
+                    attack_id: attackId,
+                    village_support_id: defenserVillageSupportUnit.id,
+                    sent_quantity: defenserVillageSupportUnit.quantity,
+                    lost_quantity: 0
+                });
+
+                attackDefenserSupportUnit.village_unit_id = defenserVillageSupportUnit.village_unit_id
+                attackDefenserSupportUnit.Defense_types   = defenserVillageSupportUnit.Village_unit.Unit.Defense_types;
+                attackDefenserSupport.push(attackDefenserSupportUnit);
+            }
+
+            return attackDefenserSupport;
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to generate attack defenser support for attack ${attackId}: ${error.message}`);
+        }
+    }
+
+    getTotalAttackPower (attackAttackerUnits) {
+        const totalAttackPower = attackAttackerUnits.reduce((total, unit) => {
+            const unitAtk       =  unit.Village_unit.Unit.attack;
+            const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+            const totalAtk      = aliveQuantity * unitAtk;
+            return total + totalAtk;
+        }, 0);
+
+        return totalAttackPower;
+    }
+
+    /**
+     * 
+     * @param {Attack_attacker_unit[]} attackAttackerUnits 
+     * @param {string} roundUnitType 
+     * @returns {{
+     *  attack_power: number,
+     *  sent_quantity: number,
+     *  alive_quantity: number,
+     *  lost_quantity: number
+     * }}
+     */
+    generateRoundAttackUnits (attackAttackerUnits, roundUnitType) {
+        const roundAttackUnits = attackAttackerUnits.reduce((total, unit) => {
+            const unitType = unit.Village_unit.Unit.unit_type;
+
+            if (unitType === roundUnitType && unit.sent_quantity > unit.lost_quantity) 
+            {
+                const unitAtk       =  unit.Village_unit.Unit.attack;
+                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                total.attack_power  += (aliveQuantity * unitAtk);
+                total.sent_quantity += aliveQuantity;
+            }
+            return total;
+        }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
+
+        return roundAttackUnits;
+    }
+
+    /**
+     * 
+     * @param {Attack_defenser_unit[] | Attack_defenser_support[]} defenserUnits
+     * @param {string} roundUnitType
+     * @returns {{
+     * total_defense: number,
+     * units: {
+     * unit_id: number,
+     * sent_quantity: number,
+     * alive_quantity: number,
+     * lost_quantity: number,
+     * base_defense: number
+     * }[]
+     * }}
+     */
+    generateRoundDefenseUnits (defenserUnits, roundUnitType, roundAttackAllocationPercent) {
+        const roundDefenserUnits = defenserUnits.reduce((total, unit) => {
+            if (unit.sent_quantity > unit.lost_quantity)
+            {
+                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                const sent_quantity = Math.round(aliveQuantity * roundAttackAllocationPercent);     
+                const unit_defense  = unit.Defense_types.find(defense => defense.type === roundUnitType);   
+                const base_defense  = sent_quantity * unit_defense.defense_value;   
+                total.units.push({
+                    unit_id: unit.village_unit_id,
+                    sent_quantity: sent_quantity,
+                    alive_quantity: 0,
+                    lost_quantity: 0,
+                    base_defense: base_defense,
+                });
+
+                total.total_defense += base_defense;
+            }
+
+            return total;
+        }, {total_defense: 0, units: []});
+
+        return roundDefenserUnits;
+    }
+
+    getRoundAlivePercent (roundAttackUnits, roundDefenseUnits, wallAdittionalDefensePercent) {
+        const wallDefenseBonus          = roundDefenseUnits.total_defense * wallAdittionalDefensePercent / 100;
+        const defenseWithWallBonus      = roundDefenseUnits.total_defense + wallDefenseBonus;
+        const attackPowerComparison     = roundAttackUnits.attack_power - defenseWithWallBonus;
+        const attackUnitAlivePercent    = attackPowerComparison / roundAttackUnits.attack_power;
+        const defensePowerComparison    = defenseWithWallBonus - roundAttackUnits.attack_power;
+        const defenseUnitAlivePercent   = defensePowerComparison / defenseWithWallBonus;
+
+        return {
+            attackUnitAlivePercent,
+            defenseUnitAlivePercent
+        }
+    }
+
+    calculateAttackerUnitsLost (attackAttackerUnits, roundUnitType, attackUnitAlivePercent) {
+        for (const attackUnit of attackAttackerUnits)
+        {
+            if (attackUnit.Village_unit.Unit.unit_type === roundUnitType && attackUnit.sent_quantity > attackUnit.lost_quantity)
+            {
+                const unitsAlive         = Math.floor(attackUnitAlivePercent * (attackUnit.sent_quantity - attackUnit.lost_quantity));
+                const lostQuantity       = (attackUnit.sent_quantity - attackUnit.lost_quantity) - unitsAlive;
+                attackUnit.lost_quantity += lostQuantity;
+            }
+        }
+    }
+
+    calculateDefenserUnitsLost (defenserUnits, roundDefenseUnits, defenseUnitAlivePercent) {
+        for (const defenseUnit of defenserUnits)
+        {
+            if (defenseUnit.sent_quantity > defenseUnit.lost_quantity)
+            {
+                const unitSent = roundDefenseUnits.units.find(unit => unit.unit_id === defenseUnit.village_unit_id);
+                unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
+                unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
+                defenseUnit.lost_quantity  += unitSent.lost_quantity;
+            }
+        }
+    }
+
+    checkWinner (attackAttackerUnits, defenserUnits) {
+        if (attackAttackerUnits.every(unit => unit.lost_quantity >= unit.sent_quantity))
+        {
+            return 'defender';
+        }
+        else if (defenserUnits.every(unit => unit.lost_quantity >= unit.sent_quantity))
+        {
+            return 'attacker';
+        }
+        else 
+        {
+            return null;
+        }
+    }
+
+
+    async processAttack (attack) {
+        try
+        {
+            // Gagnant de l'attaque
+            let winner = null;
+
+            // l'attaque
+            const attack = attack;
+
+            // Le village attaqué
+            const attackedVillage = await Village.findByPk(attack.attacked_village_id, {
+                include: [
+                    {
+                        model: Map_position,
+                        required: true
+                    }
+                ]
+            });
+
+            // Le village attaquant
+            const attackingVillage = await Village.findByPk(attack.attacking_village_id, {
+                include: [
+                    {
+                        model: Map_position,
+                        required: true
+                    }
+                ]
+            });
+
+            // troupes attaquantes
+            const attackAttackerUnits = await this.getAttackerUnits(attack.id);
+
+            // Types d'unités attaquantes
+            const unitTypesInAttack = this.getTypeOfAttackUnits(attackAttackerUnits);
+
+            // troupes en défense
+            const defenserVillageUnit = await this.getAttackedVillageUnits(attackedVillage.id);
+
+            // troupes en support
+            const defenserVillageSupport = await this.getAttackedVillageSupport(attackedVillage.id);
+
+            // pourcentage de défense du mur
+            const wallAdittionalDefensePercent = await this.getAttackedVillageWallDefensePercent(attackedVillage.id);
+
+            // Création des unités en défense
+            const attackDefenserUnits = await this.generateAttackDefenserUnits(attack.id, defenserVillageUnit);
+            const attackDefenserSupport = await this.generateAttackDefenserSupport(attack.id, defenserVillageSupport);
+
+            // Regroupement des unités en défense sous un tableau
+            const defenserUnits = attackDefenserUnits.concat(attackDefenserSupport);
+
+            // Si le village attaqué n'a pas d'unités en défense, l'attaquant gagne
+            if (defenserUnits.length === 0)
+            {
+                winner = 'attacker';
+            }
+
+            // Boucle de simulation de l'attaque
+            let round = 1;
+            while(winner === null)
+            {
+                const roundTotalAttackPower = this.getTotalAttackPower(attackAttackerUnits);
+
+                // Pour chaque type d'unité attaquante
+                for (const roundUnitType of unitTypesInAttack)
+                {
+                    // Total d'unités attaquantes pour le type d'unité en cours
+                    const roundAttackUnits = this.generateRoundAttackUnits(attackAttackerUnits, roundUnitType);
+                    
+                    // Pourcentage d'unités attaquantes pour le type d'unité en cours
+                    const roundAttackAllocationPercent = roundAttackUnits.attack_power / roundTotalAttackPower;
+
+                    // Total d'unités en défense pour le type d'unité en cours
+                    const roundDefenseUnits = this.generateRoundDefenseUnits(defenserUnits, roundUnitType, roundAttackAllocationPercent);
+
+                    // Calcul de pourcentage des unités en vie
+                    const { attackUnitAlivePercent, defenseUnitAlivePercent } = this.getRoundAlivePercent(roundAttackUnits, roundDefenseUnits, wallAdittionalDefensePercent);
+
+                    // Calcul du nombre d'unités perdues pour l'attaquant
+                    this.calculateAttackerUnitsLost(attackAttackerUnits, roundUnitType, attackUnitAlivePercent);
+
+                    // Calcul du nombre d'unités perdues pour le défenseur
+                    this.calculateDefenserUnitsLost(defenserUnits, roundDefenseUnits, defenseUnitAlivePercent);
+
+                    // Suppression du type d'unité si la puissance d'attaque est négative ou égale à 0
+                    if (roundAttackUnits.attack_power <= 0) {
+                        unitTypesInAttack.splice(unitTypesInAttack.indexOf(roundUnitType), 1);
+                    }
+                }
+
+                // Vérification s'il y a un gagnant
+                winner = this.checkWinner(attackAttackerUnits, defenserUnits);
+
+                // Si le nombre de round dépasse 20, l'attaque est annulée
+                round++;
+                if (round > 20)
+                {
+                    throw new Error('Too many rounds');
+                }
+            }
+
+
+
+
+            // Ce que je retourne 
+            // l'attaque
+            // les troupes attaquantes 
+            // les troupes défensives (defense et support) sous forme de tableau 
+        }
+        catch (error)
+        {
+            throw error;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
      * Calculate the outgoing attack results
      * @param {Number} attack - The attack
      */
@@ -716,8 +1212,6 @@ class AttackService {
 
         return defensePower;
     }
-
-
 
     /**
      * Calcule the distance between two villages
