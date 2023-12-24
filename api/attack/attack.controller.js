@@ -78,10 +78,10 @@ class AttackController {
         }
     }
 
-    async generateIncomingAttackResults(req, res, next) {
+    async handleIncommingAttacks(req, res, next) {
         try
         {
-            const attacks = await AttackService.generateIncomingAttackResults(req.params.id);
+            const attacks = await AttackService.handleIncommingAttacks(req.params.id);
             res.status(200).json(attacks);
         }
         catch(error)

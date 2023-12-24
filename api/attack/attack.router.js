@@ -16,7 +16,7 @@ const {
  */
 router.get('/',  AttackController.getAll);
 router.get('/:id', idParamSanitization, AttackController.getById);
-router.get('/village/:id', idParamSanitization, AttackController.generateIncomingAttackResults);
+router.get('/village/:id', idParamSanitization, AttackController.handleIncommingAttacks);
 router.post('/', createSanitization, AttackController.create);
 router.post('/generate', AttackController.generate);
 router.post('/simulate', AttackController.attackSimulation);

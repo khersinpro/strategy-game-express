@@ -1,19 +1,19 @@
 const { Op } = require('sequelize');
 const { sequelize } = require('../../database/index');
-const attack = require('../../database/models/attack');
 const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
+const unit = require('../../database/models/unit');
 const { 
-    Attack, 
-    Village_support,
-    Village_unit, 
-    Unit, 
-    Attack_attacker_unit, 
     Map_position, 
-    Village, 
-    Wall_defense, 
-    Village_building, 
+    Unit, 
     Defense_type,
+    Village, 
+    Village_unit, 
+    Village_support,
+    Village_building, 
+    Wall_defense, 
+    Attack, 
+    Attack_attacker_unit, 
     Attack_defenser_unit,
     Attack_defenser_support,
     Attack_stolen_resource,
@@ -162,9 +162,19 @@ class AttackService {
                 arrival_date: new Date() 
             });
 
-            const sameVillageUnits = data.villageUnits.filter(villageUnit => villageUnit.id === attackedVillage.id);
+            const sameVillageUnits = data.villageUnits.reduce((total, unit) => {
+                if (total.key.includes(unit.id))
+                {
+                    total.hasSameKey = true;
+                }
+                else
+                {
+                    total.key.push(unit.id);
+                }
+                return total;
+            }, {key: [], hasSameKey: false });
 
-            if (sameVillageUnits.length > 0)
+            if (sameVillageUnits.hasSameKey === true)
             {
                 throw new BadRequestError('You cannot add same units in the same attack');
             }
@@ -251,14 +261,10 @@ class AttackService {
      * Rename to handle incoming attack
      * @param {Number} villageId - The village id where the attack is incoming
      */
-    async generateIncomingAttackResults(villageId) {
+    async handleIncommingAttacks(villageId) {
         const transaction = await sequelize.transaction();
         try 
         {
-            const attackReport = {
-
-            }
-
             const incomingAttacks = await Attack.findAll({
                 include: [
                     {
@@ -519,13 +525,7 @@ class AttackService {
                                 defenseUnit.lost_quantity  += unitSent.lost_quantity;
                             }
                         }
-    
-                        // Set the results of the round
-                        attackReport[`round_${round}_${type}`] = {
-                            roundAtkUnits,
-                            roundDefUnits,
-                        };
-    
+
                         // Remove the type of weapon if the attack power is negative or equal to 0
                         if (atkPowerComparison <= 0) {
                             attackerTypes.splice(attackerTypes.indexOf(type), 1);
@@ -678,18 +678,10 @@ class AttackService {
                     villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
                     await villageUnit.save({silent: true, transaction});
                 }
-
-
-                // Save both villages losts
-                attackReport.stolenCapacity = stolenCapacity;
-                attackReport.winner         = winner;
-                attackReport.defenderUnits  = defenderUnits;
-                attackReport.attackerUnits  = attackerUnits;
             }
 
             await transaction.commit();
-            return attackReport;
-                
+            return true;  
         }
         catch (error)
         {
