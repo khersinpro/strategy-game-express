@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../../database/index');
 const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
-const unit = require('../../database/models/unit');
+const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
 const { 
     Map_position, 
     Unit, 
@@ -10,6 +10,7 @@ const {
     Village, 
     Village_unit, 
     Village_support,
+    Village_resource,
     Village_building, 
     Wall_defense, 
     Attack, 
@@ -228,14 +229,11 @@ class AttackService {
             }
 
             // calculate the distance between the two villages 
-            const attackingVillageXPosition = attackingVillage.Map_position.x;
-            const attackingVillageYPosition = attackingVillage.Map_position.y;
-            const attackedVillageXPosition  = attackedVillage.Map_position.x;
-            const attackedVillageYPosition  = attackedVillage.Map_position.y;
-            const distance                  = this.euclideanDistance(attackingVillageXPosition, attackingVillageYPosition, attackedVillageXPosition, attackedVillageYPosition);
-            const estimatedTravelTime       = this.estimateTravelTime(distance, slowestUnitSpeed);
-            const arrivalTime               = this.calculateArrivalTime(attack.departure_date, estimatedTravelTime);
-            attack.arrival_date             = arrivalTime;
+            const { x: startingPointX, y: startingPointY } = attackingVillage.Map_position;
+            const { x: arrivalPointX, y: arrivalPointY }   = attackedVillage.Map_position;
+
+            const euclideanCalculator       = new EuclideanDistanceCalculator(startingPointX, startingPointY, arrivalPointX, arrivalPointY);
+            attack.arrival_date             = euclideanCalculator.getArrivalDate(new Date(attack.departure_date), slowestUnitSpeed);
             attack.attack_status            = 'attacking';
             await attack.save();
             
@@ -256,34 +254,10 @@ class AttackService {
         }
     }
 
-    /**
-     * Calculate the incoming attack results
-     * Rename to handle incoming attack
-     * @param {Number} villageId - The village id where the attack is incoming
-     */
     async handleIncommingAttacks(villageId) {
-        const transaction = await sequelize.transaction();
-        try 
+        try
         {
             const incomingAttacks = await Attack.findAll({
-                include: [
-                    {
-                        model: Attack_attacker_unit,
-                        required: true,
-                        include: [
-                            {
-                                model: Village_unit,
-                                required: true,
-                                include: [
-                                    {
-                                        model: Unit,
-                                        required: true,
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ],
                 where: {
                     attacked_village_id: villageId,
                     attack_status: 'attacking',
@@ -298,730 +272,24 @@ class AttackService {
                 return;
             }
 
-            const attackedVillage = await Village.findByPk(villageId);
-
-            if (!attackedVillage)
+            for (const attack of incomingAttacks)
             {
-                throw new NotFoundError('Village not found');
+                await this.processAttack(attack);
             }
-
-            for (const incomingAttack of incomingAttacks)
-            {
-                // update the village resourse with the incoming attack date
-                // update the village units with the incoming attack date
-                // Mise a jour des batiments avec dates d'arrivée de l'attaque
-
-                const attackingVillage  = await Village.findByPk(incomingAttack.attacking_village_id);
-
-                const attackerTypes     = [];
-                let winner              = null;
-                let round               = 1;
-                let defensePercentWall  = 0;
-
-                // Get the unit of incoming attack
-                const attackerUnits = incomingAttack.Attack_attacker_units;
-
-                // Get the type of units in attack
-                for (const attackUnit of attackerUnits)
-                {
-                    if (!attackerTypes.includes(attackUnit.Village_unit.Unit.unit_type))
-                    {
-                        attackerTypes.push(attackUnit.Village_unit.Unit.unit_type);
-                    }
-                }
-
-                // Get the defense units of the attacked village
-                const defenderUnits = await Village_unit.findAll({ 
-                    include: [
-                        {
-                            model: Unit,
-                            required: true,
-                            include: [
-                                {
-                                    model: Defense_type,
-                                    required: true
-                                }
-                            ]
-                        }
-                    ],
-                    where: {
-                        village_id: attackedVillage.id,
-                        present_quantity: {
-                            [Op.gt]: 0
-                        }
-                    }
-                });
-
-                const defenseUnits = [];
-                
-                // Création des unité du village en défense lié a l'attaque ( utile pour le rapport de fin de combat)
-                for (const defenderUnit of defenderUnits)
-                {
-                    const present_quantity = defenderUnit.present_quantity;
-                    const defenseUnit = await Attack_defenser_unit.create({
-                        sent_quantity: present_quantity,
-                        lost_quantity: 0,
-                        attack_id: incomingAttack.id,
-                        village_unit_id: defenderUnit.id
-                    });
-                    // Add the défense to the defenseUnit for next steps
-                    defenseUnit.Defense_types = defenderUnit.Unit.Defense_types;
-                    defenseUnits.push(defenseUnit);
-                }
-
-                // Get the support units of the attacked village
-                const defenderSupportUnits = await Village_support.findAll({
-                    include: [
-                        {
-                            model: Village_unit,
-                            required: true,
-                            include: [
-                                {
-                                    model: Unit,
-                                    required: true,
-                                    include: [
-                                        {
-                                            model: Defense_type,
-                                            required: true
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    where: {
-                        supported_village_id: attackedVillage.id,
-                        quantity: {
-                            [Op.gt]: 0
-                        }
-                    }
-                });
-
-                // Création des unité en support du village en défense lié a l'attaque ( utile pour le rapport de fin de combat)
-                for (const defenderSupportUnit of defenderSupportUnits)
-                {
-                    const present_quantity = defenderSupportUnit.quantity;
-                    const defenseSupport = await Attack_defenser_support.create({
-                        sent_quantity: present_quantity,
-                        lost_quantity: 0,
-                        attack_id: incomingAttack.id,
-                        village_support_id: defenderSupportUnit.id,
-                    });
-                    // Add the défense to the defenseUnit for next steps
-                    defenseSupport.village_unit_id = defenderSupportUnit.village_unit_id
-                    defenseSupport.Defense_types = defenderSupportUnit.Village_unit.Unit.Defense_types;
-                    defenseUnits.push(defenseSupport);
-                }
-
-                // Get the wall defense percent if the wall level is specified and set it to the defensePercentWall variable
-                const attackedVillageWall = await Village_building.findOne({
-                    where: {
-                        village_id: attackedVillage.id, 
-                        type: 'wall_building'
-                    }
-                });
-
-                if (attackedVillageWall)
-                {
-                    const wallDefenseLevel = attackedVillageWall.level_id;
-    
-                    const wallDefense = await Wall_defense.findOne({
-                        where: {
-                            building_level_id: wallDefenseLevel
-                        }
-                    });
-    
-                    if (wallDefense)
-                    {
-                        defensePercentWall = wallDefense.defense_percent;
-                    }
-                }
-
-                // if the attacked village has no units in defense, the attacker win
-                if (defenseUnits.length === 0)
-                {
-                    winner = 'attacker';
-                }
-
-                while(winner === null)
-                {
-                    // Get the total attack power of the attacker
-                    const roundTotalAtk = attackerUnits.reduce((total, unit) => {
-                        const unitAtk       =  unit.Village_unit.Unit.attack;
-                        const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
-                        const totalAtk      = aliveQuantity * unitAtk;
-                        return total + totalAtk;
-                    }, 0);
-    
-                    // Total of units in attack for the type of weapon in progress
-                    for (const type of attackerTypes) 
-                    {
-                        const roundAtkUnits = attackerUnits.reduce((total, unit) => {
-                            const unitType = unit.Village_unit.Unit.unit_type;
-                            if (unitType === type && unit.sent_quantity > unit.lost_quantity) 
-                            {
-                                const unitAtk       =  unit.Village_unit.Unit.attack;
-                                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
-                                total.attack_power  += (aliveQuantity * unitAtk);
-                                total.sent_quantity += aliveQuantity;
-                            }
-                            return total;
-                        }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
-
-                        // Percentage of units in attack for the type of weapon in progress
-                        const roundAtkAlocationPercent = roundAtkUnits.attack_power / roundTotalAtk;
-
-                        // Total of units in defense for the type of weapon in progress
-                        const roundDefUnits = defenseUnits.reduce((total, unit) => {
-                            if (unit.sent_quantity > unit.lost_quantity) 
-                            {
-                                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
-                                const sent_quantity = Math.round(aliveQuantity * roundAtkAlocationPercent);
-                                const unit_defense  = unit.Defense_types.find(defense => defense.type === type);
-                                const base_defense  = sent_quantity * unit_defense.defense_value;
-                                total.units.push({
-                                    unit_id: unit.village_unit_id,
-                                    sent_quantity: sent_quantity,
-                                    alive_quantity: 0,
-                                    lost_quantity: 0,
-                                    base_defense: base_defense,
-                                });
-
-                                total.total_defense += base_defense;
-                            }   
-                            return total;
-                        }, {total_defense: 0, units: []});
-    
-                        // Attack and defense comparison with alive percent
-                        const defWithWallBonus        = roundDefUnits.total_defense + (roundDefUnits.total_defense * defensePercentWall / 100);
-                        const atkPowerComparison      = roundAtkUnits.attack_power - defWithWallBonus;
-                        const atkUnitAlivePercent     = atkPowerComparison / roundAtkUnits.attack_power;
-                        const defensePowerComparison  = defWithWallBonus - roundAtkUnits.attack_power;
-                        const defenseUnitAlivePercent = defensePowerComparison / defWithWallBonus;
-    
-    
-                        // Calculs of the number of units lost for the attacker 
-                        roundAtkUnits.alive_quantity  =  atkPowerComparison > 0 ? Math.floor(atkUnitAlivePercent * roundAtkUnits.sent_quantity) : 0;
-                        roundAtkUnits.lost_quantity   = roundAtkUnits.sent_quantity - roundAtkUnits.alive_quantity;
-    
-                        for (const attackUnit of attackerUnits) 
-                        {
-                            if (attackUnit.Village_unit.Unit.unit_type === type && attackUnit.sent_quantity > attackUnit.lost_quantity) 
-                            {
-                                const unitsAlive         = atkPowerComparison > 0 ? Math.floor(atkUnitAlivePercent * (attackUnit.sent_quantity - attackUnit.lost_quantity)) : 0;
-                                const lostQuantity       = (attackUnit.sent_quantity - attackUnit.lost_quantity) - unitsAlive;
-                                attackUnit.lost_quantity += lostQuantity;
-                            }
-                        }
-
-                        // Calculs of the number of units lost for the defender
-                        for (const defenseUnit of defenseUnits) 
-                        {
-                            if (defenseUnit.sent_quantity > defenseUnit.lost_quantity) 
-                            {
-                                const unitSent = roundDefUnits.units.find(unit => unit.unit_id === defenseUnit.village_unit_id);
-                                unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
-                                unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
-                                defenseUnit.lost_quantity  += unitSent.lost_quantity;
-                            }
-                        }
-
-                        // Remove the type of weapon if the attack power is negative or equal to 0
-                        if (atkPowerComparison <= 0) {
-                            attackerTypes.splice(attackerTypes.indexOf(type), 1);
-                        }
-    
-                    }
-                    
-                    // Check if there is a winner
-                    if (attackerUnits.every(unit => unit.lost_quantity >= unit.sent_quantity)) 
-                    {
-                        winner = 'defender';
-                        break;
-                    }
-                    else if (defenseUnits.every(unit => unit.lost_quantity >= unit.sent_quantity)) 
-                    {
-                        winner = 'attacker';
-                        break;
-                    }
-    
-                    round++;
-                    if (round > 20) 
-                    {
-                        throw new Error('Too many rounds');
-                    }
-                }
-
-                // Save the defense global lost quantity
-                for (const defenseUnit of defenseUnits)
-                {
-                    await defenseUnit.save()
-                }
-
-                // Save the attacker units
-                let slowestUnitSpeed = 0;
-                let stolenCapacity = 0;
-                for (const attackUnit of attackerUnits)
-                {
-                    if (winner === 'attacker' && attackUnit.sent_quantity > attackUnit.lost_quantity)
-                    {
-                        // Get the slowest unit speed
-                        const unitSpeed = attackUnit.Village_unit.Unit.movement_speed;
-                        if (slowestUnitSpeed < unitSpeed)
-                        {
-                            slowestUnitSpeed = unitSpeed;
-                        }
-
-                        // Get the stolen capacity of alive units
-                        const aliveQuantity = attackUnit.sent_quantity - attackUnit.lost_quantity;
-                        const unitCarryCapacity = attackUnit.Village_unit.Unit.carrying_capacity;
-                        stolenCapacity += aliveQuantity * unitCarryCapacity;
-                    }
-                    await attackUnit.save();
-                }
-
-                // Get the stolen resources if the attacker win
-                if (winner === 'attacker')
-                {
-                    const defenseVillageResources = await attackedVillage.getVillage_resources({
-                        where: {
-                            quantity: {
-                                [Op.gte]: 1
-                            }
-                        }
-                    });
-
-                    const totalDefenseResources = defenseVillageResources.reduce((total, resource) => {
-                        return total + resource.quantity;
-                    }, 0);
-
-                    for (const resource of defenseVillageResources)
-                    {
-                        // y ajouter les resources volé a l'attaque
-                        const resourceQuantity  = resource.quantity;
-                        const stolenQuantity    = Math.floor(resourceQuantity * (stolenCapacity / totalDefenseResources));
-                        const realStolenQuantity = stolenQuantity > resourceQuantity ? resourceQuantity : stolenQuantity;
-                        resource.quantity       -= realStolenQuantity;
-                        // resource.updated_at     = incomingAttack.arrival_date;
-                        await resource.save({
-                            silent: true,
-                            transaction
-                        });
-
-                        // Save the stolen resources
-                        await Attack_stolen_resource.create({
-                            attack_id: incomingAttack.id,
-                            resource_name: resource.resource_name,
-                            quantity: realStolenQuantity
-                        }, { transaction }); 
-                    }
-
-                    // Calculer la distance entre les deux villages
-                    const attackingVillagePosition = await attackingVillage.getMap_position();
-                    const attackedVillagePosition  = await attackedVillage.getMap_position();
-                    const distance = this.euclideanDistance(attackedVillagePosition.x, attackedVillagePosition.y, attackingVillagePosition.x, attackingVillagePosition.y);
-                    const travelTime = this.estimateTravelTime(distance, slowestUnitSpeed);
-                    const arrivalTime = this.calculateArrivalTime(incomingAttack.arrival_date, travelTime);
-                    incomingAttack.return_date = arrivalTime;
-
-                }
-
-                // Save the attack report
-                incomingAttack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
-
-                await incomingAttack.save({ transaction });
-
-                // Save the attacked village village_units
-                for (const defenderUnit of defenderUnits)
-                {
-                    const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderUnit.id);
-
-                    defenderUnit.present_quantity   -= unitInDefense.lost_quantity;
-                    defenderUnit.total_quantity     -= unitInDefense.lost_quantity;
-                    await defenderUnit.save({silent: true, transaction});
-                }
-
-                // Save de support units
-                for (const defenderSupportUnit of defenderSupportUnits)
-                {
-                    const unitInDefense = defenseUnits.find(unit => unit.village_unit_id === defenderSupportUnit.village_unit_id);
-
-                    if (!unitInDefense) 
-                    {
-                        continue;
-                    }
-
-                    // Save the support units
-                    defenderSupportUnit.quantity -= unitInDefense.lost_quantity;
-                    defenderSupportUnit.enabled  = defenderSupportUnit.quantity === 0 ? 0 : 1;
-                    await defenderSupportUnit.save({ transaction });
-
-                    // Save the support village_units
-                    const village_unit                  = await defenderSupportUnit.getVillage_unit();
-                    village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
-                    village_unit.total_quantity         -= unitInDefense.lost_quantity;
-                    await village_unit.save({silent: true, transaction});
-                }
-
-                    
-                // Save the attacker village_units
-                const villageAttackUnit = await attackingVillage.getVillage_units();
-                for (const villageUnit of villageAttackUnit)
-                { 
-                    const unitInAttack = attackerUnits.find(unit => unit.village_unit_id === villageUnit.id);
-                    if (!unitInAttack)
-                    {
-                        continue;
-                    }
-
-                    villageUnit.total_quantity -= unitInAttack.lost_quantity;
-                    villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
-                    await villageUnit.save({silent: true, transaction});
-                }
-            }
-
-            await transaction.commit();
-            return true;  
         }
         catch (error)
         {
-            transaction.rollback();
             console.error(error);
             throw error;
         }
     }
 
-    /**
-     * Return an array of the type of units in the attack
-     * @param {Attack_attacker_unit[]} attackUnits array of attack_attacker_unit with the included village_unit and unit
-     * @returns {String[]}
-     */
-    getTypeOfAttackUnits (attackUnits) {
-        const types = attackUnits.reduce((types, unit) => {
-            if (!types.includes(unit.Village_unit.Unit.unit_type))
-            {
-                types.push(unit.Village_unit.Unit.unit_type);
-            }
-            return types;
-        }, []);
-
-        return types;
-    }
-
-    /**
-     * 
-     * @param {number} attackId 
-     * @returns {Promise<Attack_attacker_unit[]>}
-     */
-    getAttackerUnits (attackId) {
-        return Attack_attacker_unit.findAll({
-            include: [
-                {
-                    model: Village_unit,
-                    required: true,
-                    include: [
-                        {
-                            model: Unit,
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            where: {
-                attack_id: attackId
-            }
-        });
-    }
-
-    /**
-     * 
-     * @param {number} attackedVillageId 
-     * @returns {Promise<Village_unit[]>}
-     */
-    getAttackedVillageUnits (attackedVillageId) {
-        return Village_unit.findAll({
-            include: [
-                {
-                    model: Unit,
-                    required: true,
-                    include: [
-                        {
-                            model: Defense_type,
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            where: {
-                village_id: attackedVillageId,
-                present_quantity: {
-                    [Op.gt]: 0
-                }
-            }
-        });
-    }
-
-    /**
-     * 
-     * @param {number} attackedVillageId
-     * @returns {Promise<Village_support[]>}
-     */
-    getAttackedVillageSupport (attackedVillageId) {
-        return Village_support.findAll({
-            include: [
-                {
-                    model: Village_unit,
-                    required: true,
-                    include: [
-                        {
-                            model: Unit,
-                            required: true,
-                            include: [
-                                {
-                                    model: Defense_type,
-                                    required: true
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ],
-            where: {
-                supported_village_id: attackedVillageId,
-                enabled: 1
-            }
-        });
-    }
-
-    async getAttackedVillageWallDefensePercent (attackedVillageId) {
-        try
-        {
-            const wall = await Village_building.findOne({
-                where: {
-                    village_id: attackedVillageId,
-                    type: 'wall_building'
-                }
-            });
-
-            if (!wall)
-            {
-                return 0;
-            }
-
-            const wallDefense = await Wall_defense.findOne({
-                where: {
-                    building_level_id: wall.level_id
-                }
-            });
-
-            if (!wallDefense)
-            {
-                return 0;
-            }
-
-            return wallDefense.defense_percent;
-        }
-        catch (error)
-        {
-            throw new Error(`Failed to get defense percent for village ${attackedVillageId}: ${error.message}`);
-        }
-    }
-
-    async generateAttackDefenserUnits (attackId, defenserVillageUnits) {
-        try 
-        {
-            const attackDefenserUnits = [];
-
-            for (const defenserVillageUnit of defenserVillageUnits)
-            {
-                const attackDefenserUnit = await Attack_defenser_unit.create({
-                    attack_id: attackId,
-                    village_unit_id: defenserVillageUnit.id,
-                    sent_quantity: defenserVillageUnit.present_quantity,
-                    lost_quantity: 0
-                });
-
-                attackDefenserUnit.Defense_types = defenserVillageUnit.Unit.Defense_types;
-                attackDefenserUnits.push(attackDefenserUnit);
-            }
-
-            return attackDefenserUnits;
-        }
-        catch (error)
-        {
-            throw new Error(`Failed to generate attack defenser units for attack ${attackId}: ${error.message}`);
-        }
-    }
-
-    async generateAttackDefenserSupport (attackId, defenserVillageSupport) {
-        try
-        {
-            const attackDefenserSupport = [];
-
-            for (const defenserVillageSupportUnit of defenserVillageSupport)
-            {
-                const attackDefenserSupportUnit = await Attack_defenser_support.create({
-                    attack_id: attackId,
-                    village_support_id: defenserVillageSupportUnit.id,
-                    sent_quantity: defenserVillageSupportUnit.quantity,
-                    lost_quantity: 0
-                });
-
-                attackDefenserSupportUnit.village_unit_id = defenserVillageSupportUnit.village_unit_id
-                attackDefenserSupportUnit.Defense_types   = defenserVillageSupportUnit.Village_unit.Unit.Defense_types;
-                attackDefenserSupport.push(attackDefenserSupportUnit);
-            }
-
-            return attackDefenserSupport;
-        }
-        catch (error)
-        {
-            throw new Error(`Failed to generate attack defenser support for attack ${attackId}: ${error.message}`);
-        }
-    }
-
-    getTotalAttackPower (attackAttackerUnits) {
-        const totalAttackPower = attackAttackerUnits.reduce((total, unit) => {
-            const unitAtk       =  unit.Village_unit.Unit.attack;
-            const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
-            const totalAtk      = aliveQuantity * unitAtk;
-            return total + totalAtk;
-        }, 0);
-
-        return totalAttackPower;
-    }
-
-    /**
-     * 
-     * @param {Attack_attacker_unit[]} attackAttackerUnits 
-     * @param {string} roundUnitType 
-     * @returns {{
-     *  attack_power: number,
-     *  sent_quantity: number,
-     *  alive_quantity: number,
-     *  lost_quantity: number
-     * }}
-     */
-    generateRoundAttackUnits (attackAttackerUnits, roundUnitType) {
-        const roundAttackUnits = attackAttackerUnits.reduce((total, unit) => {
-            const unitType = unit.Village_unit.Unit.unit_type;
-
-            if (unitType === roundUnitType && unit.sent_quantity > unit.lost_quantity) 
-            {
-                const unitAtk       =  unit.Village_unit.Unit.attack;
-                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
-                total.attack_power  += (aliveQuantity * unitAtk);
-                total.sent_quantity += aliveQuantity;
-            }
-            return total;
-        }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
-
-        return roundAttackUnits;
-    }
-
-    /**
-     * 
-     * @param {Attack_defenser_unit[] | Attack_defenser_support[]} defenserUnits
-     * @param {string} roundUnitType
-     * @returns {{
-     * total_defense: number,
-     * units: {
-     * unit_id: number,
-     * sent_quantity: number,
-     * alive_quantity: number,
-     * lost_quantity: number,
-     * base_defense: number
-     * }[]
-     * }}
-     */
-    generateRoundDefenseUnits (defenserUnits, roundUnitType, roundAttackAllocationPercent) {
-        const roundDefenserUnits = defenserUnits.reduce((total, unit) => {
-            if (unit.sent_quantity > unit.lost_quantity)
-            {
-                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
-                const sent_quantity = Math.round(aliveQuantity * roundAttackAllocationPercent);     
-                const unit_defense  = unit.Defense_types.find(defense => defense.type === roundUnitType);   
-                const base_defense  = sent_quantity * unit_defense.defense_value;   
-                total.units.push({
-                    unit_id: unit.village_unit_id,
-                    sent_quantity: sent_quantity,
-                    alive_quantity: 0,
-                    lost_quantity: 0,
-                    base_defense: base_defense,
-                });
-
-                total.total_defense += base_defense;
-            }
-
-            return total;
-        }, {total_defense: 0, units: []});
-
-        return roundDefenserUnits;
-    }
-
-    getRoundAlivePercent (roundAttackUnits, roundDefenseUnits, wallAdittionalDefensePercent) {
-        const wallDefenseBonus          = roundDefenseUnits.total_defense * wallAdittionalDefensePercent / 100;
-        const defenseWithWallBonus      = roundDefenseUnits.total_defense + wallDefenseBonus;
-        const attackPowerComparison     = roundAttackUnits.attack_power - defenseWithWallBonus;
-        const attackUnitAlivePercent    = attackPowerComparison / roundAttackUnits.attack_power;
-        const defensePowerComparison    = defenseWithWallBonus - roundAttackUnits.attack_power;
-        const defenseUnitAlivePercent   = defensePowerComparison / defenseWithWallBonus;
-
-        return {
-            attackUnitAlivePercent,
-            defenseUnitAlivePercent
-        }
-    }
-
-    calculateAttackerUnitsLost (attackAttackerUnits, roundUnitType, attackUnitAlivePercent) {
-        for (const attackUnit of attackAttackerUnits)
-        {
-            if (attackUnit.Village_unit.Unit.unit_type === roundUnitType && attackUnit.sent_quantity > attackUnit.lost_quantity)
-            {
-                const unitsAlive         = Math.floor(attackUnitAlivePercent * (attackUnit.sent_quantity - attackUnit.lost_quantity));
-                const lostQuantity       = (attackUnit.sent_quantity - attackUnit.lost_quantity) - unitsAlive;
-                attackUnit.lost_quantity += lostQuantity;
-            }
-        }
-    }
-
-    calculateDefenserUnitsLost (defenserUnits, roundDefenseUnits, defenseUnitAlivePercent) {
-        for (const defenseUnit of defenserUnits)
-        {
-            if (defenseUnit.sent_quantity > defenseUnit.lost_quantity)
-            {
-                const unitSent = roundDefenseUnits.units.find(unit => unit.unit_id === defenseUnit.village_unit_id);
-                unitSent.alive_quantity       = defensePowerComparison > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
-                unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
-                defenseUnit.lost_quantity  += unitSent.lost_quantity;
-            }
-        }
-    }
-
-    checkWinner (attackAttackerUnits, defenserUnits) {
-        if (attackAttackerUnits.every(unit => unit.lost_quantity >= unit.sent_quantity))
-        {
-            return 'defender';
-        }
-        else if (defenserUnits.every(unit => unit.lost_quantity >= unit.sent_quantity))
-        {
-            return 'attacker';
-        }
-        else 
-        {
-            return null;
-        }
-    }
-
-
     async processAttack (attack) {
+        const transaction = await sequelize.transaction();
         try
         {
             // Gagnant de l'attaque
             let winner = null;
-
-            // l'attaque
-            const attack = attack;
 
             // Le village attaqué
             const attackedVillage = await Village.findByPk(attack.attacked_village_id, {
@@ -1115,70 +383,605 @@ class AttackService {
                 }
             }
 
+            // Si l'attaquant gagne, on récupère les ressources volées et on set la date de retour
+            if (winner === 'attacker')
+            {
+                const stolenCapacity   = this.getAttackerStolenCapacity(attackAttackerUnits);
+                const slowestUnitSpeed = this.getAttackerSlowestUnitSpeed(attackAttackerUnits);
 
+                // Récupération des ressources volées
+                await this.generateAttackStolenResources(attackedVillage.id, attack.id, stolenCapacity, transaction);
 
+                const { x: attackedVillageX,  y: attackedVillageY }   = attackedVillage.Map_position;
+                const { x: attackingVillageX, y: attackingVillageY }  = attackingVillage.Map_position;
 
-            // Ce que je retourne 
-            // l'attaque
-            // les troupes attaquantes 
-            // les troupes défensives (defense et support) sous forme de tableau 
+                const euclideanCalculator = new EuclideanDistanceCalculator(attackedVillageX, attackedVillageY, attackingVillageX, attackingVillageY);
+                attack.return_date        = euclideanCalculator.getArrivalDate(new Date(attack.arrival_date), slowestUnitSpeed);
+            }
+
+            // Sauvegarde du rapport de l'attaque
+            attack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
+            await attack.save({ transaction });
+
+            // Sauvegarde des unités du village attaqué
+            await this.saveDefenserLosses(defenserUnits, defenserVillageSupport, defenserVillageUnit, transaction);
+
+            // Sauvegarde des unités du village attaquant
+            await this.saveAttackerLosses(attackAttackerUnits, attackingVillage.id, transaction);
+
+            await transaction.commit();
         }
         catch (error)
         {
+            transaction.rollback();
             throw error;
         }
     }
 
+    /**
+     * Return an array of the type of units in the attack
+     * @param {Attack_attacker_unit[]} attackUnits array of attack_attacker_unit with the included village_unit and unit
+     * @returns {String[]}
+     */
+    getTypeOfAttackUnits (attackUnits) {
+        const types = attackUnits.reduce((types, unit) => {
+            if (!types.includes(unit.Village_unit.Unit.unit_type))
+            {
+                types.push(unit.Village_unit.Unit.unit_type);
+            }
+            return types;
+        }, []);
 
+        return types;
+    }
 
+    /**
+     * Get the Attack_attacker_unit with associated village_unit and unit for the attack
+     * @param {number} attackId - The attack id
+     * @returns {Promise<Attack_attacker_unit[]>} - Return an array of Attack_attacker_unit with associated village_unit and unit
+     */
+    getAttackerUnits (attackId) {
+        return Attack_attacker_unit.findAll({
+            include: [
+                {
+                    model: Village_unit,
+                    required: true,
+                    include: [
+                        {
+                            model: Unit,
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            where: {
+                attack_id: attackId
+            }
+        });
+    }
 
+    /**
+     * Get the Village_unit with associated unit and defense_type for the attacked village
+     * @param {number} attackedVillageId - The attacked village id
+     * @returns {Promise<Village_unit[]>} - Return an array of Village_unit with associated unit and defense_type
+     */
+    getAttackedVillageUnits (attackedVillageId) {
+        return Village_unit.findAll({
+            include: [
+                {
+                    model: Unit,
+                    required: true,
+                    include: [
+                        {
+                            model: Defense_type,
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            where: {
+                village_id: attackedVillageId,
+                present_quantity: {
+                    [Op.gt]: 0
+                }
+            }
+        });
+    }
 
+    /**
+     * Get the Village_support with associated village_unit , unit and defense_types for the attacked village
+     * @param {number} attackedVillageId - The attacked village id
+     * @returns {Promise<Village_support[]>} - Return an array of Village_support with associated village_unit , unit and defense_types
+     */
+    getAttackedVillageSupport (attackedVillageId) {
+        return Village_support.findAll({
+            include: [
+                {
+                    model: Village_unit,
+                    required: true,
+                    include: [
+                        {
+                            model: Unit,
+                            required: true,
+                            include: [
+                                {
+                                    model: Defense_type,
+                                    required: true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            where: {
+                supported_village_id: attackedVillageId,
+                enabled: 1
+            }
+        });
+    }
 
+    /**
+     * Get the wall defense percent of the attacked village
+     * @param {number} attackedVillageId - The attacked village id
+     * @returns {Promise<number>} - Return the wall defense percent
+     */ 
+    async getAttackedVillageWallDefensePercent (attackedVillageId) {
+        try
+        {
+            const wall = await Village_building.findOne({
+                where: {
+                    village_id: attackedVillageId,
+                    type: 'wall_building'
+                }
+            });
 
+            if (!wall)
+            {
+                return 0;
+            }
 
+            const wallDefense = await Wall_defense.findOne({
+                where: {
+                    building_level_id: wall.level_id
+                }
+            });
 
+            if (!wallDefense)
+            {
+                return 0;
+            }
 
+            return wallDefense.defense_percent;
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to get defense percent for village ${attackedVillageId}: ${error.message}`);
+        }
+    }
 
+    /**
+     * Generate the attack defenser units with associated defense_types
+     * @param {number} attackId - The attack id
+     * @param {Village_unit[]} defenserVillageUnits - The village units with the included unit and defense_types of the attacked village
+     * @returns {Promise<Attack_defenser_unit[]>} - Return an array of Attack_defenser_unit with associated  defense_types
+     */ 
+    async generateAttackDefenserUnits (attackId, defenserVillageUnits) {
+        try 
+        {
+            const attackDefenserUnits = [];
 
+            for (const defenserVillageUnit of defenserVillageUnits)
+            {
+                const attackDefenserUnit = await Attack_defenser_unit.create({
+                    attack_id: attackId,
+                    village_unit_id: defenserVillageUnit.id,
+                    sent_quantity: defenserVillageUnit.present_quantity,
+                    lost_quantity: 0
+                });
 
+                attackDefenserUnit.Defense_types = defenserVillageUnit.Unit.Defense_types;
+                attackDefenserUnits.push(attackDefenserUnit);
+            }
 
+            return attackDefenserUnits;
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to generate attack defenser units for attack ${attackId}: ${error.message}`);
+        }
+    }
 
+    /**
+     * Generate the attack defenser support with associated village_unit and defense_types
+     * @param {number} attackId - The attack id
+     * @param {Village_support[]} defenserVillageSupport - The village support of the attacked village with the included village_unit, unit and defense_types
+     * @returns {Promise<Attack_defenser_support[]>} - Return an array of Attack_defenser_support with associated village_unit_id and defense_types
+     */ 
+    async generateAttackDefenserSupport (attackId, defenserVillageSupport) {
+        try
+        {
+            const attackDefenserSupport = [];
 
+            for (const defenserVillageSupportUnit of defenserVillageSupport)
+            {
+                const attackDefenserSupportUnit = await Attack_defenser_support.create({
+                    attack_id: attackId,
+                    village_support_id: defenserVillageSupportUnit.id,
+                    sent_quantity: defenserVillageSupportUnit.quantity,
+                    lost_quantity: 0
+                });
 
+                attackDefenserSupportUnit.village_unit_id = defenserVillageSupportUnit.village_unit_id
+                attackDefenserSupportUnit.Defense_types   = defenserVillageSupportUnit.Village_unit.Unit.Defense_types;
+                attackDefenserSupport.push(attackDefenserSupportUnit);
+            }
 
+            return attackDefenserSupport;
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to generate attack defenser support for attack ${attackId}: ${error.message}`);
+        }
+    }
 
+    /**
+     * Generate and return the total attack power of the attack_attackers_units with the included village_unit and unit
+     * @param {Attack_attacker_unit[]} attackAttackerUnits - The attack_attacker_units with the included village_unit and unit
+     * @returns {number} - The total attack power
+     */ 
+    getTotalAttackPower (attackAttackerUnits) {
+        const totalAttackPower = attackAttackerUnits.reduce((total, unit) => {
+            const unitAtk       =  unit.Village_unit.Unit.attack;
+            const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+            const totalAtk      = aliveQuantity * unitAtk;
+            return total + totalAtk;
+        }, 0);
 
+        return totalAttackPower;
+    }
 
+    /**
+     * Generate the units in the attack round by there types 
+     * @param {Attack_attacker_unit[]} attackAttackerUnits - The attack_attacker_units with the included village_unit and unit
+     * @param {string} roundUnitType - The type of unit for the round
+     * @returns {{
+     *  attack_power: number,
+     *  sent_quantity: number,
+     *  alive_quantity: number,
+     *  lost_quantity: number
+     * }} - Return the units in the attack round
+     */
+    generateRoundAttackUnits (attackAttackerUnits, roundUnitType) {
+        const roundAttackUnits = attackAttackerUnits.reduce((total, unit) => {
+            const unitType = unit.Village_unit.Unit.unit_type;
 
+            if (unitType === roundUnitType && unit.sent_quantity > unit.lost_quantity) 
+            {
+                const unitAtk       =  unit.Village_unit.Unit.attack;
+                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                total.attack_power  += (aliveQuantity * unitAtk);
+                total.sent_quantity += aliveQuantity;
+            }
+            return total;
+        }, {attack_power: 0, sent_quantity: 0, alive_quantity: 0, lost_quantity: 0});
 
+        return roundAttackUnits;
+    }
 
+    /**
+     * Generate the defense units in the attack round by the type of attacker unit
+     * @param {Attack_defenser_unit[] | Attack_defenser_support[]} defenserUnits - The defense units in the attack round with the included defense_types
+     * @param {string} roundUnitType - The type of unit for the round
+     * @returns {{
+     * total_defense: number,
+     * units: {
+     * unit_id: number,
+     * sent_quantity: number,
+     * alive_quantity: number,
+     * lost_quantity: number,
+     * base_defense: number
+     * }[]
+     * }} - Return the defense units in the attack round
+     */
+    generateRoundDefenseUnits (defenserUnits, roundUnitType, roundAttackAllocationPercent) {
+        const roundDefenserUnits = defenserUnits.reduce((total, unit) => {
+            if (unit.sent_quantity > unit.lost_quantity)
+            {
+                const aliveQuantity = unit.sent_quantity - unit.lost_quantity;
+                const sent_quantity = Math.round(aliveQuantity * roundAttackAllocationPercent);     
+                const unit_defense  = unit.Defense_types.find(defense => defense.type === roundUnitType);   
+                const base_defense  = sent_quantity * unit_defense.defense_value;   
+                total.units.push({
+                    unit_id: unit.village_unit_id,
+                    sent_quantity: sent_quantity,
+                    alive_quantity: 0,
+                    lost_quantity: 0,
+                    base_defense: base_defense,
+                });
 
+                total.total_defense += base_defense;
+            }
 
+            return total;
+        }, {total_defense: 0, units: []});
 
+        return roundDefenserUnits;
+    }
 
+    /**
+     * Calculate the alive percent of the attack units and the defense units
+     * @param {{}} roundAttackUnits - The attack units in the round
+     * @param {{}} roundDefenseUnits - The defense units in the round
+     * @param {number} wallAdittionalDefensePercent - The wall defense percent
+     * @returns {{
+     * attackUnitAlivePercent: number,
+     * defenseUnitAlivePercent: number
+     * }} - Return the alive percent of the attack units and the defense units
+     */ 
+    getRoundAlivePercent (roundAttackUnits, roundDefenseUnits, wallAdittionalDefensePercent) {
+        const wallDefenseBonus          = roundDefenseUnits.total_defense * wallAdittionalDefensePercent / 100;
+        const defenseWithWallBonus      = roundDefenseUnits.total_defense + wallDefenseBonus;
+        const attackPowerComparison     = roundAttackUnits.attack_power - defenseWithWallBonus;
+        const attackUnitAlivePercent    = attackPowerComparison / roundAttackUnits.attack_power;
+        const defensePowerComparison    = defenseWithWallBonus - roundAttackUnits.attack_power;
+        const defenseUnitAlivePercent   = defensePowerComparison / defenseWithWallBonus;
 
+        return {
+            attackUnitAlivePercent,
+            defenseUnitAlivePercent
+        }
+    }
 
+    /**
+     * Calculate the units lost for the attacker
+     * @param {Attack_attacker_unit[]} attackAttackerUnits - The attack units with the included village_unit and unit
+     * @param {string} roundUnitType - The type of unit for the round
+     * @param {number} attackUnitAlivePercent - The alive percent of the attack units
+     * @returns {void}
+     */
+    calculateAttackerUnitsLost (attackAttackerUnits, roundUnitType, attackUnitAlivePercent) {
+        for (const attackUnit of attackAttackerUnits)
+        {
+            if (attackUnit.Village_unit.Unit.unit_type === roundUnitType && attackUnit.sent_quantity > attackUnit.lost_quantity)
+            {
+                const unitsAlive         = attackUnitAlivePercent > 0 ? Math.floor(attackUnitAlivePercent * (attackUnit.sent_quantity - attackUnit.lost_quantity)) : 0;
+                const lostQuantity       = (attackUnit.sent_quantity - attackUnit.lost_quantity) - unitsAlive;
+                attackUnit.lost_quantity += lostQuantity;
+            }
+        }
+    }
 
+    /**
+     * Calculate the units lost for the defenser
+     * @param {Attack_defenser_unit[] | Attack_support_unit[]} defenserUnits - The defense units in the attack round
+     * @param {{}} roundDefenseUnits - The defense units in the attack round
+     * @param {number} defenseUnitAlivePercent - The alive percent of the defense units
+     * @returns {void}
+     */ 
+    calculateDefenserUnitsLost (defenserUnits, roundDefenseUnits, defenseUnitAlivePercent) {
+        for (const defenseUnit of defenserUnits)
+        {
+            if (defenseUnit.sent_quantity > defenseUnit.lost_quantity)
+            {
+                const unitSent = roundDefenseUnits.units.find(unit => unit.unit_id === defenseUnit.village_unit_id);
+                unitSent.alive_quantity       = defenseUnitAlivePercent > 0 ? Math.floor(defenseUnitAlivePercent * unitSent.sent_quantity) : 0;
+                unitSent.lost_quantity        = unitSent.sent_quantity - unitSent.alive_quantity;
+                defenseUnit.lost_quantity  += unitSent.lost_quantity;
+            }
+        }
+    }
 
+    /**
+     * Check if there is a winner
+     * @param {Attack_attacker_unit[]} attackAttackerUnits - The attack units with the included village_unit and unit
+     * @param {Attack_defenser_unit[] | Attack_support_unit[]} defenserUnits - The defense units in the attack round
+     * @returns {string | null} - Return the winner or null if there is no winner
+     */ 
+    checkWinner (attackAttackerUnits, defenserUnits) {
+        if (attackAttackerUnits.every(unit => unit.lost_quantity >= unit.sent_quantity))
+        {
+            return 'defender';
+        }
+        else if (defenserUnits.every(unit => unit.lost_quantity >= unit.sent_quantity))
+        {
+            return 'attacker';
+        }
+        else 
+        {
+            return null;
+        }
+    }
 
+    /**
+     * Get the total stolen capacity of the attacker
+     * @param {Attack_attacker_unit[]} attackAttackerUnits  - The attacker units with the included village_unit and unit
+     * @returns {number} - The total stolen capacity
+     */
+    getAttackerStolenCapacity (attackAttackerUnits) {
+        const stolenCapacity = attackAttackerUnits.reduce((total, unit) => {
+            const aliveQuantity      = unit.sent_quantity - unit.lost_quantity;
+            if (aliveQuantity > 0)
+            {
+                const unitCarryCapacity = unit.Village_unit.Unit.carrying_capacity;
+                total += aliveQuantity * unitCarryCapacity;
+            }
+            return total;
+        }, 0);
+        return stolenCapacity;
+    }
 
+    /**
+     * Get slowest alive unit speed
+     * @param {Attack_attacker_unit[]} attackAttackerUnits  - The attacker units with the included village_unit and unit
+     * @returns {number} - The slowest alive unit speed
+     */
+    getAttackerSlowestUnitSpeed (attackAttackerUnits) {
+        const slowestUnitSpeed = attackAttackerUnits.reduce((slowestUnitSpeed, unit) => {
+            if (unit.lost_quantity < unit.sent_quantity)
+            {
+                const unitSpeed = unit.Village_unit.Unit.movement_speed;
+                if (slowestUnitSpeed < unitSpeed)
+                {
+                    slowestUnitSpeed = unitSpeed;
+                }
+            }
+            return slowestUnitSpeed;
+        }, 0);
+        return slowestUnitSpeed;
+    }
 
+    /**
+     * Save the defense losses for support units and village units
+     * @param {Attack_defenser_unit[] || Attack_support_unit} defenserUnits - The defense related to the attack
+     * @param {Village_support[]} villageSupportUnits - The support units of the attacked village
+     * @param {Village_unit[]} villageUnits - The village units of the attacked village
+     * @param {Sequelize.transaction} transaction - The transaction
+     */
+    async saveDefenserLosses (defenserUnits, villageSupportUnits, villageUnits, transaction) {
+        try
+        {
+            // Sauvegarde des unités en défense
+            for (const defenserUnit of defenserUnits)
+            {
+                await defenserUnit.save()
+            }
 
+            // Sauvegarde des unités en support
+            for (const villageSupportUnit of villageSupportUnits)
+            {
+                const unitInDefense = defenserUnits.find(unit => unit.village_unit_id === villageSupportUnit.village_unit_id);
 
+                if (!unitInDefense) 
+                {
+                    continue;
+                }
 
+                // Sauvegarde des unités en support
+                villageSupportUnit.quantity -= unitInDefense.lost_quantity;
+                villageSupportUnit.enabled  = villageSupportUnit.quantity === 0 ? 0 : 1;
+                await villageSupportUnit.save({ transaction });
 
+                // Sauvegarde des unités du village en support
+                const village_unit                  = await villageSupportUnit.getVillage_unit();
+                village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
+                village_unit.total_quantity         -= unitInDefense.lost_quantity;
+                await village_unit.save({ transaction, silent: true });
+            }
 
+            // Sauvegarde des unités du village
+            for (const villageUnit of villageUnits)
+            { 
+                const unitInDefense = defenserUnits.find(unit => unit.village_unit_id === villageUnit.id);
 
+                if (!unitInDefense)
+                {
+                    continue;
+                }
 
+                villageUnit.total_quantity      -= unitInDefense.lost_quantity;
+                villageUnit.present_quantity    -= unitInDefense.lost_quantity;
+                await villageUnit.save({ transaction, silent: true });
+            }
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to save defenser losses: ${error.message}`);
+        }
+    }
 
+    /**
+     * Save the attacker losses
+     * @param {Attack_attacker_unit[]} attackAttackerUnits - The attacker units with the included village_unit and unit
+     * @param {number} attackingVillageId - The attacking village id
+     * @param {Sequelize.transaction} transaction - The transaction
+     * @returns {Promise<void>}
+     */ 
+    async saveAttackerLosses (attackAttackerUnits, attackingVillageId, transaction) {
+        try
+        {
+            for (const attackAttackerUnit of attackAttackerUnits)
+            {
+                await attackAttackerUnit.save();
+            }
 
+            const villageUnits = await Village_unit.findAll({
+                where: {
+                    village_id: attackingVillageId
+                }
+            });
 
+            for (const villageUnit of villageUnits)
+            {
+                const unitInAttack = attackAttackerUnits.find(unit => unit.village_unit_id === villageUnit.id);
 
+                if (!unitInAttack)
+                {
+                    continue;
+                }
 
+                villageUnit.total_quantity -= unitInAttack.lost_quantity;
+                villageUnit.in_attack_quantity -= unitInAttack.lost_quantity;
+                await villageUnit.save({ transaction, silent: true });
+            }
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to save attacker losses: ${error.message}`);
+        }
+    }
 
+    /**
+     * Generate the stolen resources and update the village resources stolen
+     * @param {number} attackedVillageId - The attacked village id
+     * @param {number} attackId - The attack id
+     * @param {number} stolenCapacity  - The total stolen capacity
+     * @param {Sequelize.Transaction} transaction - The transaction
+     * @returns {Promise<Attack_stolen_resource[] || Village_resource[]>} - Return the promise of saved village_resources and attack_stolen_resources
+     */
+    async generateAttackStolenResources (attackedVillageId, attackId, stolenCapacity, transaction) {
+        try
+        {
+            const villageResources = await Village_resource.findAll({
+                where: {
+                    village_id: attackedVillageId,
+                    quantity: {
+                        [Op.gte]: 1
+                    }
+                }
+            })
 
+            const promises = [];
 
+            const totalResources = villageResources.reduce((total, resource) => {
+                return total + resource.quantity;
+            }, 0);
 
+            for (const villageResource of villageResources)
+            {
+                const resourceQuantity   = villageResource.quantity;
+                const stolenQuantity     = Math.floor(resourceQuantity * (stolenCapacity / totalResources));
+                const realStolenQuantity = stolenQuantity > resourceQuantity ? resourceQuantity : stolenQuantity;
+                villageResource.quantity -= realStolenQuantity;
+
+                promises.push(villageResource.save({
+                    silent: true,
+                    transaction
+                }));
+
+                promises.push(Attack_stolen_resource.create({
+                    attack_id: attackId,
+                    resource_name: villageResource.resource_name,
+                    quantity: realStolenQuantity
+                }, { transaction }));
+            }
+
+            return Promise.all(promises);
+        }
+        catch (error)
+        {
+            throw new Error(`Failed to generate attack stolen resources for attack ${attackId}: ${error.message}`);
+        }
+    }
 
 
 
@@ -1200,57 +1003,6 @@ class AttackService {
         {
 
         }
-    }
-
-    calculateDefensePower (villageUnits) {
-        let defensePower = 0;
-
-        for (const villageUnit of villageUnits)
-        {
-            defensePower += villageUnit.present_quantity * villageUnit.Unit.defense;
-        }
-
-        return defensePower;
-    }
-
-    /**
-     * Calcule the distance between two villages
-     * @param {Number} x1 - The x position of the first village
-     * @param {Number} y1 - The y position of the first village
-     * @param {Number} x2 - The x position of the second village
-     * @param {Number} y2 - The y position of the second village
-     * @returns {Number} - The distance between the two villages 
-     */
-    euclideanDistance(x1, y1, x2, y2) {
-        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-        return distance;
-    }
-
-    /**
-     * Calcule the estimated travel time with the slowest unit speed
-     * @param {Number} distance - The distance between the two villages
-     * @param {Number} speed - The slowest unit speed
-     * @returns - The estimated travel time
-     */
-    estimateTravelTime(distance, speed) {
-        const travelTime = distance / speed;
-        return travelTime;
-    }
-
-    /**
-     * Calcule the arrival time
-     * @param {Date} currentDateTime - The current date and time
-     * @param {Number} estimatedTravelTime - The estimated travel time
-     * @returns - The arrival time
-     */
-    calculateArrivalTime(currentDateTime, estimatedTravelTime) {
-        // Parse the current date and time string to a Date object
-        const startDate = new Date(currentDateTime);
-      
-        // Calculate the arrival time by adding the estimated travel time (in hours) to the start date
-        const arrivalTime = new Date(startDate.getTime() + estimatedTravelTime * 60 * 60 * 1000); // Convert hours to milliseconds
-      
-        return arrivalTime;
     }
 
     /**
