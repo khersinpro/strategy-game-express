@@ -3,9 +3,10 @@ const { sequelize } = require('../../database/index');
 const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
 const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
-const villageBuildingService = require('../village/village_building/village_building.service');
+const VillageBuildingService = require('../village/village_building/village_building.service');
 const VillageResourceService = require('../village/village_resource/village_resource.service');
-const villageUnitService = require('../village/village_unit/village_unit.service')
+const VillageUnitService = require('../village/village_unit/village_unit.service');
+
 const { 
     Map_position, 
     Unit, 
@@ -291,6 +292,7 @@ class AttackService {
         const transaction = await sequelize.transaction();
         try
         {
+            const arrivalDate = new Date(attack.arrival_date);
             // Gagnant de l'attaque
             let winner = null;
 
@@ -318,24 +320,11 @@ class AttackService {
             // avant la date de l'attaque en cours
             if (offensiveAttack)
             {
-                const arrivalDate = new Date(attack.arrival_date);
                 await this.handleIncommingAttacks(attackedVillage.id, arrivalDate);
             }
             
-
-            // Mettre a jour les resources du village attaqué
-            await VillageResourceService.updateVillageResource(attackedVillage.id);
-            // Mettre a jour les batiments du village attaqué
-            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(attackedVillage.id);
-            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(attackedVillage.id);
-            // Mettre a jour les unités du village attaqué, ce qui comprend de :
-            // - Mettre a jour les unité en cours de création
-            await villageUnitService.addUnitAfterTraining(attackedVillage.id);
-            // - Mettre a jour les unités revenu d'attaques
-            // - Mettre a jour les unités arrivé en support
-            // - Mettre a jour les unités en cours de support
+            await this.updateVillageBeforeAttack(attackedVillage.id, arrivalDate);
             
-
             // troupes attaquantes
             const attackAttackerUnits = await this.getAttackerUnits(attack.id);
 
@@ -421,7 +410,7 @@ class AttackService {
                 const { x: attackingVillageX, y: attackingVillageY }  = attackingVillage.Map_position;
 
                 const euclideanCalculator = new EuclideanDistanceCalculator(attackedVillageX, attackedVillageY, attackingVillageX, attackingVillageY);
-                attack.return_date        = euclideanCalculator.getArrivalDate(new Date(attack.arrival_date), slowestUnitSpeed);
+                attack.return_date        = euclideanCalculator.getArrivalDate(arrivalDate, slowestUnitSpeed);
             }
 
             // Sauvegarde du rapport de l'attaque
@@ -440,6 +429,168 @@ class AttackService {
         {
             transaction.rollback();
             throw error;
+        }
+    }
+
+    /**
+     * Get the returning troops in attacks
+     * @param {number} villageId - The village id
+     * @returns {Promise<void>}
+     */
+    async handleReturningAttacks (villageId, returnDate = new Date()) {
+        try 
+        {
+            const returningAttacks = await Attack.findAll({
+                where: {
+                    attacking_village_id: villageId,
+                    attack_status: 'returning',
+                    return_date: {
+                        [Op.lt]: returnDate
+                    }
+                }
+            });
+
+            for (const attack of returningAttacks)
+            {
+                await this.processReturningAttack(attack);
+            }
+        }
+        catch (error)
+        {
+            throw error(`Failed to handle returning attacks for village ${villageId}: ${error.message}`);
+        }
+    }
+
+    /**
+     * Process the returning attack
+     * @param {Attack} attack - The attack to process
+     * @returns {Promise<void>}
+     */
+    async processReturningAttack (attack) {
+        const transaction = await sequelize.transaction();
+        try
+        {
+            // Récupérer les troupes et les réatribué au village via les villages_unit
+            await this.reassignAttackerUnits(attack, transaction);
+
+            // Récupérer les ressources volées et les réatribué au village via les villages_resources 
+            await this.allocateStolenResources(attack, transaction);
+
+            // Passer l'attaque au statut returned
+            attack.attack_status = 'returned';
+            await attack.save({ transaction });
+            await transaction.commit();
+        }
+        catch (error)
+        {
+            await transaction.rollback();
+            throw error(`Failed to process returning attack ${attack.id}: ${error.message}`);
+        }
+    }
+
+    /**
+     * Reassign the attacker units to the village
+     * @param {Attack} attack - The attack to process
+     * @param {Sequelize.Transaction} transaction - The transaction
+     * @return {Promise<void>}
+     */
+    async reassignAttackerUnits (attack, transaction) {
+        try
+        {
+           const attackUnits  = await this.getAttackerUnits(attack.id); 
+           const promiseArray = [];
+
+           for (const attackUnit of attackUnits)
+           {
+                const villageUnit      = attackUnit.Village_unit;
+                const reassignQuantity = attackUnit.sent_quantity - attackUnit.lost_quantity;
+                if (reassignQuantity > 0)
+                {
+                    villageUnit.present_quantity    += reassignQuantity;
+                    villageUnit.in_attack_quantity -= reassignQuantity;
+                    promiseArray.push(villageUnit.save({ transaction }));
+                }
+           }
+
+           await Promise.all(promiseArray);
+        }
+        catch (error)
+        {
+            throw error(`Failed to reassign attacker units for attack ${attack.id}: ${error.message}`);
+        }
+    }
+
+    /**
+     * Allocate the stolen resources to the village
+     * @param {Attack} attack - The attack to process
+     * @param {Sequelize.Transaction} transaction - The transaction
+     * @return {Promise<void>}
+     */
+    async allocateStolenResources (attack, transaction) {
+        try
+        {
+            const stolenResources = await Attack_stolen_resource.findAll({
+                where: {
+                    attack_id: attack.id
+                }
+            });
+            
+            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', {
+                replacements: { villageId: attack.attacking_village_id }
+            });
+
+            const promiseArray = [];
+
+            for (const stolenResource of stolenResources)
+            {
+                const villageResource = villageResources.find(resource => resource.resource_name === stolenResource.resource_name);
+                const stolenQuantity  = stolenResource.quantity;
+                const storageCapacity = villageResource.village_resource_storage;
+                const currentQuantity = villageResource.village_resource_quantity;
+                const newQuantity     = currentQuantity + stolenQuantity > storageCapacity ? storageCapacity : currentQuantity + stolenQuantity;
+
+                const promise = Village_resource.update(
+                    {
+                        quantity: newQuantity
+                    }, 
+                    {
+                        where: {
+                            id: villageResource.village_resource_id
+                        },
+                        transaction,
+                        silent: true
+                    }
+                )
+
+                promiseArray.push(promise);
+            }
+
+            await Promise.all(promiseArray);
+        }
+        catch (error)
+        {
+            throw error(`Failed to allocate stolen resources for attack ${attack.id} : ${error.message}`);
+        }
+    }
+    
+    async updateVillageBeforeAttack (villageId, updateDate = new Date()) {
+        try
+        {
+            // Update the village resources by village id
+            await VillageResourceService.updateVillageResource(villageId, updateDate);
+
+            // Update the village buildings by village id
+            await VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
+            await VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
+
+            // Update the village units trained by village id
+            await VillageUnitService.addUnitAfterTraining(villageId, updateDate);
+            // Update the village attack units returned by village id
+            await this.handleReturningAttacks(villageId, updateDate);
+        }
+        catch (error)
+        {   
+            throw error(`Failed to update village ${villageId} before attack: ${error.message}`);
         }
     }
 
@@ -1132,8 +1283,6 @@ class AttackService {
 
                 defensePercentWall = wall.defense_percent;
             }
-
-            console.log('avant la boucle');
 
             // Attack simulation loop 
             while(winner === null)
