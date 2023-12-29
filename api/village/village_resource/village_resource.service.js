@@ -80,10 +80,11 @@ class VillageBuildingService {
 
     /**
      * Update all ressource of specific village
-     * @param {Number} villageId
+     * @param {Number} villageId - The id of the village
+     * @param {Date} endDate - The end date of the update
      * @returns {Promise<Village_resource[]>}
      */ 
-    async updateVillageResource (villageId) {
+    async updateVillageResource (villageId, endDate = new Date()) {
         const transaction = await sequelize.transaction();
         try 
         {
@@ -96,19 +97,18 @@ class VillageBuildingService {
             const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
 
             const lastBuildingsUpdates = await sequelize.query('CALL get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
-                replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: new Date() }
+                replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: endDate }
             });
             
             for (const villageResource of villageResources) 
             {
-                const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource, lastBuildingsUpdates, transaction);
+                const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource, lastBuildingsUpdates, endDate, transaction);
 
                 if (generatedPromise) 
                 {
                     promises.push(generatedPromise)
                 }
             };
-    
     
             await Promise.all(promises);
 
@@ -179,12 +179,13 @@ class VillageBuildingService {
 
     /**
      * Generate update resource promise if needed
-     * @param {Object} villageResource  
-     * @param {Object[]} lastBuildingsUpdates - data of last resource_building and storage_building updated since last resource production update
+     * @param {Object} villageResource  - Data of the village resource
+     * @param {Object[]} lastBuildingsUpdates - Data of last resource_building and storage_building updated since last resource production update
+     * @param {Date} updateDateLimit - limit date to update the village resource
      * @param {sequelize.Transaction} resourceTransaction - transaction to use for update
      * @returns {Promise<Village_resource> || false}
      */
-    async calculateUniqueVillageResourceProduction (villageResource, lastBuildingsUpdates, resourceTransaction = false) {
+    async calculateUniqueVillageResourceProduction (villageResource, lastBuildingsUpdates, updateDateLimit = new Date(), resourceTransaction = false) {
         try 
         {
             let lastResourceUpdate    = new Date(villageResource.village_last_update);
@@ -253,9 +254,7 @@ class VillageBuildingService {
                 }
             });
             
-            
-            const actualDate            = new Date();
-            const diffInMilisecond      = actualDate - lastResourceUpdate;
+            const diffInMilisecond      = updateDateLimit - lastResourceUpdate;
             const diffInMinute          = Math.floor(diffInMilisecond / 1000 / 60);
             const productionInMinute    = buildingProduction / 60;
             const generatedProduction   = productionInMinute * diffInMinute;
@@ -268,7 +267,12 @@ class VillageBuildingService {
 
             // await transaction.commit();
             const updatedQuantity = totalResource > storageCapacity ? storageCapacity : totalResource;
-            return this.update(villageResource.village_resource_id, { quantity: updatedQuantity }, resourceTransaction);
+            return this.update(villageResource.village_resource_id, 
+                { 
+                    quantity: updatedQuantity, 
+                    updatedAt: updateDateLimit
+                }, resourceTransaction
+            );
         }
         catch (error)
         {

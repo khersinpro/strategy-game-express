@@ -3,6 +3,9 @@ const { sequelize } = require('../../database/index');
 const BadRequestError = require('../../errors/bad-request');
 const NotFoundError = require('../../errors/not-found');
 const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
+const villageBuildingService = require('../village/village_building/village_building.service');
+const VillageResourceService = require('../village/village_resource/village_resource.service');
+const villageUnitService = require('../village/village_unit/village_unit.service')
 const { 
     Map_position, 
     Unit, 
@@ -108,7 +111,6 @@ class AttackService {
      * @param {Array.<{id: Number, quantity: Number}>} data.villageUnits - The villageUnits of the attacker
      * @param {Number} data.villageUnits[].id - The id of the villageUnit
      * @param {Number} data.villageUnits[].quantity - The quantity of the villageUnit
-     * @param {Object} currentUser - The current user
      * @throws {NotFoundError} - When the resource is not found
      * @throws {BadRequestError} - When the request is not valid
      * @returns {Promise<Attack>}
@@ -254,7 +256,7 @@ class AttackService {
         }
     }
 
-    async handleIncommingAttacks(villageId) {
+    async handleIncommingAttacks(villageId, arrivalDate = new Date()) {
         try
         {
             const incomingAttacks = await Attack.findAll({
@@ -262,7 +264,7 @@ class AttackService {
                     attacked_village_id: villageId,
                     attack_status: 'attacking',
                     arrival_date: {
-                        [Op.lt]: new Date()
+                        [Op.lt]: arrivalDate
                     }
                 }
             });
@@ -274,7 +276,8 @@ class AttackService {
 
             for (const attack of incomingAttacks)
             {
-                await this.processAttack(attack);
+                const offensiveAttack = attack.attacking_village_id === villageId;
+                await this.processAttack(attack, offensiveAttack);
             }
         }
         catch (error)
@@ -284,7 +287,7 @@ class AttackService {
         }
     }
 
-    async processAttack (attack) {
+    async processAttack (attack, offensiveAttack) {
         const transaction = await sequelize.transaction();
         try
         {
@@ -310,6 +313,28 @@ class AttackService {
                     }
                 ]
             });
+
+            // Check si le village mis a jour est l'attaquant, alors on met a jour les attaques du défenseur 
+            // avant la date de l'attaque en cours
+            if (offensiveAttack)
+            {
+                const arrivalDate = new Date(attack.arrival_date);
+                await this.handleIncommingAttacks(attackedVillage.id, arrivalDate);
+            }
+            
+
+            // Mettre a jour les resources du village attaqué
+            await VillageResourceService.updateVillageResource(attackedVillage.id);
+            // Mettre a jour les batiments du village attaqué
+            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(attackedVillage.id);
+            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(attackedVillage.id);
+            // Mettre a jour les unités du village attaqué, ce qui comprend de :
+            // - Mettre a jour les unité en cours de création
+            await villageUnitService.addUnitAfterTraining(attackedVillage.id);
+            // - Mettre a jour les unités revenu d'attaques
+            // - Mettre a jour les unités arrivé en support
+            // - Mettre a jour les unités en cours de support
+            
 
             // troupes attaquantes
             const attackAttackerUnits = await this.getAttackerUnits(attack.id);

@@ -23,11 +23,12 @@ module.exports = (sequelize, DataTypes) => {
 
     /**
      * Return the total unit trained since the beginning of the training
+     * @param {Date} endDateLimit - The end of the count of units trained
      * @returns {Number} - total unit trained since the beginning of the training
      */
-    getTotalsUnitsTrained() {
+    getTotalsUnitsTrained(endDateLimit = new Date()) {
       const startDate                     = new Date(this.training_start);
-      const endDate                       = this.training_end >= new Date() ? new Date() : new Date(this.training_end);
+      const endDate                       = this.training_end >= endDateLimit ? endDateLimit : new Date(this.training_end);
       const diffInSec                     = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
       const singleUnitTrainingDuration    = this.single_training_duration;
       const totalUnitCreated              = Math.floor(diffInSec / singleUnitTrainingDuration);
@@ -36,10 +37,11 @@ module.exports = (sequelize, DataTypes) => {
 
     /**
      * Return the number of unit trained to create since last update
+     * @param {Date} lastUpdateDate - The last update date 
      * @returns {Number} - count of unit trained to create since last update
      */
-    getUnitCountTrainedSinceLastUpdate() {
-      const totalUnitCreated = this.getTotalsUnitsTrained();
+    getUnitCountTrainedSinceLastUpdate(lastUpdateDate = new Date()) {
+      const totalUnitCreated = this.getTotalsUnitsTrained(lastUpdateDate);
       const unitToCreate     = totalUnitCreated - this.trained_unit_count;
       return unitToCreate;
     }

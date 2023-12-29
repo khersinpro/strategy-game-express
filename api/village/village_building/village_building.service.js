@@ -77,10 +77,11 @@ class VillageBuildingService {
 
     /**
      * Create buildings for one village when the village construction progress of the village is finished
-     * @param {Number} villageId village id
+     * @param {Number} villageId - The village id
+     * @param {Date} - The construction end date limit
      * @return {Promise<sequelize.transaction>} transaction promise
      */
-    async createUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
+    async createUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId, ConstructionEnd = new Date()) {
         const transaction = await sequelize.transaction();
         try
         {
@@ -97,7 +98,7 @@ class VillageBuildingService {
                     enabled: true,
                     archived: false,
                     construction_end: {
-                        [Op.lte]: new Date()
+                        [Op.lte]: ConstructionEnd
                     }
                 }
             })
@@ -118,10 +119,11 @@ class VillageBuildingService {
 
     /**
      * Update buildings for one village when the village construction progress of the village is finished
-     * @param {Number} villageId village id
+     * @param {Number} villageId - The village id
+     * @param {Date} - The construction end date limit
      * @return {Promise<sequelize.transaction>} transaction promise
      */
-    async updateUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId) {
+    async updateUniqueVillageBuildingWhenConstructionProgressIsFinished (villageId, ConstructionEnd = new Date()) {
         const transaction = await sequelize.transaction();
         try
         {
@@ -138,7 +140,7 @@ class VillageBuildingService {
                     enabled: true,
                     archived: false,
                     construction_end: {
-                        [Op.lte]: new Date()
+                        [Op.lte]: ConstructionEnd
                     }
                 }
             })

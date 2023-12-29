@@ -3,7 +3,6 @@ const VillageService = require('./village.service');
 const villageBuildingService = require('./village_building/village_building.service');
 const VillageResourceService = require('./village_resource/village_resource.service');
 const villageUnitService = require('./village_unit/village_unit.service');
-const { Map_position, Village } = require('../../database').models;
 
 class VillageController {
 
@@ -53,15 +52,7 @@ class VillageController {
             await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(req.params.id);
             await villageUnitService.addUnitAfterTraining(req.params.id);
-            // const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
-            const village = await Village.findByPk(req.params.id, {
-                include: [
-                    {
-                        model: Map_position,
-                        required: true
-                    }
-                ]
-            });
+            const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
             res.status(200).send(village);
         }
         catch (error)

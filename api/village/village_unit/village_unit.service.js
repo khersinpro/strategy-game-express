@@ -72,16 +72,17 @@ class VillageUnitService {
     /**
      * Create the village unit who training is finished and update the village training progress
      * If village id is passed, create the village unit for the village id passed else create for all village
-     * @param {Number} villageId village id
+     * @param {Number} villageId - The village id
+     * @param {Date} updateEndDate - the limit date to update the village training progress
      * @returns {Promise<Sequelize.Transaction>}
      */ 
-    async addUnitAfterTraining (villageId) {
+    async addUnitAfterTraining (villageId, updateEndDate = new Date()) {
         const transacton = await sequelize.transaction();
         try
         {
             const whereParams = {
                 training_start: {
-                    [Op.lt]: new Date()
+                    [Op.lt]: updateEndDate
                 },
                 enabled: true,
                 archived: false
@@ -98,7 +99,7 @@ class VillageUnitService {
             for (const villageTrainingProgress of villageTrainingProgresses)
             {
                 // calculate the number of unit to create since training start and date now / single_training_duration as total
-                const totalUnitCreated = villageTrainingProgress.getTotalsUnitsTrained();
+                const totalUnitCreated = villageTrainingProgress.getTotalsUnitsTrained(updateEndDate);
                 
                 if (totalUnitCreated === 0)
                 {
@@ -106,7 +107,7 @@ class VillageUnitService {
                 }
        
                 // calculate the total number of unit trained - trained_unit_count to get the number of unit to create as trained unit
-                const unitToCreate = villageTrainingProgress.getUnitCountTrainedSinceLastUpdate();
+                const unitToCreate = villageTrainingProgress.getUnitCountTrainedSinceLastUpdate(updateEndDate);
 
                 // get the village unit to update
                 const villageUnit = await this.getById(villageTrainingProgress.village_unit_id);
@@ -114,13 +115,15 @@ class VillageUnitService {
                 // Create the unit in the village
                 villageUnit.total_quantity += unitToCreate;
                 villageUnit.present_quantity += unitToCreate;
+                villageUnit.updatedAt = updateEndDate;
                 villageUnit.save({ transaction: transacton});
 
                 // Check if the total unit created is less than the unit to train in village_training_progress then update the trained_unit_count
                 if (unitToCreate + villageTrainingProgress.trained_unit_count < villageTrainingProgress.unit_to_train_count)
                 {
                     await villageTrainingProgress.update({
-                        trained_unit_count: totalUnitCreated
+                        trained_unit_count: totalUnitCreated,
+                        updatedAt: updateEndDate
                     }, {
                         transaction: transacton
                     });
@@ -131,6 +134,7 @@ class VillageUnitService {
                     // update the trained_unit_count
                     await villageTrainingProgress.update({
                         trained_unit_count: totalUnitCreated,
+                        updatedAt: updateEndDate,
                         enabled: false,
                         archived: true
                     }, {
