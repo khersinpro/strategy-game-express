@@ -46,7 +46,10 @@ const modelList = [
   require('./models/attack_defenser_unit.js'),
   require('./models/attack_defenser_support.js'),
   require('./models/village_support.js'),
-  require('./models/attack_stolen_resource.js')
+  require('./models/attack_stolen_resource.js'),
+  require('./models/support_status.js'),
+  require('./models/support.js'),
+  require('./models/supporting_unit.js'),
 ];
 
 // Déclaration des models a sequelize
