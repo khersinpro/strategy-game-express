@@ -39,11 +39,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     arrival_date: {
       type: DataTypes.DATE,
-      allowNull: false
     },
     return_date: {
       type: DataTypes.DATE,
-      allowNull: false
     },
     status: {
       type: DataTypes.INTEGER,

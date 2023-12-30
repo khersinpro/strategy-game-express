@@ -28,6 +28,11 @@ module.exports = {
         name: 'returned',
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        name: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]
     queryInterface.bulkInsert('support_status', supportStatus)

@@ -26,12 +26,10 @@ module.exports = {
         }
       },
       arrival_date: {
-        type: Sequelize.DATE,
-        allowNull: false
+        type: Sequelize.DATE
       },
       return_date: {
-        type: Sequelize.DATE,
-        allowNull: false
+        type: Sequelize.DATE
       },
       status: {
         type: Sequelize.INTEGER,
