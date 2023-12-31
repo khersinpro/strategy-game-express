@@ -46,7 +46,7 @@ class SupportController {
     async cancelSupport (req, res, next) {
         try
         {
-            const support = await SupportService.cancelSupport(req.params.id);
+            const support = await SupportService.cancelSupport(req.params.id, req.user);
             res.status(200).json(support);
         }
         catch (error)

@@ -3,10 +3,11 @@ const { Village, Village_building, Village_unit, Village_resource, Civilization,
 const UserService = require('../user/user.service');
 const ServerService = require('../server/server.service');
 const ForbiddenError = require('../../errors/forbidden'); 
-const villageResourceService = require('./village_resource/village_resource.service');
-const villageBuildingService = require('./village_building/village_building.service');
-const villageUnitService = require('./village_unit/village_unit.service');
-const attackService = require('../attack/attack.service')
+const VillageResourceService = require('./village_resource/village_resource.service');
+const VillageBuildingService = require('./village_building/village_building.service');
+const VillageUnitService = require('./village_unit/village_unit.service');
+const AttackService = require('../attack/attack.service')
+const SupportService = require('../support/support.service');
 
 class VilageService {
     /**
@@ -98,39 +99,6 @@ class VilageService {
         }
 
         return Village.destroy();
-    }
-
-    /**
-     * Update the village data by village id
-     * @param {number} villageId - The village id to update
-     * @param {Date} updateDate - The date to update the village, default is now 
-     * @param {boolean} updateAttacks - If true, update the village attacks, default is false
-     * @returns {Promise<void>}
-     */
-    async updateVillageData(villageId, updateDate = new Date()) {
-        try
-        {
-            // Update the village attacks by village id
-            await attackService.handleIncommingAttacks(villageId, updateDate);
-            
-            // Update the village resources by village id
-            await villageResourceService.updateVillageResource(villageId, updateDate);
-
-            // Update the village buildings by village id
-            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
-            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
-
-            // Update the village units trained by village id
-            await villageUnitService.addUnitAfterTraining(villageId, updateDate);
-            // Update the village attack units returned by village id
-            await attackService.handleReturningAttacks(villageId, updateDate);
-
-            //  Update the village support
-        }
-        catch (error)
-        {
-            throw error;
-        }
     }
 
     /**

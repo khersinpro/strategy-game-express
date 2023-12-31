@@ -6,7 +6,7 @@ const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalcul
 const VillageBuildingService = require('../village/village_building/village_building.service');
 const VillageResourceService = require('../village/village_resource/village_resource.service');
 const VillageUnitService = require('../village/village_unit/village_unit.service');
-
+const SupportService = require('../support/support.service');
 const { 
     Map_position, 
     Unit, 
@@ -323,8 +323,9 @@ class AttackService {
                 await this.handleIncommingAttacks(attackedVillage.id, arrivalDate);
             }
             
+            // probleme ici 
             await this.updateVillageBeforeAttack(attackedVillage.id, arrivalDate);
-            
+
             // troupes attaquantes
             const attackAttackerUnits = await this.getAttackerUnits(attack.id);
 
@@ -573,20 +574,22 @@ class AttackService {
         }
     }
     
+    /**
+     * Update the all village attributes before attack
+     * @param {number} villageId - The village id
+     * @param {Date} updateDate - The date to update the village, default is now
+     * @returns {Promise<void>}
+     */ 
     async updateVillageBeforeAttack (villageId, updateDate = new Date()) {
         try
         {
-            // Update the village resources by village id
             await VillageResourceService.updateVillageResource(villageId, updateDate);
-
-            // Update the village buildings by village id
             await VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
             await VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
-
-            // Update the village units trained by village id
             await VillageUnitService.addUnitAfterTraining(villageId, updateDate);
-            // Update the village attack units returned by village id
             await this.handleReturningAttacks(villageId, updateDate);
+            await SupportService.handleSupport(villageId, updateDate);
+            await SupportService.handleReturningSupport(villageId, updateDate);
         }
         catch (error)
         {   

@@ -4,6 +4,7 @@ const VillageService = require('./village.service');
 const villageBuildingService = require('./village_building/village_building.service');
 const VillageResourceService = require('./village_resource/village_resource.service');
 const villageUnitService = require('./village_unit/village_unit.service');
+const VillageUpdateUtils = require('../../utils/villlageUpdateUtils');
 
 class VillageController {
 
@@ -49,7 +50,7 @@ class VillageController {
     async get(req, res, next) {
         try 
         {
-            await VillageService.updateVillageData(req.params.id);
+            await VillageUpdateUtils.updateVillageData(req.params.id);
             const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
             res.status(200).send(village);
         }

@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
     checkPassword(password) {
       return bcrypt.compareSync(password, this.password)
     }
+
+    isAdmin() {
+      return this.role_name === 'ROLE_ADMIN'
+    }
   }
 
   User.init({

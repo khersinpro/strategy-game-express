@@ -1,16 +1,14 @@
-const {
-    Support,
-    Supporting_unit,
-    Village,
-    Village_unit,
-    Unit
-} = require('../../database/index').models;
-const sequelize = require('../../database/index').sequelize;
-const village = require('../../database/models/village');
+const sequelize = require('../../database/index').sequelize; 
 const VillageService = require('../village/village.service');
 const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
 const BadRequestError = require('../../errors/bad-request');
 const { Op } = require('sequelize');
+const {
+    Support,
+    Supporting_unit,
+    Village_unit,
+    Unit
+} = require('../../database/index').models;
 
 class SupportService {
 
@@ -128,6 +126,7 @@ class SupportService {
      * Handle the incomming supports
      * @param {number} supportedVillageId - The id of the supported village
      * @param {Date} endDate - The date to update the village, default is now 
+     * @returns {Promise<void>}
      */
     async handleSupport (supportedVillageId, endDate = new Date()) {
         const transaction = await sequelize.transaction();
@@ -161,6 +160,7 @@ class SupportService {
      * Handle the returning supports
      * @param {number} supportingVillageId - The id of the supporting village
      * @param {Date} endDate - The date to update the village, default is now 
+     * @returns {Promise<void>}
      */
     async handleReturningSupport (supportingVillageId, endDate = new Date()) {
         const transaction = await sequelize.transaction();
@@ -207,7 +207,13 @@ class SupportService {
         }
     }
 
-    async cancelSupport (supportId) {
+    /**
+     * Cancel a support actually supporting a village or on the way to the supported village
+     * @param {number} supportId - The id of the support 
+     * @param {User} currentUser - The current user
+     * @returns {Promise<Support>}
+     */
+    async cancelSupport (supportId, currentUser) {
         const transaction = await sequelize.transaction();
         try
         {
@@ -218,10 +224,19 @@ class SupportService {
                     }
                 }
             });
+            
 
             if (!support)
             {
                 throw new BadRequestError(`Support not found or already canceled`);
+            }
+            
+            const supportingVillage = await support.getSupporting_village();
+            const supportedVillage  = await support.getSupported_village();
+
+            if (supportingVillage.user_id !== currentUser.id && supportedVillage.user_id !== currentUser.id && !currentUser.isAdmin())
+            {
+                throw new BadRequestError(`You are not allowed to cancel this support`);
             }
 
             // If support is on the way to the supported village, Else support is actually supporting the supported village
@@ -270,10 +285,10 @@ class SupportService {
                 }
 
                 const supportingVillage = await support.getSupporting_village();
-                const supportedVillafe  = await support.getSupported_village();
+                const supportedVillage  = await support.getSupported_village();
 
                 const supportingMapPosition = await supportingVillage.getMap_position();
-                const supportedMapPosition  = await supportedVillafe.getMap_position();
+                const supportedMapPosition  = await supportedVillage.getMap_position();
 
                 const { x: supportingX, y: supportingY }  = supportingMapPosition;
                 const { x: supportedX,  y: supportedY }   = supportedMapPosition;
