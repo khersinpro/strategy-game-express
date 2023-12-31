@@ -40,6 +40,7 @@ const unitCostRouter = require('./api/unit/unit_cost/unit_cost.router');
 const attackRouter = require('./api/attack/attack.router');
 const attackUnitRouter = require('./api/attack/attack_attacker_unit/attack_attacker_unit.router');
 const attackStatusRouter = require('./api/attack/attack_status/attack_status.router');
+const supportRouter = require('./api/support/support.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -98,6 +99,7 @@ app.use('/api/unit-cost', auth, unitCostRouter);
 app.use('/api/attack', auth, attackRouter);
 app.use('/api/attack-unit', auth, attackUnitRouter);
 app.use('/api/attack-status', auth, attackStatusRouter);
+app.use('/api/support', auth, supportRouter);
 
 
 /**

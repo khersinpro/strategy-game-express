@@ -5,7 +5,7 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     const supportStatus = [
       {
-        name: 'on the way',
+        name: 'ontheway',
         createdAt: new Date(),
         updatedAt: new Date()
       },

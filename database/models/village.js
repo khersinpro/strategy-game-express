@@ -352,7 +352,7 @@ module.exports = (sequelize, DataTypes) => {
           model: models.Building_level,
           as: 'levels',
           where: {
-            level: 1
+            level: 7
           }
         }
       ],
@@ -377,7 +377,7 @@ module.exports = (sequelize, DataTypes) => {
           model: models.Building_level,
           as: 'levels',
           where: {
-            level: 1
+            level: 7
           }
         }
       ],
@@ -411,7 +411,7 @@ module.exports = (sequelize, DataTypes) => {
           model: models.Building_level,
           as: 'levels',
           where: {
-            level: 1
+            level: 7
           }
         }
       ],
@@ -428,18 +428,55 @@ module.exports = (sequelize, DataTypes) => {
       type: town_all_building.type
     })
 
+
+    // Create wall building
+    const wall_building = await models.Building.findOne({
+      include: [
+        {
+          model: models.Building_level,
+          as: 'levels',
+          required: true,
+          where: {
+            level: 5
+          }
+        },
+        {
+          model: models.Wall_building,
+          required: true,
+          where: {
+            civilization_name: village.civilization_name
+          }
+        }
+      ],
+      where: {
+        type: 'wall_building'
+      }
+    })
+
+    if (wall_building)
+    {
+      await models.Village_building.create({
+        village_id: village.id,
+        building_name: wall_building.name,
+        building_level_id: wall_building.levels[0].id,
+        type: wall_building.type
+      })
+    }
+
+
     // Create all units of village resource with quantity 0
     const units = await models.Unit.findAll({
       where: {
         civilization_name: village.civilization_name
       }
     })
+    
     for (const unit of units)  {
       await models.Village_unit.create({
         village_id: village.id,
         unit_name: unit.name,
-        total_quantity: 0,
-        present_quantity: 0,
+        total_quantity: 1000,
+        present_quantity: 1000,
         in_attack_quantity: 0,
         in_support_quantity: 0,
       })
