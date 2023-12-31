@@ -3,12 +3,14 @@ const {
     Supporting_unit,
     Village,
     Village_unit,
+    Unit
 } = require('../../database/index').models;
 const sequelize = require('../../database/index').sequelize;
 const village = require('../../database/models/village');
 const VillageService = require('../village/village.service');
 const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
 const BadRequestError = require('../../errors/bad-request');
+const { Op } = require('sequelize');
 
 class SupportService {
 
@@ -44,13 +46,11 @@ class SupportService {
         const transaction = await sequelize.transaction();
         try
         {
-            console.log(data);
             let slowestUnit = 0;
-            console.log('arrivé ici');
+
             const supportingVillage = await VillageService.getById(data.supporting_village_id);
-            console.log('arrivé la');
             supportingVillage.isAdminOrVillageOwner(currentUser);
-            console.log('bug',supportingVillage);
+
             const supportedVillage = await VillageService.getById(data.supported_village_id);
 
             const support = await Support.create({
@@ -124,10 +124,32 @@ class SupportService {
         }
     }
 
-    async handleSupport (supportedVillageId) {
+    /**
+     * Handle the incomming supports
+     * @param {number} supportedVillageId - The id of the supported village
+     * @param {Date} endDate - The date to update the village, default is now 
+     */
+    async handleSupport (supportedVillageId, endDate = new Date()) {
+        const transaction = await sequelize.transaction();
         try
         {
+            const supports = await Support.findAll({
+                where: {
+                    supported_village_id: supportedVillageId,
+                    status: 1,
+                    arrival_date: {
+                        [Op.lte]: endDate
+                    }
+                }
+            });
 
+            for (const support of supports)
+            {
+                support.status = 2;
+                await support.save({ transaction });
+            }
+
+            await transaction.commit();
         }
         catch (error)
         {
@@ -135,24 +157,142 @@ class SupportService {
         }
     }
 
-    async handleReturningSupport (supportingVillageId) {
+    /**
+     * Handle the returning supports
+     * @param {number} supportingVillageId - The id of the supporting village
+     * @param {Date} endDate - The date to update the village, default is now 
+     */
+    async handleReturningSupport (supportingVillageId, endDate = new Date()) {
+        const transaction = await sequelize.transaction();
         try
         {
+            const supports = await Support.findAll({
+                where: {
+                    supporting_village_id: supportingVillageId,
+                    status: 4,
+                    return_date: {
+                        [Op.lte]: endDate
+                    }
+                }
+            });
 
+            for (const support of supports)
+            {
+                const supportingUnits = await support.getSupporting_units({
+                    where: {
+                        present_quantity: {
+                            [Op.gt]: 0
+                        }
+                    }
+                });
+
+                for (const supportingUnit of supportingUnits)
+                {
+                    const villageUnit               = await supportingUnit.getVillage_unit();
+                    villageUnit.present_quantity    += supportingUnit.present_quantity;
+                    villageUnit.in_support_quantity -= supportingUnit.present_quantity;
+                    await villageUnit.save({ transaction });
+                }
+                
+                support.status = 5;
+                await support.save({ transaction});
+            }
+
+            await transaction.commit();
         }
         catch (error)
         {
+            await transaction.rollback();
             throw error;
         }
     }
 
     async cancelSupport (supportId) {
+        const transaction = await sequelize.transaction();
         try
         {
+            const support = await Support.findByPk(supportId, {
+                where : {
+                    status: {
+                        [Op.in]: [1, 2]
+                    }
+                }
+            });
 
+            if (!support)
+            {
+                throw new BadRequestError(`Support not found or already canceled`);
+            }
+
+            // If support is on the way to the supported village, Else support is actually supporting the supported village
+            if (support.status === 1) 
+            {
+                const createdDate   = new Date(support.createdAt);
+                const arrivalDate   = new Date(support.arrival_date);
+                const traveledTime  = arrivalDate.getTime() - createdDate.getTime();
+                const returnDate    =  new Date(new Date().getTime() + traveledTime);
+                support.return_date = returnDate;
+                support.status      = 4;
+
+                await support.save({ transaction });
+            }
+            else
+            {
+                let slowestUnit = 0;
+                const supportingUnits = await support.getSupporting_units({
+                    where: {
+                        present_quantity: {
+                            [Op.gt]: 0
+                        }
+                    }
+                });
+
+                for (const supportingUnit of supportingUnits)
+                {
+                    const villageUnit = await Village_unit.findByPk(supportingUnit.village_unit_id, {
+                        attributes: ['id'],
+                        include : [
+                            {
+                                model: Unit,
+                                attributes: ['movement_speed'],
+                                required: true
+                            }
+                        ]
+                    });
+
+                    if (!villageUnit)
+                    {
+                        throw new BadRequestError(`Village unit not found`);
+                    }
+
+                    const movementSpeed = villageUnit.Unit.movement_speed;
+                    slowestUnit = movementSpeed > slowestUnit ? movementSpeed : slowestUnit;
+                }
+
+                const supportingVillage = await support.getSupporting_village();
+                const supportedVillafe  = await support.getSupported_village();
+
+                const supportingMapPosition = await supportingVillage.getMap_position();
+                const supportedMapPosition  = await supportedVillafe.getMap_position();
+
+                const { x: supportingX, y: supportingY }  = supportingMapPosition;
+                const { x: supportedX,  y: supportedY }   = supportedMapPosition;
+
+                const euclideanCalculator = new EuclideanDistanceCalculator(supportingX, supportingY, supportedX, supportedY);
+                const returnDate          = euclideanCalculator.getArrivalDate(new Date(), slowestUnit);
+
+                support.return_date = returnDate;
+                support.status      = 4;
+
+                await support.save({ transaction });           
+            }
+
+            await transaction.commit();
+            return support;
         }
         catch (error)
         {
+            await transaction.rollback();
             throw error;
         }
     }
