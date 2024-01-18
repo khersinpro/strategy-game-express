@@ -46,6 +46,11 @@ class SupportService {
         {
             let slowestUnit = 0;
 
+            if (data.supporting_village_id === data.supported_village_id)
+            {
+                throw new BadRequestError(`You can't support your own village`);
+            }
+
             const supportingVillage = await VillageService.getById(data.supporting_village_id);
             supportingVillage.isAdminOrVillageOwner(currentUser);
 
@@ -107,7 +112,7 @@ class SupportService {
             const arrivalDate = euclideanCalculator.getArrivalDate(new Date(), slowestUnit);
 
             support.arrival_date = arrivalDate;
-            support.status = 1;
+            support.status       = 1;
             await support.save({ transaction });
 
             await transaction.commit();
@@ -116,7 +121,6 @@ class SupportService {
         }
         catch (error)
         {
-            console.error(error);
             await transaction.rollback(); 
             throw error;
         }

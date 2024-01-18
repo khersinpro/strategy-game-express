@@ -26,11 +26,11 @@ module.exports = {
           key: 'id'
         }
       },
-      village_support_id: {
+      supporting_unit_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'village_support',
+          model: 'supporting_unit',
           key: 'id'
         }
       },
@@ -45,7 +45,7 @@ module.exports = {
     }, {
       uniqueKeys: {
         unique_attack_defenser_support: {
-          fields: ['attack_id', 'village_support_id']
+          fields: ['attack_id', 'supporting_unit_id']
         }
       }
     

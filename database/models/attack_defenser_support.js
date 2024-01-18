@@ -7,8 +7,8 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Attack, {
         foreignKey: 'attack_id',
       });
-      this.belongsTo(models.Village_support, {
-        foreignKey: 'village_support_id',
+      this.belongsTo(models.Supporting_unit, {
+        foreignKey: 'suppporting_unit_id',
       });
     }
   }
@@ -31,11 +31,11 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    village_support_id: {
+    suppporting_unit_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'village_support',
+        model: 'supporting_unit',
         key: 'id'
       }
     }
@@ -44,10 +44,10 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Attack_defenser_support',
     tableName: 'attack_defenser_support',
     indexes: [
-      {
-        unique: true,
-        fields: ['attack_id', 'village_support_id']
-      }
+      // {
+      //   unique: true,
+      //   fields: ['attack_id', 'village_support_id']
+      // }
     ]
   });
   
