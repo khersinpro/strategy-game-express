@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'attack_id',
       });
       this.belongsTo(models.Supporting_unit, {
-        foreignKey: 'suppporting_unit_id',
+        foreignKey: 'supporting_unit_id',
       });
     }
   }
@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    suppporting_unit_id: {
+    supporting_unit_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {

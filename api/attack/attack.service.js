@@ -13,7 +13,8 @@ const {
     Defense_type,
     Village, 
     Village_unit, 
-    Village_support,
+    Support,
+    Supporting_unit,
     Village_resource,
     Village_building, 
     Wall_defense, 
@@ -262,7 +263,14 @@ class AttackService {
         {
             const incomingAttacks = await Attack.findAll({
                 where: {
-                    attacked_village_id: villageId,
+                    [Op.or]: [
+                        {
+                            attacked_village_id: villageId,
+                        },
+                        {
+                            attacking_village_id: villageId
+                        }
+                    ],
                     attack_status: 'attacking',
                     arrival_date: {
                         [Op.lt]: arrivalDate
@@ -336,14 +344,14 @@ class AttackService {
             const defenserVillageUnit = await this.getAttackedVillageUnits(attackedVillage.id);
 
             // troupes en support
-            const defenserVillageSupport = await this.getAttackedVillageSupport(attackedVillage.id);
+            const defenserSupportingUnit = await this.getAttackedVillageSupportingUnits(attackedVillage.id);
 
             // pourcentage de défense du mur
             const wallAdittionalDefensePercent = await this.getAttackedVillageWallDefensePercent(attackedVillage.id);
 
             // Création des unités en défense
-            const attackDefenserUnits = await this.generateAttackDefenserUnits(attack.id, defenserVillageUnit);
-            const attackDefenserSupport = await this.generateAttackDefenserSupport(attack.id, defenserVillageSupport);
+            const attackDefenserUnits   = await this.generateAttackDefenserUnits(attack.id, defenserVillageUnit);
+            const attackDefenserSupport = await this.generateAttackDefenserSupport(attack.id, defenserSupportingUnit);
 
             // Regroupement des unités en défense sous un tableau
             const defenserUnits = attackDefenserUnits.concat(attackDefenserSupport);
@@ -419,7 +427,7 @@ class AttackService {
             await attack.save({ transaction });
 
             // Sauvegarde des unités du village attaqué
-            await this.saveDefenserLosses(defenserUnits, defenserVillageSupport, defenserVillageUnit, transaction);
+            await this.saveDefenserLosses(defenserUnits, defenserSupportingUnit, defenserVillageUnit, transaction);
 
             // Sauvegarde des unités du village attaquant
             await this.saveAttackerLosses(attackAttackerUnits, attackingVillage.id, transaction);
@@ -668,13 +676,21 @@ class AttackService {
     }
 
     /**
-     * Get the Village_support with associated village_unit , unit and defense_types for the attacked village
+     * Get the Supporting_unit with associated village_unit , unit and defense_types for the attacked village
      * @param {number} attackedVillageId - The attacked village id
-     * @returns {Promise<Village_support[]>} - Return an array of Village_support with associated village_unit , unit and defense_types
+     * @returns {Promise<Supporting_unit[]>} - Return an array of Supporting_unit with associated village_unit , unit and defense_types
      */
-    getAttackedVillageSupport (attackedVillageId) {
-        return Village_support.findAll({
+    getAttackedVillageSupportingUnits (attackedVillageId) {
+        return Supporting_unit.findAll({
             include: [
+                {
+                    model: Support,
+                    required: true,
+                    where: {
+                        supported_village_id: attackedVillageId,
+                        status: 2
+                    }
+                },
                 {
                     model: Village_unit,
                     required: true,
@@ -693,10 +709,9 @@ class AttackService {
                 }
             ],
             where: {
-                supported_village_id: attackedVillageId,
-                enabled: 1
+                present_quantity: { [Op.gt] : 0 }
             }
-        });
+        })
     }
 
     /**
@@ -721,7 +736,7 @@ class AttackService {
 
             const wallDefense = await Wall_defense.findOne({
                 where: {
-                    building_level_id: wall.level_id
+                    building_level_id: wall.building_level_id
                 }
             });
 
@@ -773,25 +788,25 @@ class AttackService {
     /**
      * Generate the attack defenser support with associated village_unit and defense_types
      * @param {number} attackId - The attack id
-     * @param {Village_support[]} defenserVillageSupport - The village support of the attacked village with the included village_unit, unit and defense_types
+     * @param {Supporting_unit[]} defenserSupportingUnits - The village support of the attacked village with the included village_unit, unit and defense_types
      * @returns {Promise<Attack_defenser_support[]>} - Return an array of Attack_defenser_support with associated village_unit_id and defense_types
      */ 
-    async generateAttackDefenserSupport (attackId, defenserVillageSupport) {
+    async generateAttackDefenserSupport (attackId, defenserSupportingUnits) {
         try
         {
             const attackDefenserSupport = [];
 
-            for (const defenserVillageSupportUnit of defenserVillageSupport)
+            for (const defenserSupportingUnit of defenserSupportingUnits)
             {
                 const attackDefenserSupportUnit = await Attack_defenser_support.create({
                     attack_id: attackId,
-                    village_support_id: defenserVillageSupportUnit.id,
-                    sent_quantity: defenserVillageSupportUnit.quantity,
+                    supporting_unit_id: defenserSupportingUnit.id,
+                    sent_quantity: defenserSupportingUnit.present_quantity,
                     lost_quantity: 0
                 });
 
-                attackDefenserSupportUnit.village_unit_id = defenserVillageSupportUnit.village_unit_id
-                attackDefenserSupportUnit.Defense_types   = defenserVillageSupportUnit.Village_unit.Unit.Defense_types;
+                attackDefenserSupportUnit.village_unit_id = defenserSupportingUnit.village_unit_id
+                attackDefenserSupportUnit.Defense_types   = defenserSupportingUnit.Village_unit.Unit.Defense_types;
                 attackDefenserSupport.push(attackDefenserSupportUnit);
             }
 
@@ -1012,11 +1027,11 @@ class AttackService {
     /**
      * Save the defense losses for support units and village units
      * @param {Attack_defenser_unit[] || Attack_support_unit} defenserUnits - The defense related to the attack
-     * @param {Village_support[]} villageSupportUnits - The support units of the attacked village
+     * @param {Supporting_unit[]} villageSupportingUnits - The support units of the attacked village
      * @param {Village_unit[]} villageUnits - The village units of the attacked village
      * @param {Sequelize.transaction} transaction - The transaction
      */
-    async saveDefenserLosses (defenserUnits, villageSupportUnits, villageUnits, transaction) {
+    async saveDefenserLosses (defenserUnits, villageSupportingUnits, villageUnits, transaction) {
         try
         {
             // Sauvegarde des unités en défense
@@ -1025,10 +1040,12 @@ class AttackService {
                 await defenserUnit.save()
             }
 
+            const sameSupportIdUnits = {};
+
             // Sauvegarde des unités en support
-            for (const villageSupportUnit of villageSupportUnits)
+            for (const villageSupportingUnit of villageSupportingUnits)
             {
-                const unitInDefense = defenserUnits.find(unit => unit.village_unit_id === villageSupportUnit.village_unit_id);
+                const unitInDefense = defenserUnits.find(unit => unit.village_unit_id === villageSupportingUnit.village_unit_id);
 
                 if (!unitInDefense) 
                 {
@@ -1036,15 +1053,42 @@ class AttackService {
                 }
 
                 // Sauvegarde des unités en support
-                villageSupportUnit.quantity -= unitInDefense.lost_quantity;
-                villageSupportUnit.enabled  = villageSupportUnit.quantity === 0 ? 0 : 1;
-                await villageSupportUnit.save({ transaction });
+                villageSupportingUnit.present_quantity -= unitInDefense.lost_quantity;
+                await villageSupportingUnit.save({ transaction });
+
+                // Sauvegarde des unités en support avec le meme support_id
+                if (!sameSupportIdUnits[villageSupportingUnit.support_id])
+                {
+                    sameSupportIdUnits[villageSupportingUnit.support_id] = [];
+                }
+
+                sameSupportIdUnits[villageSupportingUnit.support_id].push(villageSupportingUnit);
+                
 
                 // Sauvegarde des unités du village en support
-                const village_unit                  = await villageSupportUnit.getVillage_unit();
+                const village_unit                  = await villageSupportingUnit.getVillage_unit();
                 village_unit.in_support_quantity    -= unitInDefense.lost_quantity;
                 village_unit.total_quantity         -= unitInDefense.lost_quantity;
                 await village_unit.save({ transaction, silent: true });
+            }
+
+            // Regarder si les VillageSupportingUnits avec le meme support_id sont tous à 0, si oui, on met le support à 3 (lost)
+            for (const supportId in sameSupportIdUnits)
+            {
+                const supportUnits = sameSupportIdUnits[supportId];
+                const allUnitsAreDead = supportUnits.every(unit => unit.present_quantity === 0);
+
+                if (allUnitsAreDead)
+                {
+                    await Support.update({
+                        status : 3
+                    },{
+                        where: {
+                            id: supportId
+                        },
+                        transaction
+                    });
+                }
             }
 
             // Sauvegarde des unités du village
