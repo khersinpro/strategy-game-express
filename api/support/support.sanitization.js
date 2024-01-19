@@ -1,4 +1,4 @@
-const { body, param, checkSchema, checkExact } = require('express-validator');
+const { param, checkSchema, checkExact } = require('express-validator');
 const validationHandler = require('../../utils/validationHandler'); 
 
 exports.idParamSanitization = [ 
