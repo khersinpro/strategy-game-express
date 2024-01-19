@@ -1,8 +1,4 @@
-const unit = require('../../database/models/unit');
-const BadRequestError = require('../../errors/bad-request');
-const NotFoundError = require('../../errors/not-found');
 const AttackService = require('./attack.service');
-const {Unit, Defense_type, Wall_defense} = require('../../database/index').models;
 
 class AttackController {
 
@@ -69,7 +65,6 @@ class AttackController {
     async generate(req, res, next) {
         try
         {
-            return res.json('ok')
             const attack = await AttackService.generate(req.body, req.user);
             res.status(200).json(attack);
         }
