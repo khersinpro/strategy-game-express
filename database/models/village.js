@@ -67,13 +67,19 @@ module.exports = (sequelize, DataTypes) => {
           as: 'attack'
         }
       })
-      this.hasMany(models.Village_support, {
-        foreignKey: 'supporting_village_id',
-        as: 'supporting_village'
+      this.hasMany(models.Support, {
+        foreignKey: {
+          name: 'supported_village_id',
+          allowNull: false,
+          as: 'sended_support'
+        }
       })
-      this.hasMany(models.Village_support, {
-        foreignKey: 'supported_village_id',
-        as: 'supported_village'
+      this.hasMany(models.Support, {
+        foreignKey: {
+          name: 'supporting_village_id',
+          allowNull: false,
+          as: 'received_support'
+        }
       })
 
       //  Polimorphic association

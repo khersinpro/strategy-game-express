@@ -69,6 +69,7 @@ class AttackController {
     async generate(req, res, next) {
         try
         {
+            return res.json('ok')
             const attack = await AttackService.generate(req.body, req.user);
             res.status(200).json(attack);
         }

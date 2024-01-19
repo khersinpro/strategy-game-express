@@ -1,5 +1,69 @@
-const { body, param } = require('express-validator');
+const { body, param, checkSchema, checkExact } = require('express-validator');
 const validationHandler = require('../../utils/validationHandler'); 
+
+
+exports.generateSanitization = [
+    checkExact(
+        checkSchema({
+            attackedVillageId: {
+                in: ['body'],
+                errorMessage: 'attackedVillageId must be an integer',
+                isInt: true,
+                trim: true,
+                escape: true
+            },
+            attackingVillageId: {
+                in: ['body'],
+                errorMessage: 'attackingVillageId must be an integer',
+                isInt: true,
+                trim: true,
+                escape: true,
+            },
+            villageUnits: {
+                in: ['body'],
+                errorMessage: 'villageUnits must be an array',
+                isArray: {
+                    options: {
+                        min: 1
+                    }
+                },
+                trim: true,
+                escape: true,
+                exists: true
+            },
+            'villageUnits.*.id': {
+                in: ['body'],
+                errorMessage: 'id must be an integer',
+                isInt: true,
+                trim: true,
+                escape: true,
+                exists: true
+            },
+            'villageUnits.*.quantity': {
+                in: ['body'],
+                errorMessage: 'quantity must be an integer',
+                isInt: true,
+                trim: true,
+                escape: true,
+                exists: true
+            }, 
+        }), { message: 'Invalid fields in request body'}
+    ), 
+    validationHandler.errorhandler
+]
+
+
+exports.idParamSanitization = [
+    param('id')
+        .escape()
+        .trim()
+        .isInt().withMessage('Id must be an integer'),
+    validationHandler.errorhandler
+]
+
+/**
+ * For Admin routes
+ */
 
 exports.createSanitization = [
     body('attacked_village_id')
@@ -87,13 +151,5 @@ exports.updateSanitization = [
         .isString().withMessage('attack_status must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('attack_status must not be empty')
         .optional(),
-    validationHandler.errorhandler
-]
-
-exports.idParamSanitization = [
-    param('id')
-        .escape()
-        .trim()
-        .isInt().withMessage('Id must be an integer'),
     validationHandler.errorhandler
 ]
