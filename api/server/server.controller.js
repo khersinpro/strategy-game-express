@@ -77,7 +77,7 @@ class ServerController {
         try 
         {
             const server = await serverService.delete(req.params.name);
-            res.status(200).send(server);
+            res.status(200).json(server);
         }
         catch (error)
         {

@@ -14,7 +14,7 @@ router.get('/:name', nameParamSanitization, serverController.get);
  * Admin routes
  */ 
 router.post('/',isAdmin, createSanitization, serverController.create);
-router.put('/:name', isAdmin, nameParamSanitization, createSanitization, serverController.update);
+router.put('/:name', isAdmin, createSanitization, serverController.update);
 router.delete('/:name', isAdmin, nameParamSanitization, serverController.delete);
 
 module.exports = router;

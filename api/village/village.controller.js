@@ -22,10 +22,10 @@ class VillageController {
             /**
              * A retirer par la suite
             */
-            await VillageResourceService.updateAllVillagesResources();
-            await villageBuildingService.updateAllVillageBuildingWhenConstructionProgressIsFinished();
-            await villageBuildingService.createAllVillageBuildingWhenConstructionProgressIsFinished();
-            await villageUnitService.addUnitAfterTraining();
+            // await VillageResourceService.updateAllVillagesResources();
+            // await villageBuildingService.updateAllVillageBuildingWhenConstructionProgressIsFinished();
+            // await villageBuildingService.createAllVillageBuildingWhenConstructionProgressIsFinished();
+            // await villageUnitService.addUnitAfterTraining();
             /**
              * A retirer par la suite
              */

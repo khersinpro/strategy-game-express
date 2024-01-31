@@ -42,6 +42,7 @@ const attackUnitRouter = require('./api/attack/attack_attacker_unit/attack_attac
 const attackStatusRouter = require('./api/attack/attack_status/attack_status.router');
 const supportRouter = require('./api/support/support.router');
 const supportStatusRouter = require('./api/support/support_status/support_status.router');
+const villageSupportRouter = require('./api/support/supporting_unit/supporting_unit.router');
 
 const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
@@ -102,6 +103,7 @@ app.use('/api/attack-unit', auth, attackUnitRouter);
 app.use('/api/attack-status', auth, attackStatusRouter);
 app.use('/api/support', auth, supportRouter);
 app.use('/api/support-status', auth, supportStatusRouter);
+app.use('/api/village-support', auth, villageSupportRouter);
 
 
 /**
