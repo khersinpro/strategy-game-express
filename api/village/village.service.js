@@ -26,9 +26,9 @@ class VilageService {
      * @throws {NotFoundError} if the village does not exist
      * @returns {Promise<Village>}
      */
-    getById(id, includes, whereparams, currentUser) {
+    async getById(id, includes, whereparams, currentUser) {
         const filters = this.generateFilters(includes, whereparams, currentUser);
-        const village = Village.findByPk(id, filters);
+        const village = await Village.findByPk(id, filters);
 
         if (!village)
         {

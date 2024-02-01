@@ -19,7 +19,6 @@ class AttackStatusService {
     async getByName(name) {
         try
         {
-            console.log("name : " + name);
             const attackStatus = await Attack_status.findByPk(name);
 
             if (!attackStatus) 

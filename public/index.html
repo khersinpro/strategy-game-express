@@ -12,13 +12,13 @@
         const socket = io('http://localhost:3000');
         socket.emit('message', 'hello world');
         socket.on('message', data => {
-            console.log(data);
+            
         });
         socket.on('user:create', data => {
-            console.log(data);
+
         });
         socket.on('user:delete', data => {
-            console.log(data);
+
         });
     </script>
 </body>

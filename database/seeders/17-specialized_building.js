@@ -6,14 +6,12 @@ const { Building, Civilization } = require('../index.js').models;
 module.exports = {
   async up (queryInterface, Sequelize) {
     const civilizations = await Civilization.findAll();
-console.log('ici');
+
     const infrastructure_building = await Building.findAll({
       where: {
         type: 'town_all_building'
       }
     });
-console.log('ma');
-    console.log(infrastructure_building);
 
     const military_building = await Building.findAll({
       where: {

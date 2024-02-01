@@ -12,15 +12,23 @@ exports.auth = async (req, res, next) => {
         
         if (!token)
         {
-            throw new UnauthorizedError('Token manquant');
+            return res.status(401).send({message: 'Token manquant'});
+            // throw new UnauthorizedError('Token manquant');
         }
         
         const extractedToken = token.split(' ')[1];
         
-        const decodedToken = jwt.verify(extractedToken, config.jwtSecret);
-        
+        const decodedToken = jwt.verify(extractedToken, config.jwtSecret, (err, decodedToken) => {
+            if (err)
+            {
+                throw new UnauthorizedError('Token invalide');
+            }
+            return decodedToken;
+        });
+
         if (!decodedToken || !decodedToken.id)
         {
+
             throw new UnauthorizedError('Token invalide');
         }
 

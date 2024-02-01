@@ -8,7 +8,6 @@ class BuildingService {
      * @returns {Promise<Resource_building[]>}
      */
     getAll() {
-        console.log(Resource_building);
         return Resource_building.findAll();
     }
 

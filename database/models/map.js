@@ -41,7 +41,6 @@ module.exports = (sequelize, DataTypes) => {
       }
       catch (error)
       {
-        console.log(error);
         throw error;
       }
     }

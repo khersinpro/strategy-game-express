@@ -8,7 +8,6 @@ class StorageCapacityService {
      * @returns {Promise<Storage_capacity[]>}
      */
     getAll() {
-        console.log(Storage_capacity);
         return Storage_capacity.findAll();
     }
 

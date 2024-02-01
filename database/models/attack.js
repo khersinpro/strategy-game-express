@@ -91,7 +91,6 @@ module.exports = (sequelize, DataTypes) => {
         if (this.attacked_village_id && this.attacking_village_id && this.attacked_village_id === this.attacking_village_id) {
           throw new ForbiddenError('Attacked and attacking villages must be different');
         }
-        console.log("valide");
       }
     }
   });
