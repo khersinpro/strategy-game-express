@@ -81,8 +81,8 @@ describe('Village controller', () => {
      *********************************************************************************************/
     it('[getOne] should return 200 and a village', async () => {
         const res = await request(app).get('/api/village/1').set('Authorization', `Bearer ${token}`);
-        expect(res.status).toBe(200);
         expect(res.body).toEqual(mockVillage);
+        expect(res.status).toBe(200);
     });
 
     it('[getOne] should return 401 if no token', async () => {

@@ -27,15 +27,22 @@ class VilageService {
      * @returns {Promise<Village>}
      */
     async getById(id, includes, whereparams, currentUser) {
-        const filters = this.generateFilters(includes, whereparams, currentUser);
-        const village = await Village.findByPk(id, filters);
-
-        if (!village)
+        try
         {
-            throw new NotFoundError(`Village with id ${id} not found`);
+            const filters = this.generateFilters(includes, whereparams, currentUser);
+            const village = await Village.findByPk(id, filters);
+    
+            if (!village)
+            {
+                throw new NotFoundError(`Village with id ${id} not found`);
+            }
+            
+            return village;
         }
-
-        return village;
+        catch (error)
+        {
+            throw error;
+        }
     }   
 
     /**

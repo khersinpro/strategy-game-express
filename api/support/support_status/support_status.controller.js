@@ -22,7 +22,7 @@ class SupportStatusController {
     async get (req, res, next) {
         try
         {
-            const supportStatus = await SupportStatusService.get(req.params.id);
+            const supportStatus = await SupportStatusService.getById(req.params.id);
             res.status(200).json(supportStatus);
         }
         catch (error)

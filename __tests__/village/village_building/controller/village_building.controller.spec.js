@@ -21,7 +21,7 @@ describe('Village building controller', () => {
         building_name: 'iron mine',
         building_level_id: 57,
         createdAt: '2020-04-01T13:00:00.000Z',
-        updatedAt: '2020-04-01T13:00:00.000Z',
+        updatedAt: '2020-04-01T13:00:00.000Z'
     }
 
     const mockVillageBuildingList = [
@@ -69,6 +69,7 @@ describe('Village building controller', () => {
         Village_building.findAll = jest.fn().mockResolvedValue(mockVillageBuildingList);
         Village_building.findByPk = jest.fn().mockResolvedValue(mockVillageBuilding);
         Village_building.create = jest.fn().mockResolvedValue(mockVillageBuilding);
+        Village_building.update = jest.fn().mockResolvedValue(1);
     });
 
     /**********************************************************************************************
@@ -143,9 +144,14 @@ describe('Village building controller', () => {
     });
 
     it('[create] should return 400 if village_building is not valid', async () => {
+        const wrongVillageBuilding = {
+            village_id: 1,
+            type: 'resource_building',
+            building_name: '',
+            building_level_id: 57,
+        }
         mockCurrentUser.role_name = 'ROLE_ADMIN';
-        mockVillageBuilding.building_name = '';
-        const res = await request(app).post('/api/village-building').set('Authorization', `Bearer ${token}`).send(mockVillageBuilding);
+        const res = await request(app).post('/api/village-building').set('Authorization', `Bearer ${token}`).send(wrongVillageBuilding);
         expect(res.status).toBe(400);
     });
 
@@ -154,9 +160,82 @@ describe('Village building controller', () => {
      * Tests for update village_building
      * ********************************************************************************************
      * ********************************************************************************************/
+    it('[update] should return 200 for admin user', async () => {
+        mockCurrentUser.role_name = 'ROLE_ADMIN';
+        const updateData = {
+            building_name: 'iron mine'
+        }
+        const res = await request(app).put('/api/village-building/1').set('Authorization', `Bearer ${token}`).send(updateData);
+        expect(res.body).toEqual(1);
+        expect(res.status).toBe(200);
+    });
 
+    it('[update] should return 400 if request params is not valid', async () => {
+        mockCurrentUser.role_name = 'ROLE_ADMIN';
+        const updateData = {
+            building_name: 'iron mine'
+        }
+        const res = await request(app).put('/api/village-building/abc').set('Authorization', `Bearer ${token}`).send(updateData);
+        expect(res.status).toBe(400);
+    });
 
+    it('[update] should return 400 if village_building is not valid', async () => {
+        mockCurrentUser.role_name = 'ROLE_ADMIN';
+        const updateData = {
+            building_name: ''
+        }
+        const res = await request(app).put('/api/village-building/1').set('Authorization', `Bearer ${token}`).send(updateData);
+        expect(res.status).toBe(400);
+    });
 
+    it('[update] should return 403 for basic user', async () => {
+        mockCurrentUser.role_name = 'ROLE_USER';
+        const res = await request(app).put('/api/village-building/1').set('Authorization', `Bearer ${token}`).send(mockVillageBuilding);
+        expect(res.status).toBe(403);
+    });
+
+    it('[update] should return 401 if no token', async () => {
+        const res = await request(app).put('/api/village-building/1').send(mockVillageBuilding);
+        expect(res.status).toBe(401);
+    });
+
+    /**********************************************************************************************
+     * ********************************************************************************************
+     * Tests for delete village_building
+     * ********************************************************************************************
+     * ********************************************************************************************/
+    it('[delete] should return 200 for admin user', async () => {
+        const mockVillageBuildingToDestroy = {
+            id: 1,
+            village_id: 1,
+            type: 'resource_building',
+            building_name: 'iron mine',
+            building_level_id: 57,
+        }
+        Village_building.findByPk = jest.fn().mockResolvedValue(mockVillageBuildingToDestroy);
+        mockVillageBuildingToDestroy.destroy = jest.fn().mockResolvedValue(1);
+        mockCurrentUser.role_name = 'ROLE_ADMIN';
+        const res = await request(app).delete('/api/village-building/1').set('Authorization', `Bearer ${token}`);
+        expect(res.status).toBe(204);
+    });
+
+    it('[delete] should return 403 for basic user', async () => {
+        mockCurrentUser.role_name = 'ROLE_USER';
+        const res = await request(app).delete('/api/village-building/1').set('Authorization', `Bearer ${token}`);
+        expect(res.status).toBe(403);
+    });
+
+    it('[delete] should return 401 if no token', async () => {
+        const res = await request(app).delete('/api/village-building/1');
+        expect(res.status).toBe(401);
+    });
+
+    it('[delete] should return 404 if village_building not found', async () => {
+        Village_building.findByPk = jest.fn().mockResolvedValue(null);
+        mockCurrentUser.role_name = 'ROLE_ADMIN';
+        const res = await request(app).delete('/api/village-building/1').set('Authorization', `Bearer ${token}`);
+        expect(res.status).toBe(404);
+    });
 
     afterEach(() => {
         jest.clearAllMocks();

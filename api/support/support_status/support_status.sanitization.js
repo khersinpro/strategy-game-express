@@ -15,9 +15,14 @@ exports.createSanitization = [
             name: {
                 in: ['body'],
                 errorMessage: 'Name must be a string',
-                isString: true,
+                escape: true,
                 trim: true,
-                escape: true
+                isString: true,
+                isLength: {
+                    options: {
+                        min: 3
+                    }
+                },
             }
         }), { message: 'Invalid fields in request body'}
     ),

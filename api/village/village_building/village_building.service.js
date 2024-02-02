@@ -66,13 +66,7 @@ class VillageBuildingService {
      */ 
     async delete(id) {
         const villageBuilding = await this.getById(id);
-
-        if (!villageBuilding)
-        {
-            throw new NotFoundError('Village building not found')
-        }
-
-        return village.destroy();
+        return villageBuilding.destroy();
     }
 
     /**
