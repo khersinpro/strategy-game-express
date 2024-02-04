@@ -4,7 +4,7 @@ const jwt       = require('jsonwebtoken');
 const config    = require('../../../../config');
 const { User, Village_resource }  = require('../../../../database/index').models;
 
-describe('Village controller', () => {
+describe('Village resource controller', () => {
     let token;
     const mockId = 1;
     const mockCurrentUser =  {

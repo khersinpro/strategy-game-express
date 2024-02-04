@@ -63,7 +63,7 @@ class VillageUnitService {
 
         if (!villageUnit)
         {
-            throw new NotFoundError('Village nit not found')
+            throw new NotFoundError('Village not found')
         }
 
         return villageUnit.destroy();
