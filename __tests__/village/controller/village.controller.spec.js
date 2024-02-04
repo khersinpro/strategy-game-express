@@ -3,6 +3,7 @@ const { app }   = require('../../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../../config');
 const { User, Village, Server }  = require('../../../database/index').models;
+const VillageUpdateUtils = require('../../../utils/villlageUpdateUtils');
 
 describe('Village controller', () => {
     let token;
@@ -50,6 +51,7 @@ describe('Village controller', () => {
         User.findByPk = jest.fn().mockResolvedValue(mockCurrentUser);
         Village.findAll = jest.fn().mockResolvedValue(mockVillageList);
         Village.findByPk = jest.fn().mockResolvedValue(mockVillage);
+        VillageUpdateUtils.updateVillageData = jest.fn().mockResolvedValue();
     });
 
     /**********************************************************************************************
