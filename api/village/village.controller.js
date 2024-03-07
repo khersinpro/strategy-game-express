@@ -49,7 +49,7 @@ class VillageController {
      */
     async get(req, res, next) {
         try 
-        {
+        { 
             await VillageUpdateUtils.updateVillageData(req.params.id);
             const village = await VillageService.getById(req.params.id, req.query, {}, req.user);  
             res.status(200).send(village);

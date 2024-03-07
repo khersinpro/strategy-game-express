@@ -14,11 +14,12 @@ class VillageUnitService {
 
     /**
      * Returns unit of a village by id
-     * @param {Number} id village village id 
+     * @param {Number} id village village id
      * @throws {NotFoundError} when village village not found
      * @returns {Promise<Village_unit>}
      */ 
     async getById(id) {
+
         const villageUnit = await Village_unit.findByPk(id);
 
         if (!villageUnit)

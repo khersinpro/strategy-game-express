@@ -1,0 +1,21 @@
+version: '3'
+services:
+  app:
+    image: strategy-game
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules 
+    environment:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: strategy_game
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DIALECT: mysql
+    networks:
+      - mysql-database
+networks:
+  mysql-database:
+    external: true

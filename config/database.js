@@ -1,15 +1,10 @@
-const env = require('dotenv').config({path: __dirname + '/../.env'}).parsed;
-
-if (!env)
-{
-    throw new Error('Environment file not found')
-}
+require('dotenv').config();  
 
 module.exports = {
-    username: env.USER,
-    password: env.PASSWORD,
-    database: env.DATABASE,
-    host: env.HOST,
-    port: env.DB_PORT,
-    dialect: env.DIALECT,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: process.env.DB_DIALECT,
 }

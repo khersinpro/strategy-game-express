@@ -65,9 +65,9 @@ app.use(cors());
 app.use(express.json());
 
 /**
- * Routes
+ * Routes 
  */
-app.use('/api/user', auth, usersRouter);
+app.use('/api/user', auth, usersRouter);  
 app.use('/api/role', auth, roleRouter);
 app.use('/api/village', auth, villageRouter);
 app.use('/api/server', auth, serverRouter);

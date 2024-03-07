@@ -5,9 +5,9 @@ class EuclideanDistanceCalculator {
     /**
      * @param {number} xStartingPoint
      */
-    #xStartingPoint;
+    #xStartingPoint;  
     
-    /**
+    /** 
      * @param {number} yStartingPoint
      */
     #yStartingPoint;
