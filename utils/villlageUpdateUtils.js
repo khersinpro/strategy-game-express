@@ -14,11 +14,20 @@ class villageUpdateUtils {
     static async updateVillageData(villageId, updateDate = new Date()) {
         try
         {
+            // Update the village incoming attacks
             await AttackService.handleIncommingAttacks(villageId, updateDate);
+
+            // Update the village resources production
             await VillageResourceService.updateVillageResource(villageId, updateDate);
+
+            // Update the village building construction progress
             await VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
             await VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(villageId, updateDate);
+
+            // Update the village unit training progress
             await VillageUnitService.addUnitAfterTraining(villageId, updateDate);
+
+            // Update the village unit movement (attack and support)
             await AttackService.handleReturningAttacks(villageId, updateDate);
             await SupportService.handleSupport(villageId, updateDate);
             await SupportService.handleReturningSupport(villageId, updateDate);
