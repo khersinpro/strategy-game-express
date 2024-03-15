@@ -301,10 +301,10 @@ class AttackService {
         try
         {
             const arrivalDate = new Date(attack.arrival_date);
-            // Gagnant de l'attaque
+            // Winner of the attack
             let winner = null;
 
-            // Le village attaqué
+            // Attacked village
             const attackedVillage = await Village.findByPk(attack.attacked_village_id, {
                 include: [
                     {
@@ -314,7 +314,7 @@ class AttackService {
                 ]
             });
 
-            // Le village attaquant
+            // Attacking village
             const attackingVillage = await Village.findByPk(attack.attacking_village_id, {
                 include: [
                     {
@@ -324,81 +324,81 @@ class AttackService {
                 ]
             });
 
-            // Check si le village mis a jour est l'attaquant, alors on met a jour les attaques du défenseur 
-            // avant la date de l'attaque en cours
+
+            // Check if the updated village is the attacker, then we update the defender's attacks before the date of the current attack
             if (offensiveAttack)
             {
                 await this.handleIncommingAttacks(attackedVillage.id, arrivalDate);
             }
             
-            // probleme ici 
+            // Check this function problem
             await this.updateVillageBeforeAttack(attackedVillage.id, arrivalDate);
 
-            // troupes attaquantes
+            // Attackers units
             const attackAttackerUnits = await this.getAttackerUnits(attack.id);
 
-            // Types d'unités attaquantes
+            // Attackers unit types
             const unitTypesInAttack = this.getTypeOfAttackUnits(attackAttackerUnits);
 
-            // troupes en défense
+            // Defenser units
             const defenserVillageUnit = await this.getAttackedVillageUnits(attackedVillage.id);
 
-            // troupes en support
+            // Defenser supporting units
             const defenserSupportingUnit = await this.getAttackedVillageSupportingUnits(attackedVillage.id);
 
-            // pourcentage de défense du mur
+            // Wall defense percent 
             const wallAdittionalDefensePercent = await this.getAttackedVillageWallDefensePercent(attackedVillage.id);
 
-            // Création des unités en défense
+            // Generate attack defenser units and support
             const attackDefenserUnits   = await this.generateAttackDefenserUnits(attack.id, defenserVillageUnit);
             const attackDefenserSupport = await this.generateAttackDefenserSupport(attack.id, defenserSupportingUnit);
 
-            // Regroupement des unités en défense sous un tableau
+            // Group all defenser units in one array
             const defenserUnits = attackDefenserUnits.concat(attackDefenserSupport);
 
-            // Si le village attaqué n'a pas d'unités en défense, l'attaquant gagne
+            // If there is no defenser units, the attacker wins
             if (defenserUnits.length === 0)
             {
                 winner = 'attacker';
             }
 
-            // Boucle de simulation de l'attaque
+            // Loop through the rounds of the attack
             let round = 1;
             while(winner === null)
             {
                 const roundTotalAttackPower = this.getTotalAttackPower(attackAttackerUnits);
 
-                // Pour chaque type d'unité attaquante
+                // For each type of unit in the attack
                 for (const roundUnitType of unitTypesInAttack)
                 {
-                    // Total d'unités attaquantes pour le type d'unité en cours
+                    // Total of attacking units for the current unit type
                     const roundAttackUnits = this.generateRoundAttackUnits(attackAttackerUnits, roundUnitType);
                     
-                    // Pourcentage d'unités attaquantes pour le type d'unité en cours
+                    // Percentage of attacking units for the current unit type
                     const roundAttackAllocationPercent = roundAttackUnits.attack_power / roundTotalAttackPower;
 
-                    // Total d'unités en défense pour le type d'unité en cours
+                    // Total of defense units for the current unit type
                     const roundDefenseUnits = this.generateRoundDefenseUnits(defenserUnits, roundUnitType, roundAttackAllocationPercent);
 
-                    // Calcul de pourcentage des unités en vie
+                    // Calcul of percentage of alive units
                     const { attackUnitAlivePercent, defenseUnitAlivePercent } = this.getRoundAlivePercent(roundAttackUnits, roundDefenseUnits, wallAdittionalDefensePercent);
 
-                    // Calcul du nombre d'unités perdues pour l'attaquant
+                    // Calcul of the number of units lost for the attacker
                     this.calculateAttackerUnitsLost(attackAttackerUnits, roundUnitType, attackUnitAlivePercent);
 
-                    // Calcul du nombre d'unités perdues pour le défenseur
+                    // Calcul of the number of units lost for the defenser
                     this.calculateDefenserUnitsLost(defenserUnits, roundDefenseUnits, defenseUnitAlivePercent);
 
-                    // Suppression du type d'unité si la puissance d'attaque est négative ou égale à 0
+                    // Delete the unit type if the attack power is negative or equal to 0
                     if (roundAttackUnits.attack_power <= 0) {
                         unitTypesInAttack.splice(unitTypesInAttack.indexOf(roundUnitType), 1);
                     }
                 }
 
-                // Vérification s'il y a un gagnant
+                // Check if there is a winner
                 winner = this.checkWinner(attackAttackerUnits, defenserUnits);
 
-                // Si le nombre de round dépasse 20, l'attaque est annulée
+                // If the number of rounds exceeds 20, the attack is canceled
                 round++;
                 if (round > 20)
                 {
@@ -406,13 +406,13 @@ class AttackService {
                 }
             }
 
-            // Si l'attaquant gagne, on récupère les ressources volées et on set la date de retour
+            // If the attacker wins, we get the stolen resources and set the return date
             if (winner === 'attacker')
             {
                 const stolenCapacity   = this.getAttackerStolenCapacity(attackAttackerUnits);
                 const slowestUnitSpeed = this.getAttackerSlowestUnitSpeed(attackAttackerUnits);
 
-                // Récupération des ressources volées
+                // Get the stolen resources
                 await this.generateAttackStolenResources(attackedVillage.id, attack.id, stolenCapacity, transaction);
 
                 const { x: attackedVillageX,  y: attackedVillageY }   = attackedVillage.Map_position;
@@ -422,14 +422,14 @@ class AttackService {
                 attack.return_date        = euclideanCalculator.getArrivalDate(arrivalDate, slowestUnitSpeed);
             }
 
-            // Sauvegarde du rapport de l'attaque
+            // Save the attack report
             attack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
             await attack.save({ transaction });
 
             // Sauvegarde des unités du village attaqué
             await this.saveDefenserLosses(defenserUnits, defenserSupportingUnit, defenserVillageUnit, transaction);
 
-            // Sauvegarde des unités du village attaquant
+            // Save the attacker units
             await this.saveAttackerLosses(attackAttackerUnits, attackingVillage.id, transaction);
 
             await transaction.commit();
@@ -479,13 +479,13 @@ class AttackService {
         const transaction = await sequelize.transaction();
         try
         {
-            // Récupérer les troupes et les réatribué au village via les villages_unit
+            // Get the troops and reassign them to the village
             await this.reassignAttackerUnits(attack, transaction);
 
-            // Récupérer les ressources volées et les réatribué au village via les villages_resources 
+            // Get the stolen resources and allocate them to the village
             await this.allocateStolenResources(attack, transaction);
 
-            // Passer l'attaque au statut returned
+            // Pass the attack to the returned status
             attack.attack_status = 'returned';
             await attack.save({ transaction });
             await transaction.commit();
@@ -1206,30 +1206,9 @@ class AttackService {
         }
     }
 
-
-
-
-
-
-
-
     /**
-     * Calculate the outgoing attack results
-     * @param {Number} attack - The attack
-     */
-    generateOutgoingAttackResults(attack) {
-        try 
-        {
-
-        }
-        catch (error)
-        {
-
-        }
-    }
-
-    /**
-     * Attack simulation
+     * Attack simulation 
+     * TODO => Refactor this method
      * @param {Array.<{name: String, quantity: Number}>} attackUnits - The units in attack
      * @param {Array.<{name: String, quantity: Number}>} defenseUnits - The units in defense
      * @param {Object} wallLevel - The wall level
