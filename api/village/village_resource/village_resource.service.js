@@ -143,7 +143,6 @@ class VillageBuildingService {
                 return acc;
             }, {});
     
-            // Voir comment calculer pour faire en sorte que ca calcule les 4 resource d'un coup pour chaque village
             for (const villageId in villagesResourcesByVillageId) 
             {
                 const villageResources = villagesResourcesByVillageId[villageId];
