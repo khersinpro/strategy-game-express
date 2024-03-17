@@ -5,7 +5,7 @@ const { sequelize }  = require('../database/index');
 // Connect to Sequelize and start Express server
 sequelize.sync()
 .then(() => { 
-    console.log('Connexion réussi')    
+    console.log('Database connected...')    
 })
 .catch((err) => console.error(err))
 

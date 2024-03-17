@@ -48,7 +48,7 @@ const usersController = require('./api/user/user.controller');
 const { auth } = require('./middlewares/auth');
 const { loginSanitization } = require('./api/user/user.sanitization');
 
-// Déclaration du serveur et configuration de socket.io
+// Server declaration and socket.io configuration
 const server = http.createServer(app);
 const io = new Server(server);
 
@@ -114,21 +114,21 @@ app.post('/api/login', loginSanitization, usersController.login)
 app.use(express.static('public'));
 
 /**
- * Middleware de gestion des erreurs 404
+ * Error management middleware 404
  */
 app.use((req, res, next) => {
     next(new NotFoundError('Ressource introuvable'));
 })
 
 /**
- * Middleware de gestion d'erreur
+ * Error middleware for all errors
  */
 app.use((error, req, res, next) => {
     const status = error.status || 500;
-    let message = error.message || 'Erreur interne au serveur';
+    let message = error.message || 'Internal server error';
     if (process.env.NODE_ENV === 'production')
     {
-        message = 'Erreur interne au serveur';
+        message = 'Internal server error';
     }
     res.status(status).json({ error: message });
 })

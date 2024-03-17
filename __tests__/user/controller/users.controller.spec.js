@@ -114,7 +114,7 @@ describe('Test for users crud functuionality', () => {
         .send({username: 'test', email: 'test@test.fr', password: 'test'});
         
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.password.msg).toEqual('Le mot de passe doit contenir entre 5 et 20 caractères');
+        expect(response.body.errors.password.msg).toEqual('Password must be between 5 and 20 characters.');
     })
     
     test('[create] request with invalid email should return 400 with email error message', async () => {
@@ -124,7 +124,7 @@ describe('Test for users crud functuionality', () => {
         .send({username: 'test', email: 'testtest.fr', password: 'testtesttest'});
         
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.email.msg).toEqual('L\'email est incorrect.');
+        expect(response.body.errors.email.msg).toEqual('Email is incorrect.');
     })
 
     test('[create] request with invalid username should return 400 with username error message', async () => {
@@ -142,8 +142,8 @@ describe('Test for users crud functuionality', () => {
         
         expect(response.statusCode).toBe(400);
         expect(response.body.errors.username.msg).toEqual('Invalid value');
-        expect(response.body.errors.email.msg).toEqual('L\'email est incorrect.');
-        expect(response.body.errors.password.msg).toEqual('Le mot de passe doit contenir entre 5 et 20 caractères');
+        expect(response.body.errors.email.msg).toEqual('Email is incorrect.');
+        expect(response.body.errors.password.msg).toEqual('Password must be between 5 and 20 characters.');
     })
     
     test('[create]request without token should return 401', async () => {
@@ -221,7 +221,7 @@ describe('Test for users crud functuionality', () => {
         .send({email: 'wrongemail'})
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.email.msg).toEqual('L\'email est incorrect.');
+        expect(response.body.errors.email.msg).toEqual('Email is incorrect.');
     })
 
     test('[update]request with incorrect password should return 400 and error message', async () => {
@@ -231,7 +231,7 @@ describe('Test for users crud functuionality', () => {
         .send({password: 'aaa'})
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.errors.password.msg).toEqual('Le mot de passe doit contenir entre 5 et 20 caractères');
+        expect(response.body.errors.password.msg).toEqual('Password must be between 5 and 20 characters.');
     })
 
     test('[update]request with empty body should return 200 and message', async () => {
