@@ -4,7 +4,7 @@ const sequelize                 = require('../../../database/index').sequelize;
 const VillageService            = require('../village.service');
 const BuildingService           = require('../../building/building.service');
 const BuildingCostService       = require('../../building/building_cost/building_cost.service');
-const villageBuildingService    = require('../village_building/village_building.service');
+const VillageBuildingService    = require('../village_building/village_building.service');
 const { Op } = require('sequelize');
 const { 
     Village_construction_progress, 
@@ -31,14 +31,14 @@ class VillageProductionProgressService {
      * @returns {Promise<Village_construction_progress>}
      */ 
     async getById(id) {
-        const villageProductionProgress = await Village_construction_progress.findByPk(id);
+        const villageConstructionProgress = await Village_construction_progress.findByPk(id);
 
-        if (!villageProductionProgress)
+        if (!villageConstructionProgress)
         {
-            throw new NotFoundError('Village unit not found')
+            throw new NotFoundError(`The village construction progress with id ${id} was not found`);
         }
 
-        return villageProductionProgress;
+        return villageConstructionProgress;
     }
 
     /**
@@ -75,9 +75,9 @@ class VillageProductionProgressService {
                 throw new NotFoundError('Building not found');
             }
 
-            // Udpdate the constructions in progress before creating the new onea
-            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
-            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
+            // Udpdate the constructions in progress before creating the new one
+            await VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
+            await VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
 
             // check if village_building already exists in the village, if yes throw ForbiddenError
             const existingVillageBuilding = await Village_building.findOne({
@@ -103,7 +103,7 @@ class VillageProductionProgressService {
                 }
             }
 
-            // check if building construction in progress, if yes throw ForbiddenError
+            // Check if this building is already in construction in this village
             const existingVillageConstructionInProgress = await Village_construction_progress.findOne({
                 include: [
                     {
@@ -241,8 +241,8 @@ class VillageProductionProgressService {
             }
 
             // Udpdate the constructions in progress before creating the new one
-            await villageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
-            await villageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
+            await VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
+            await VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished(village.id);
 
             // check if building has already an update in progress and get the last update progress
             const sameBuildingUpdateInProgress = await Village_construction_progress.findOne({

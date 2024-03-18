@@ -16,13 +16,13 @@ const {
  */
 router.get('/', VillageUnitController.getAll);
 router.get('/:id', idParamSanitization, VillageUnitController.get);
+router.post('/new', createNewBuildingSanitization, VillageUnitController.createNewBuilding);
+router.post('/update', createUpdateBuildingSanitization, VillageUnitController.createUpdateBuilding);
 router.put('/cancel/:id', idParamSanitization, VillageUnitController.cancelConstruction);
 
 /**
  * Admin routes
  */
-router.post('/new', isAdmin, createNewBuildingSanitization, VillageUnitController.createNewBuilding);
-router.post('/update', isAdmin, createUpdateBuildingSanitization, VillageUnitController.createUpdateBuilding);
 router.put('/:id', isAdmin, updateSanitization, VillageUnitController.update);
 router.delete('/:id', isAdmin, idParamSanitization, VillageUnitController.delete);
 
