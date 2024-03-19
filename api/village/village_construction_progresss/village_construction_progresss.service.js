@@ -162,7 +162,7 @@ class VillageProductionProgressService {
             const constructionDurationInMilliseconds    = buildingLevel.time * 1000;
             const endDate                               = new Date(starDateInMilliseconds + constructionDurationInMilliseconds);
     
-            // create a new village_constructoin_progresss with the start date and the end date
+            // create a new village_construction_progresss with the start date and the end date
             const villageConstructionProgress = await Village_construction_progress.create({
                 type: 'village_new_construction',
                 construction_start: startDate,
@@ -172,7 +172,7 @@ class VillageProductionProgressService {
 
             if (!villageConstructionProgress)
             {
-                throw new Error('Village production progress not created');
+                throw new Error('Village construction progress not created');
             }
 
             // create the associated village_new_construction

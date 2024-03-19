@@ -3,7 +3,7 @@ const { app }   = require('../../../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../../../config');
 const { sequelize } = require('../../../../database/index');
-const { User, Village_construction_progress, Village_new_construction, Building_level, Village_building } = require('../../../../database/index').models;
+const { User, Village_construction_progress, Village_new_construction, Building_level, Village_building, Village } = require('../../../../database/index').models;
 const VillageService = require('../../../../api/village/village.service');
 const BuildingService = require('../../../../api/building/building.service');
 const VillageBuildingService = require('../../../../api/village/village_building/village_building.service');
@@ -73,6 +73,16 @@ describe('Village Construction Progress Controller', () => {
         updatedAt: '2021-01-01 00:00:00'
     }
 
+    const mockVillage = {
+        id: 1,
+        name: 'village',
+        server_name: 'server',
+        user_id: 1,
+        civilization_name: 'civilization',
+        user_id: 1,
+        createdAt: '2021-01-01 00:00:00',
+        updatedAt: '2021-01-01 00:00:00'
+    }
 
     beforeAll(() => {
         token = jwt.sign({ id: 1 }, config.jwtSecret, { expiresIn: '1h' });
@@ -143,6 +153,11 @@ describe('Village Construction Progress Controller', () => {
      *************************************************************************************************************/ 
 
     it('[createNewBuilding] Should return 201 and BuildingConstructionProgress with valide request', async () => {
+        Village.findByPk = jest.fn().mockResolvedValue({
+            ...mockVillage,
+            isAdminOrVillageOwner: jest.fn().mockResolvedValue(true)
+        });
+
         BuildingService.getByName = jest.fn().mockResolvedValue({ id: 1, name: 'barrack', is_common: true });
         VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
         VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
@@ -150,6 +165,7 @@ describe('Village Construction Progress Controller', () => {
         Village_construction_progress.findOne = jest.fn().mockResolvedValue(null);
         Building_level.findOne = jest.fn().mockResolvedValue({ id: 1, level: 1 });
         BuildingCostService.checkAndUpdateResourcesBeforeCreate = jest.fn().mockResolvedValue(true);
+
         Village_construction_progress.create = jest.fn().mockResolvedValue({
             ...mockVillageConstructionProgressNew,
             setDataValue: jest.fn().mockImplementation(function (key, value) {
@@ -192,6 +208,149 @@ describe('Village Construction Progress Controller', () => {
 
         expect(response.body).toEqual({error: 'Building not found'});
         expect(response.statusCode).toBe(404);
+    })
+
+    it('[createNewBuilding] Should return 403 if user try to create a building who already exist', async () => {
+        Village.findByPk = jest.fn().mockResolvedValue({
+            ...mockVillage,
+            isAdminOrVillageOwner: jest.fn().mockResolvedValue(true)
+        });
+
+        BuildingService.getByName = jest.fn().mockResolvedValue({ id: 1, name: 'barrack', is_common: true });
+        VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        Village_building.findOne = jest.fn().mockResolvedValue({ id: 1 });
+
+        const response = await request(app)
+        .post('/api/village-construction-progress/new')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            village_id: 1,
+            building_name: 'barrack'
+        });
+
+        expect(response.body).toEqual({error: 'Building already exists in the village'});
+        expect(response.statusCode).toBe(403);
+    })
+
+    it('[createNewBuilding] Should return 403 if user try to create a building where civilization is not the same of the village', async () => {
+        Village.findByPk = jest.fn().mockResolvedValue({
+            ...mockVillage,
+            isAdminOrVillageOwner: jest.fn().mockResolvedValue(true)
+        });
+
+        BuildingService.getByName = jest.fn().mockResolvedValue({ 
+            id: 1, 
+            name: 'barrack', 
+            is_common: false,
+            getCivilization: jest.fn().mockResolvedValue({civilization_name: 'other_civilization'})
+        });
+
+        VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        Village_building.findOne = jest.fn().mockResolvedValue(null);
+
+        const response = await request(app)
+        .post('/api/village-construction-progress/new')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            village_id: 1,
+            building_name: 'barrack'
+        });
+
+        expect(response.body).toEqual({error: 'Village civilization is not the same as the building civilization'});
+        expect(response.statusCode).toBe(403);
+    })
+
+    it('[createNewBuilding] Should return 403 if user try to create a building who are already in construction', async () => {
+        Village.findByPk = jest.fn().mockResolvedValue({
+            ...mockVillage,
+            isAdminOrVillageOwner: jest.fn().mockResolvedValue(true)
+        });
+
+        BuildingService.getByName = jest.fn().mockResolvedValue({ 
+            id: 1, 
+            name: 'barrack', 
+            is_common: true
+        });
+
+        VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        Village_building.findOne = jest.fn().mockResolvedValue(null);
+        Village_construction_progress.findOne = jest.fn().mockResolvedValue(true);
+
+        const response = await request(app)
+        .post('/api/village-construction-progress/new')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            village_id: 1,
+            building_name: 'barrack'
+        });
+
+        expect(response.body).toEqual({error: 'Building construction already in progress'});
+        expect(response.statusCode).toBe(403);
+    })
+
+    it('[createNewBuilding] Should return 404 if a user tries to create a building where the building level does not exist', async () => {
+        Village.findByPk = jest.fn().mockResolvedValue({
+            ...mockVillage,
+            isAdminOrVillageOwner: jest.fn().mockResolvedValue(true)
+        });
+
+        BuildingService.getByName = jest.fn().mockResolvedValue({ 
+            id: 1, 
+            name: 'barrack', 
+            is_common: true
+        });
+
+        VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        Village_building.findOne = jest.fn().mockResolvedValue(null);
+        Village_construction_progress.findOne = jest.fn().mockResolvedValue(false);
+        Building_level.findOne = jest.fn().mockResolvedValue(null);
+
+        const response = await request(app)
+        .post('/api/village-construction-progress/new')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            village_id: 1,
+            building_name: 'barrack'
+        });
+
+        expect(response.body).toEqual({error: 'Building level not found'});
+        expect(response.statusCode).toBe(404);
+    })
+
+    it('[createNewBuilding] Should return 500 if village construction progress is not created during the process', async () => {
+        Village.findByPk = jest.fn().mockResolvedValue({
+            ...mockVillage,
+            isAdminOrVillageOwner: jest.fn().mockResolvedValue(true)
+        });
+
+        BuildingService.getByName = jest.fn().mockResolvedValue({ 
+            id: 1, 
+            name: 'barrack', 
+            is_common: true
+        });
+
+        VillageBuildingService.createUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        VillageBuildingService.updateUniqueVillageBuildingWhenConstructionProgressIsFinished = jest.fn().mockResolvedValue(true);
+        Village_building.findOne = jest.fn().mockResolvedValue(null);
+        Village_construction_progress.findOne = jest.fn().mockResolvedValue(false);
+        Building_level.findOne = jest.fn().mockResolvedValue({ id: 1, level: 1 });
+        BuildingCostService.checkAndUpdateResourcesBeforeCreate = jest.fn().mockResolvedValue(true);
+        Village_construction_progress.create = jest.fn().mockResolvedValue(null);
+
+        const response = await request(app)
+        .post('/api/village-construction-progress/new')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            village_id: 1,
+            building_name: 'barrack'
+        });
+
+        expect(response.body).toEqual({error: 'Village construction progress not created'});
+        expect(response.statusCode).toBe(500);
     })
 
     afterEach(() => {
