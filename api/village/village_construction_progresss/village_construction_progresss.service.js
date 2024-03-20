@@ -221,7 +221,7 @@ class VillageProductionProgressService {
             // check if current user has the ownership of the village or if he is an admin, if not throw ForbiddenError
             village.isAdminOrVillageOwner(currentUser);
 
-            // check if village_building already exists, if not trhow NotFoundError
+            // check if village_building already exists, if not throw NotFoundError
             const villageBuilding = await Village_building.findOne({
                 include: [
                     {
@@ -372,6 +372,7 @@ class VillageProductionProgressService {
             const village = await VillageService.getById(constructionToCancel.village_id);
             village.isAdminOrVillageOwner(currentUser);
     
+            // Check if there are constructions in progress after the construction to cancel
             const constructionAfterCanceledConstruction = await Village_construction_progress.count({
                 where: {
                     village_id: village.id,
