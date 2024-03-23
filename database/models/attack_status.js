@@ -1,26 +1,43 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
-  class Attack_status extends Model {
+/**
+ * Attack_status model class
+ */
+class Attack_status extends Model {
+    /**
+     * Initializes the Attack_status model
+     * @param {Sequelize} sequelize The sequelize object
+     * @returns {void}
+     */
+    static initialize(sequelize) {
+        this.init({
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                primaryKey: true
+            }
+        }, {
+            sequelize,
+            modelName: 'Attack_status',
+            tableName: 'attack_status',
+        });
+    }
+
+    /**
+     * Initializes associations for the Attack_status model
+     * @param {Object} models The database models
+     * @returns {void}
+     */
     static associate(models) {
-      this.hasMany(models.Attack, {
-        foreignKey: 'attack_status',
-      });
+        this.hasMany(models.Attack, {
+            foreignKey: 'attack_status',
+        });
     }
-  }
 
-  Attack_status.init({
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      primaryKey: true
-    }
-  }, {
-    sequelize,
-    modelName: 'Attack_status',
-    tableName: 'attack_status',
-  });
+    /**
+     * Other model methods
+     */
+}
 
-  return Attack_status;
-};
+module.exports = Attack_status;

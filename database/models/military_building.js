@@ -1,45 +1,61 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
-  class Military_building extends Model {
-    
-    static associate(models) {
-      this.belongsTo(models.Building, {
-        foreignKey: 'name'
-      })
-      this.hasMany(models.Unit, {
-        foreignKey: 'military_building'
-      })
-      this.belongsTo(models.Unit_type, {
-        foreignKey: 'unit_type'
-      })  
-    }    
-  }
-
-  Military_building.init({
-    name: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      allowNull: false,
-      references: {
-        model: 'buildings',
-        key: 'name'
-      }
-    },
-    unit_type: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: 'unit_type',
-        key: 'type'
-      }
+/**
+ * Military_building model class
+ */
+class Military_building extends Model {
+    /**
+     * Initializes the Military_building model
+     * @param {Sequelize} sequelize The sequelize object
+     * @returns {void}
+     */
+    static initialize(sequelize) {
+        this.init({
+            name: {
+                type: DataTypes.STRING,
+                primaryKey: true,
+                allowNull: false,
+                references: {
+                    model: 'buildings',
+                    key: 'name'
+                }
+            },
+            unit_type: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                references: {
+                    model: 'unit_type',
+                    key: 'type'
+                }
+            }
+        }, {
+            sequelize,
+            modelName: 'Military_building',
+            tableName: 'military_building'
+        });
     }
-  }, {
-    sequelize,
-    modelName: 'Military_building',
-    tableName: 'military_building'
-  });
-  
-  return Military_building;
-};
+
+    /**
+     * Initializes associations for the Military_building model
+     * @param {Object} models The database models
+     * @returns {void}
+     */
+    static associate(models) {
+        this.belongsTo(models.Building, {
+            foreignKey: 'name'
+        })
+        this.hasMany(models.Unit, {
+            foreignKey: 'military_building'
+        })
+        this.belongsTo(models.Unit_type, {
+            foreignKey: 'unit_type'
+        })
+    }
+
+    /**
+     * Other model methods
+     */
+}
+
+module.exports = Military_building;

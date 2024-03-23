@@ -1,36 +1,47 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
-  class users_servers extends Model {
-    
-    static associate(models) {
+/**
+ * Users_servers model class
+ */
+class users_servers extends Model {
+    /**
+     * Initializes the Users_servers model
+     * @param {Sequelize} sequelize The sequelize object
+     * @returns {void}
+     */
+    static initialize(sequelize) {
+        this.init({
+            user_id: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                primaryKey: true,
+                references: {
+                    model: 'user',
+                    key: 'id'
+                }
+            },
+            server_name: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                primaryKey: true,
+                references: {
+                    model: 'server',
+                    key: 'name'
+                }
+            }
+        }, {
+            sequelize,
+            modelName: 'users_servers',
+        });
+    }
 
-    }
-  }
-  users_servers.init({
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-      references: {
-        model: 'user',
-        key: 'id'
-      }
-    },
-    server_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      primaryKey: true,
-      references: {
-        model: 'server',
-        key: 'name'
-      }
-    }
-  }, {
-    sequelize,
-    modelName: 'users_servers',
-  });
-  
-  return users_servers;
-};
+    /**
+     * Initializes associations for the Users_servers model
+     * @param {Object} models The database models
+     * @returns {void}
+     */
+    static associate(models) { }
+}
+
+module.exports = users_servers;

@@ -1,30 +1,46 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
-  class Resource extends Model {
+/**
+ * Resource model class
+ */
+class Resource extends Model {
+    /**
+     * Initializes the Resource model
+     * @param {Sequelize} sequelize The sequelize object
+     * @returns {void}
+     */
+    static initialize(sequelize) {
+        this.init({
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                primaryKey: true
+            }
+        }, {
+            sequelize,
+            modelName: 'Resource',
+            tableName: 'resource'
+        });
+    }
 
+    /**
+     * Initializes associations for the Resource model
+     * @param {Object} models The database models
+     * @returns {void}
+     */
     static associate(models) {
-      this.hasMany(models.Building_cost, {
-        foreignKey: 'resource_name'
-      })
-      this.hasMany(models.Unit_cost, {
-        foreignKey: 'resource_name'
-      })
+        this.hasMany(models.Building_cost, {
+            foreignKey: 'resource_name'
+        })
+        this.hasMany(models.Unit_cost, {
+            foreignKey: 'resource_name'
+        })
     }
-  }
 
-  Resource.init({
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      primaryKey: true
-    }
-  }, {
-    sequelize,
-    modelName: 'Resource',
-    tableName: 'resource'
-  });
-  
-  return Resource;
-};
+    /**
+     * Other methods
+     */
+}
+
+module.exports = Resource;
