@@ -1,19 +1,16 @@
-const NotFoundError = require('../../../errors/not-found');
-const BadRequestError = require('../../../errors/bad-request');
-const ForbiddenError = require('../../../errors/forbidden');
-const sequelize = require('../../../database/index').sequelize;
-const VillageService = require('../village.service');
-const VillageUnitService = require('../village_unit/village_unit.service');
-const UnitCostService = require('../../unit/unit_cost/unit_cost.service');
-const { 
-    Village_training_progress, 
-    Unit, 
-    Village_building, 
-    Village_unit,
-    Village_construction_progress,
-    Village_update_construction,
-    Unit_production,
-} = require('../../../database/index').models;
+const NotFoundError                 = require('../../../errors/not-found');
+const BadRequestError               = require('../../../errors/bad-request');
+const sequelize                     = require('../../../database/index').sequelize;
+const VillageService                = require('../village.service');
+const VillageUnitService            = require('../village_unit/village_unit.service');
+const UnitCostService               = require('../../unit/unit_cost/unit_cost.service');
+const Village_training_progress     = require('../../../database/models/village_training_progress');
+const Unit                          = require('../../../database/models/unit');
+const Village_building              = require('../../../database/models/village_building');
+const Village_unit                  = require('../../../database/models/village_unit');
+const Village_construction_progress = require('../../../database/models/village_construction_progress');
+const Village_update_construction   = require('../../../database/models/village_update_construction');
+const Unit_production               = require('../../../database/models/unit_production');
 
 class VillageTrainingProgressService {
     /**
@@ -63,7 +60,7 @@ class VillageTrainingProgressService {
             // check if the village exists, if not throw NotFoundError
             const village = await VillageService.getById(data.village_id, { user: 1})
             village.isAdminOrVillageOwner(currentUser);
-
+            
             // check if the unit exist and if the village has the building required to train the unit, if not throw BadRequestError
             const unitToTrain = await Unit.findOne({
                 attributes: ['name', 'training_time', 'population_cost', 'military_building'],
@@ -72,12 +69,12 @@ class VillageTrainingProgressService {
                     civilization_name: village.civilization_name
                 },
             });
-
+            
             if (!unitToTrain)
             {
                 throw new BadRequestError('Unit name is invalid.');
             }
-
+            
             const villageBuilding = await Village_building.findOne({
                 attributes: ['id', 'building_level_id', 'building_name'],
                 where: {
@@ -85,12 +82,12 @@ class VillageTrainingProgressService {
                     building_name: unitToTrain.military_building
                 }
             });
-
+            
             if (!villageBuilding)
             {
                 throw new BadRequestError('Village does not have the building required to train the unit.');
             }
-
+            
             // check if the village_building is not under construction, if not throw BadRequestError
             const villageConstructionProgress = await Village_construction_progress.findAll({
                 attributes: ['id'],
@@ -110,7 +107,7 @@ class VillageTrainingProgressService {
                     type: 'village_update_construction'
                 }
             });
-
+            
             if (villageConstructionProgress && villageConstructionProgress.length > 0)
             {
                 throw new BadRequestError('Village building is under construction.');
@@ -129,7 +126,7 @@ class VillageTrainingProgressService {
             {
                 throw new BadRequestError('Village building has already 3 training progress.');
             }
-
+            
             // check if the village has the village_unit table entry for the unit, if not create one
             const villageUnit = await Village_unit.findOne({
                 attributes: ['id'],
@@ -138,7 +135,8 @@ class VillageTrainingProgressService {
                     unit_name: unitToTrain.name
                 }
             });
-
+            
+            console.log('je suis ici', villageUnit);
             if (!villageUnit)
             {
                 await Village_unit.create({

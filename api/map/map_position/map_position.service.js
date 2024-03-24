@@ -1,5 +1,5 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Map_position } = require('../../../database').models;
+const Map_position  = require('../../../database/models/map_position');
 
 class MapPositionService {
     /**

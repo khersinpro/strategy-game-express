@@ -1,7 +1,8 @@
-const { Op } = require('sequelize');
-const NotFoundError = require('../../../errors/not-found');
-const { sequelize } = require('../../../database/index');
-const { Village_unit, Village_training_progress } = require('../../../database/index').models;
+const { Op }                    = require('sequelize');
+const NotFoundError             = require('../../../errors/not-found');
+const { sequelize }             = require('../../../database/index');
+const Village_unit              = require('../../../database/models/village_unit');
+const Village_training_progress = require('../../../database/models/village_training_progress');
 
 class VillageUnitService {
     /**

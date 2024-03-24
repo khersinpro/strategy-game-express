@@ -2,7 +2,9 @@ const request   = require('supertest');
 const { app }   = require('../../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../../config');
-const { User, Server }  = require('../../../database/index').models;
+const Server    = require('../../../database/models/server');
+const User      = require('../../../database/models/user');
+
 
 describe('Test the server controller', () => {
     let token;

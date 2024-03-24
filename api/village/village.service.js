@@ -1,13 +1,12 @@
-const NotFoundError = require('../../errors/not-found');
-const { Village, Village_building, Village_unit, Village_resource, Civilization, User, Server, Map_position } = require('../../database').models;
-const UserService = require('../user/user.service');
-const ServerService = require('../server/server.service');
-const ForbiddenError = require('../../errors/forbidden'); 
-const VillageResourceService = require('./village_resource/village_resource.service');
-const VillageBuildingService = require('./village_building/village_building.service');
-const VillageUnitService = require('./village_unit/village_unit.service');
-const AttackService = require('../attack/attack.service')
-const SupportService = require('../support/support.service');
+const NotFoundError     = require('../../errors/not-found');
+const ServerService     = require('../server/server.service');
+const Village_resource  = require('../../database/models/village_resource');
+const Village_building  = require('../../database/models/village_building');
+const Village_unit      = require('../../database/models/village_unit');
+const Civilization      = require('../../database/models/civilization');
+const User              = require('../../database/models/user');
+const Server            = require('../../database/models/server');
+const Village           = require('../../database/models/village');
 
 class VilageService {
     /**

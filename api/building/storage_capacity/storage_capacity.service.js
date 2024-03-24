@@ -1,8 +1,7 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Storage_capacity } = require('../../../database/index').models;
+const NotFoundError     = require('../../../errors/not-found');
+const Storage_capacity  = require('../../../database/models/storage_capacity');
 
 class StorageCapacityService {
-
     /**
      * return all storage capacities into promise
      * @returns {Promise<Storage_capacity[]>}

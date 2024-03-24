@@ -1,10 +1,9 @@
-const request   = require('supertest'); // simule une requette http
+const request   = require('supertest');
 const { app }   = require('../../../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../../../config');
-const { User, Village_training_progress }  = require('../../../../database/index').models;
-
-// id	training_start	training_end	unit_to_train_count	trained_unit_count	single_training_duration	village_id	village_building_id	village_unit_id	enabled	archived	createdAt	updatedAt
+const User      = require('../../../../database/models/user');
+const Village_training_progress = require('../../../../database/models/village_training_progress');
 
 describe('Village trainin progress controller', () => {
     let token;

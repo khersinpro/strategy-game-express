@@ -1,7 +1,14 @@
 'use strict';
-const { Model, Op, DataTypes } = require('sequelize');
-const ForbiddenError = require('../../errors/forbidden');
-const NotFoundError = require('../../errors/not-found');
+const { Model, Op, DataTypes }  = require('sequelize');
+const ForbiddenError            = require('../../errors/forbidden');
+const NotFoundError             = require('../../errors/not-found');
+const Village_building          = require('./village_building');
+const Village_training_progress = require('./village_training_progress');
+const Village_unit              = require('./village_unit');
+const Unit                      = require('./unit');
+const Map_position              = require('./map_position');
+const Map                       = require('./map');
+const Population_capacity       = require('./population_capacity');
 
 /**
  * Village model class
@@ -39,6 +46,154 @@ class Village extends Model {
             sequelize,
             modelName: 'Village',
             tableName: 'village',
+        });
+
+        this.setHooks();
+    }
+
+    /**
+     * Initializes hooks for the Village model
+     * @returns {void}
+     */ 
+    static setHooks() {
+        this.addHook('afterCreate', async (village, options) => {
+            const models = require('../index').models;
+        
+            // Create resources building level 1
+            const recource_buildings = await models.Building.findAll({
+                include: [
+                    {
+                        model: models.Building_level,
+                        as: 'levels',
+                        where: {
+                            level: 7
+                        }
+                    }
+                ],
+                where: {
+                    type: 'resource_building',
+                }
+            })
+        
+            for (const resource_building of recource_buildings) {
+                await models.Village_building.create({
+                    village_id: village.id,
+                    building_name: resource_building.name,
+                    building_level_id: resource_building.levels[0].id,
+                    type: resource_building.type
+                })
+            }
+        
+            // Create storage resource building level 1
+            const storage_buildings = await models.Building.findAll({
+                include: [
+                    {
+                        model: models.Building_level,
+                        as: 'levels',
+                        where: {
+                            level: 7
+                        }
+                    }
+                ],
+                where: {
+                    type: 'storage_building',
+                }
+            })
+            for (const storage_building of storage_buildings) {
+                await models.Village_building.create({
+                    village_id: village.id,
+                    building_name: storage_building.name,
+                    building_level_id: storage_building.levels[0].id,
+                    type: storage_building.type
+                })
+            }
+        
+            // Create village resources with starting quantity
+            const resources = await models.Resource.findAll()
+            for (const resource of resources) {
+                await models.Village_resource.create({
+                    village_id: village.id,
+                    resource_name: resource.name,
+                    quantity: 300,
+                })
+            }
+        
+            // Create town all building level 1
+            const town_all_building = await models.Building.findOne({
+                include: [
+                    {
+                        model: models.Building_level,
+                        as: 'levels',
+                        where: {
+                            level: 7
+                        }
+                    }
+                ],
+                where: {
+                    name: 'town all',
+                    type: 'town_all_building'
+                }
+            })
+        
+            await models.Village_building.create({
+                village_id: village.id,
+                building_name: town_all_building.name,
+                building_level_id: town_all_building.levels[0].id,
+                type: town_all_building.type
+            })
+        
+        
+            // Create wall building
+            const wall_building = await models.Building.findOne({
+                include: [
+                    {
+                        model: models.Building_level,
+                        as: 'levels',
+                        required: true,
+                        where: {
+                            level: 5
+                        }
+                    },
+                    {
+                        model: models.Wall_building,
+                        required: true,
+                        where: {
+                            civilization_name: village.civilization_name
+                        }
+                    }
+                ],
+                where: {
+                    type: 'wall_building'
+                }
+            })
+        
+            if (wall_building) {
+                await models.Village_building.create({
+                    village_id: village.id,
+                    building_name: wall_building.name,
+                    building_level_id: wall_building.levels[0].id,
+                    type: wall_building.type
+                })
+            }
+        
+        
+            // Create all units of village resource with quantity 0
+            const units = await models.Unit.findAll({
+                where: {
+                    civilization_name: village.civilization_name
+                }
+            })
+        
+            for (const unit of units) {
+                await models.Village_unit.create({
+                    village_id: village.id,
+                    unit_name: unit.name,
+                    total_quantity: 1000,
+                    present_quantity: 1000,
+                    in_attack_quantity: 0,
+                    in_support_quantity: 0,
+                })
+            }
         });
     }
 
@@ -163,10 +318,10 @@ class Village extends Model {
                 throw new Error('Invalid location')
             }
 
-            const allEmptyPositions = await sequelize.models.Map_position.findAll({
+            const allEmptyPositions = await Map_position.findAll({
                 include: [
                     {
-                        model: sequelize.models.Map,
+                        model: Map,
                         as: 'map',
                         required: true,
                         where: {
@@ -204,7 +359,7 @@ class Village extends Model {
      */
     async getPopulationCapacity() {
         try {
-            const townAllBuilding = await sequelize.models.Village_building.findOne({
+            const townAllBuilding = await Village_building.findOne({
                 attribute: ['building_level_id'],
                 where: {
                     village_id: this.id,
@@ -216,7 +371,7 @@ class Village extends Model {
                 throw new NotFoundError('Town all building not found')
             }
 
-            const populationCapacity = await sequelize.models.Population_capacity.findOne({
+            const populationCapacity = await Population_capacity.findOne({
                 attribute: ['capacity'],
                 where: {
                     building_level_id: townAllBuilding.building_level_id
@@ -241,11 +396,11 @@ class Village extends Model {
      */
     async getPopulation() {
         try {
-            const allVillageUnit = await sequelize.models.Village_unit.findAll({
+            const allVillageUnit = await Village_unit.findAll({
                 attribute: ['total_quantity'],
                 include: [
                     {
-                        model: sequelize.models.Unit,
+                        model: Unit,
                         attribute: ['population_cost'],
                         required: true
                     }
@@ -279,16 +434,16 @@ class Village extends Model {
      */
     async getPopulationInTraining() {
         try {
-            const allVillageTrainingProgress = await sequelize.models.Village_training_progress.findAll({
+            const allVillageTrainingProgress = await Village_training_progress.findAll({
                 attribute: ['unit_to_train_count', 'trained_unit_count'],
                 include: [
                     {
-                        model: sequelize.models.Village_unit,
+                        model: Village_unit,
                         attribute: ['id'],
                         required: true,
                         include: [
                             {
-                                model: sequelize.models.Unit,
+                                model: Unit,
                                 attribute: ['population_cost'],
                                 required: true
                             }
@@ -343,150 +498,5 @@ class Village extends Model {
         }
     }
 }
-
-
-/**
- * This hook is called after a village is created and create all base village resources, buildings and units
- * This hook is only used for development
- */
-Village.addHook('afterCreate', async (village, options) => {
-    const models = require('../index').models;
-
-    // Create resources building level 1
-    const recource_buildings = await models.Building.findAll({
-        include: [
-            {
-                model: models.Building_level,
-                as: 'levels',
-                where: {
-                    level: 7
-                }
-            }
-        ],
-        where: {
-            type: 'resource_building',
-        }
-    })
-
-    for (const resource_building of recource_buildings) {
-        await models.Village_building.create({
-            village_id: village.id,
-            building_name: resource_building.name,
-            building_level_id: resource_building.levels[0].id,
-            type: resource_building.type
-        })
-    }
-
-    // Create storage resource building level 1
-    const storage_buildings = await models.Building.findAll({
-        include: [
-            {
-                model: models.Building_level,
-                as: 'levels',
-                where: {
-                    level: 7
-                }
-            }
-        ],
-        where: {
-            type: 'storage_building',
-        }
-    })
-    for (const storage_building of storage_buildings) {
-        await models.Village_building.create({
-            village_id: village.id,
-            building_name: storage_building.name,
-            building_level_id: storage_building.levels[0].id,
-            type: storage_building.type
-        })
-    }
-
-    // Create village resources with starting quantity
-    const resources = await models.Resource.findAll()
-    for (const resource of resources) {
-        await models.Village_resource.create({
-            village_id: village.id,
-            resource_name: resource.name,
-            quantity: 300,
-        })
-    }
-
-    // Create town all building level 1
-    const town_all_building = await models.Building.findOne({
-        include: [
-            {
-                model: models.Building_level,
-                as: 'levels',
-                where: {
-                    level: 7
-                }
-            }
-        ],
-        where: {
-            name: 'town all',
-            type: 'town_all_building'
-        }
-    })
-
-    await models.Village_building.create({
-        village_id: village.id,
-        building_name: town_all_building.name,
-        building_level_id: town_all_building.levels[0].id,
-        type: town_all_building.type
-    })
-
-
-    // Create wall building
-    const wall_building = await models.Building.findOne({
-        include: [
-            {
-                model: models.Building_level,
-                as: 'levels',
-                required: true,
-                where: {
-                    level: 5
-                }
-            },
-            {
-                model: models.Wall_building,
-                required: true,
-                where: {
-                    civilization_name: village.civilization_name
-                }
-            }
-        ],
-        where: {
-            type: 'wall_building'
-        }
-    })
-
-    if (wall_building) {
-        await models.Village_building.create({
-            village_id: village.id,
-            building_name: wall_building.name,
-            building_level_id: wall_building.levels[0].id,
-            type: wall_building.type
-        })
-    }
-
-
-    // Create all units of village resource with quantity 0
-    const units = await models.Unit.findAll({
-        where: {
-            civilization_name: village.civilization_name
-        }
-    })
-
-    for (const unit of units) {
-        await models.Village_unit.create({
-            village_id: village.id,
-            unit_name: unit.name,
-            total_quantity: 1000,
-            present_quantity: 1000,
-            in_attack_quantity: 0,
-            in_support_quantity: 0,
-        })
-    }
-});
 
 module.exports = Village;

@@ -1,6 +1,5 @@
-const NotFoundError = require('../../../errors/not-found');
-
-const { Support_status } = require('../../../database/index').models;
+const NotFoundError     = require('../../../errors/not-found');
+const Support_status    = require('../../../database/models/support_status');
 
 class SupportStatusService {
     /**

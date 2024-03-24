@@ -1,6 +1,7 @@
 'use strict';
-const { faker } = require('@faker-js/faker');
-const { Building, Civilization } = require('../index.js').models;
+const { faker }     = require('@faker-js/faker');
+const Building      = require('../models/building');
+const Civilization  = require('../models/civilization');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

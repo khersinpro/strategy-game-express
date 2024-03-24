@@ -1,8 +1,7 @@
 const NotFoundError = require('../../errors/not-found');
-const { Civilization } = require('../../database/index').models;
+const Civilization  = require('../../database/models/civilization');
 
 class CivilizationService {
-
     /**
      * Return all civilizations in promise
      * @returns {Promise<Civilization[]>}

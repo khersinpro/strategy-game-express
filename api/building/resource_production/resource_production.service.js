@@ -1,8 +1,7 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Resource_production } = require('../../../database/index').models;
+const NotFoundError       = require('../../../errors/not-found');
+const Resource_production = require('../../../database/models/resource_production');
 
 class ResourceProductionService {
-
     /**
      * return all resource productions into promise
      * @returns {Promise<Resource_production[]>}

@@ -1,12 +1,10 @@
-const NotFoundError = require('../../../errors/not-found');
-const ForbiddenError = require('../../../errors/forbidden');
-const BadRequestError = require('../../../errors/bad-request');
-const sequelize =  require('../../../database/index').sequelize;
-const VillageResourceService = require('../../village/village_resource/village_resource.service');
-const { 
-    Unit_cost, 
-    Village_resource 
-} = require('../../../database').models;
+const NotFoundError             = require('../../../errors/not-found');
+const ForbiddenError            = require('../../../errors/forbidden');
+const BadRequestError           = require('../../../errors/bad-request');
+const sequelize                 = require('../../../database/index').sequelize;
+const VillageResourceService    = require('../../village/village_resource/village_resource.service');
+const Unit_cost                 = require('../../../database/models/unit_cost');
+const Village_resource          = require('../../../database/models/village_resource');
 
 class UnitCostService {
     /**
@@ -257,7 +255,6 @@ class UnitCostService {
             throw error;
         }
     }
-
 }
 
 module.exports = new UnitCostService();

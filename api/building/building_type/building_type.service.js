@@ -1,8 +1,7 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Building_type } = require('../../../database').models;
+const Building_type = require('../../../database/models/building_type');
 
 class BuildingTypeService {
-
     /**
      * return all building types into promise
      * @returns {Promise<Building_type[]>}

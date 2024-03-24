@@ -1,7 +1,7 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Village_new_construction } = require('../../../database/index').models;
-class VillageNewConstructionService {
+const NotFoundError             = require('../../../errors/not-found');
+const Village_new_construction  = require('../../../database/models/village_new_construction');
 
+class VillageNewConstructionService {
     /**
      * Return all village_new_construction
      * @returns {Promise<Village_new_construction>}

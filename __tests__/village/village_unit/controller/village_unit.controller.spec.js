@@ -1,8 +1,9 @@
-const request   = require('supertest'); // simule une requette http
-const { app }   = require('../../../../server');
-const jwt       = require('jsonwebtoken');
-const config    = require('../../../../config');
-const { User, Village_unit }  = require('../../../../database/index').models;
+const request       = require('supertest');
+const { app }       = require('../../../../server');
+const jwt           = require('jsonwebtoken');
+const config        = require('../../../../config');
+const User          = require('../../../../database/models/user');
+const Village_unit  = require('../../../../database/models/village_unit');
 
 describe('Village unit controller', () => {
     let token;

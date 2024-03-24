@@ -1,5 +1,7 @@
 'use strict';
-const { Unit, Resource, Unit_cost } = require('../index').models;
+const Unit      = require('../models/unit');
+const Resource  = require('../models/resource');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {

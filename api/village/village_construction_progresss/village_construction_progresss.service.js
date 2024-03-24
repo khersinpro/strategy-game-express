@@ -5,17 +5,14 @@ const VillageService            = require('../village.service');
 const BuildingService           = require('../../building/building.service');
 const BuildingCostService       = require('../../building/building_cost/building_cost.service');
 const VillageBuildingService    = require('../village_building/village_building.service');
-const { Op } = require('sequelize');
-const { 
-    Village_construction_progress, 
-    Village_update_construction, 
-    Village_new_construction, 
-    Village_building, 
-    Building_level,
-} = require('../../../database/index').models;
+const { Op }                        = require('sequelize');
+const Village_construction_progress = require('../../../database/models/village_construction_progress');
+const Village_update_construction   = require('../../../database/models/village_update_construction');
+const Village_new_construction      = require('../../../database/models/village_new_construction');
+const Village_building              = require('../../../database/models/village_building');
+const Building_level                = require('../../../database/models/building_level');
 
 class VillageProductionProgressService {
-
     /**
      * Returns unit of all village_production_progresss
      * @returns {Promise<Village_construction_progress>}
@@ -478,8 +475,6 @@ class VillageProductionProgressService {
 
         return Promise.all(promises);
     }
-
-    
 }
 
 module.exports = new VillageProductionProgressService();

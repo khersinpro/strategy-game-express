@@ -1,8 +1,7 @@
-const { Role } = require('../../database/index').models;
 const NotFoundError = require('../../errors/not-found');
+const Role          = require('../../database/models/role');
 
 class RoleService {
-
     /**
      * Returns all roles
      * @returns {Promise<Array<Role>} all roles

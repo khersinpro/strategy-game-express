@@ -1,29 +1,27 @@
-const { Op } = require('sequelize');
-const { sequelize } = require('../../database/index');
-const BadRequestError = require('../../errors/bad-request');
-const NotFoundError = require('../../errors/not-found');
-const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
-const VillageBuildingService = require('../village/village_building/village_building.service');
-const VillageResourceService = require('../village/village_resource/village_resource.service');
-const VillageUnitService = require('../village/village_unit/village_unit.service');
-const SupportService = require('../support/support.service');
-const { 
-    Map_position, 
-    Unit, 
-    Defense_type,
-    Village, 
-    Village_unit, 
-    Support,
-    Supporting_unit,
-    Village_resource,
-    Village_building, 
-    Wall_defense, 
-    Attack, 
-    Attack_attacker_unit, 
-    Attack_defenser_unit,
-    Attack_defenser_support,
-    Attack_stolen_resource,
-} = require('../../database/index').models;
+const { Op }            = require('sequelize');
+const { sequelize }     = require('../../database/index');
+const BadRequestError   = require('../../errors/bad-request');
+const NotFoundError     = require('../../errors/not-found');
+const EuclideanDistanceCalculator   = require('../../utils/euclideanDistanceCalculator');
+const VillageBuildingService        = require('../village/village_building/village_building.service');
+const VillageResourceService        = require('../village/village_resource/village_resource.service');
+const VillageUnitService            = require('../village/village_unit/village_unit.service');
+const SupportService                = require('../support/support.service');
+const Map_position                  = require('../../database/models/map_position');
+const Unit                          = require('../../database/models/unit');
+const Defense_type                  = require('../../database/models/defense_type');
+const Village                       = require('../../database/models/village');
+const Village_unit                  = require('../../database/models/village_unit');
+const Support                       = require('../../database/models/support');
+const Supporting_unit               = require('../../database/models/supporting_unit');
+const Village_resource              = require('../../database/models/village_resource');
+const Village_building              = require('../../database/models/village_building');
+const Wall_defense                  = require('../../database/models/wall_defense');
+const Attack                        = require('../../database/models/attack');
+const Attack_attacker_unit          = require('../../database/models/attack_attacker_unit');
+const Attack_defenser_unit          = require('../../database/models/attack_defenser_unit');
+const Attack_defenser_support       = require('../../database/models/attack_defenser_support');
+const Attack_stolen_resource        = require('../../database/models/attack_stolen_resource');
 
 class AttackService {
     /**

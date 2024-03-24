@@ -1,5 +1,6 @@
 'use strict';
-const { Unit, Defense_type } = require('../index').models;
+const Unit         = require('../models/unit');
+const Defense_type = require('../models/defense_type');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

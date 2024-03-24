@@ -1,8 +1,7 @@
 const NotFoundError = require('../../../errors/not-found');
-const { Wall_defense } = require('../../../database').models;
+const Wall_defense  = require('../../../database/models/wall_defense');
 
 class WallDefenseService {
-
     /**
      * return all wall defenses into promise
      * @returns {Promise<Wall_defense[]>}

@@ -1,14 +1,11 @@
-const NotFoundError = require('../../../errors/not-found');
-const ForbiddenError = require('../../../errors/forbidden');
-const sequelize =  require('../../../database/index').sequelize;
-const VillageResourceService = require('../../village/village_resource/village_resource.service');
-const { 
-    Building_cost, 
-    Village_resource 
-} = require('../../../database').models;
+const NotFoundError             = require('../../../errors/not-found');
+const ForbiddenError            = require('../../../errors/forbidden');
+const sequelize                 =  require('../../../database/index').sequelize;
+const VillageResourceService    = require('../../village/village_resource/village_resource.service');
+const Building_cost             = require('../../../database/models/building_cost');
+const Village_resource          = require('../../../database/models/village_resource');
 
 class BuildingCostService {
-
     /**
      * return all building costs into promise
      * @returns {Promise<Building_cost[]>}

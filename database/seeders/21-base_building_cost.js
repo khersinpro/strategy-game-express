@@ -1,8 +1,9 @@
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */
-const { Resource, Building_level } = require('../index.js').models;
-const { faker } = require('@faker-js/faker');
+const Resource        = require('../models/resource');
+const Building_level  = require('../models/building_level');
+const { faker }       = require('@faker-js/faker');
 
 module.exports = {
   async up (queryInterface, Sequelize) {

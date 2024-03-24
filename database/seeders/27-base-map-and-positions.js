@@ -1,5 +1,6 @@
 'use strict';
-const { Server, Map, Map_position } = require('../index').models;
+const Server = require('../models/server');
+const Map = require('../models/map');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

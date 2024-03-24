@@ -1,5 +1,5 @@
 const NotFoundError = require('../../errors/not-found');
-const { Server } = require('../../database').models;
+const Server        = require('../../database/models/server');
 
 class ServerService {
     /**

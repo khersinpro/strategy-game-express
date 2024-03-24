@@ -1,5 +1,5 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Military_building } = require('../../../database/index').models;
+const NotFoundError     = require('../../../errors/not-found');
+const Military_building = require('../../../database/models/military_building');
 
 class MilitaryBuildingService {
     /**

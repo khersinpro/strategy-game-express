@@ -2,7 +2,8 @@ const request   = require('supertest');
 const { app }   = require('../../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../../config');
-const { Role, User }  = require('../../../database/index').models;
+const Role      = require('../../../database/models/role');
+const User      = require('../../../database/models/user');
 
 
 describe('Test for role controller', () => {

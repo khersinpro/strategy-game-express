@@ -1,5 +1,5 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Attack_attacker_unit } = require('../../../database/index').models;
+const NotFoundError         = require('../../../errors/not-found');
+const Attack_attacker_unit  = require('../../../database/models/attack_attacker_unit');
 
 class AttackAttackerUnitService {
     /**

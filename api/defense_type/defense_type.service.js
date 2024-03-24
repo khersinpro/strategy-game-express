@@ -1,9 +1,7 @@
 const NotFoundError = require('../../errors/not-found');
-
-const { Defense_type } = require('../../database/index').models;
+const Defense_type  = require('../../database/models/defense_type');
 
 class DefenseTypeService {
-
     /**
      * Return all defense types
      * @returns {Promise<Defense_type[]>}

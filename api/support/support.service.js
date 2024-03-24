@@ -1,17 +1,14 @@
-const sequelize = require('../../database/index').sequelize; 
-const VillageService = require('../village/village.service');
-const EuclideanDistanceCalculator = require('../../utils/euclideanDistanceCalculator');
-const BadRequestError = require('../../errors/bad-request');
-const { Op } = require('sequelize');
-const {
-    Support,
-    Supporting_unit,
-    Village_unit,
-    Unit
-} = require('../../database/index').models;
+const sequelize                     = require('../../database/index').sequelize; 
+const { Op }                        = require('sequelize');
+const VillageService                = require('../village/village.service');
+const EuclideanDistanceCalculator   = require('../../utils/euclideanDistanceCalculator');
+const BadRequestError               = require('../../errors/bad-request');
+const Support                       = require('../../database/models/support');
+const Supporting_unit               = require('../../database/models/supporting_unit');
+const Village_unit                  = require('../../database/models/village_unit');
+const Unit                          = require('../../database/models/unit');
 
 class SupportService {
-
     /**
      * get one support by id
      * @param {number} id - The id of the support

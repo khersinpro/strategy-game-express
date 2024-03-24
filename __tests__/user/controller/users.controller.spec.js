@@ -2,7 +2,7 @@ const request   = require('supertest'); // simule une requette http
 const { app }   = require('../../../server');
 const jwt       = require('jsonwebtoken');
 const config    = require('../../../config');
-const { User }  = require('../../../database/index').models;
+const User      = require('../../../database/models/user');
 
 describe('Test for users crud functuionality', () => {
     let token

@@ -47,6 +47,28 @@ class Village_construction_progress extends Model {
             modelName: 'Village_construction_progress',
             tableName: 'village_construction_progress'
         });
+
+        this.setHooks();
+    }
+
+    /**
+     * Initializes hooks for the Village_construction_progress model
+     * @returns {void}
+     */ 
+    static setHooks() {
+        this.beforeCreate(async (village_construction_progress, options) => {
+            const constructionsInProgress = await Village_construction_progress.count({
+                where: {
+                    village_id: village_construction_progress.village_id,
+                    enabled: true,
+                    archived: false
+                }
+            });
+        
+            if (constructionsInProgress >= 3) {
+                throw new Error('Maximum number of constructions in progress reached');
+            }
+        });
     }
 
     /**
@@ -90,23 +112,5 @@ class Village_construction_progress extends Model {
         }
     }
 }
-
-
-/**
- * Before creating a new construction progress, check if there are already 3 constructions in progress
- */
-Village_construction_progress.beforeCreate(async (village_construction_progress, options) => {
-    const constructionsInProgress = await Village_construction_progress.count({
-        where: {
-            village_id: village_construction_progress.village_id,
-            enabled: true,
-            archived: false
-        }
-    });
-
-    if (constructionsInProgress >= 3) {
-        throw new Error('Maximum number of constructions in progress reached');
-    }
-});
 
 module.exports = Village_construction_progress;

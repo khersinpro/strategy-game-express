@@ -30,11 +30,11 @@ class Server extends Model {
      * @returns {void}
      */
     static associate(models) {
-        this.belongsToMany(models.User, {
-            through: 'users_servers',
-            foreignKey: 'server_name',
-            otherKey: 'user_id'
-        })
+        // this.belongsToMany(models.User, {
+        //     through: 'users_servers',
+        //     foreignKey: 'server_name',
+        //     otherKey: 'user_id'
+        // })
     }
 
     /**

@@ -1,5 +1,5 @@
 const NotFoundError = require('../../errors/not-found.js');
-const { Unit } = require('../../database/index.js').models;
+const Unit = require('../../database/models/unit.js');
 
 class UnitService {
     /**

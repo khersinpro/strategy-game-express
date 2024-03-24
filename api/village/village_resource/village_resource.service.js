@@ -1,14 +1,10 @@
-const NotFoundError = require('../../../errors/not-found');
-const { 
-    Village_resource, 
-    Village_construction_progress, 
-    Village_building,
-} = require('../../../database/index').models;
-const { sequelize }  = require('../../../database/index'); 
-const { Op, Transaction } = require('sequelize');
+const NotFoundError                 = require('../../../errors/not-found');
+const Village_resource              = require('../../../database/models/village_resource');
+const Village_construction_progress = require('../../../database/models/village_construction_progress');
+const Village_building              = require('../../../database/models/village_building');
+const { sequelize }                 = require('../../../database/index'); 
 
 class VillageBuildingService {
-
     /**
      * Returns resources of all villages
      * @returns {Promise<Village_resource>}

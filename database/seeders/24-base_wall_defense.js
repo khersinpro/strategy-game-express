@@ -1,5 +1,6 @@
 'use strict';
-const { Building, Building_level } = require('../index').models;
+const Building = require('../models/building');
+const Building_level = require('../models/building_level');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

@@ -1,5 +1,5 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Town_all_building } = require('../../../database/index').models;
+const NotFoundError     = require('../../../errors/not-found');
+const Town_all_building = require('../../../database/models/town_all_building');
 
 class TownAllBuildingService {
     /**

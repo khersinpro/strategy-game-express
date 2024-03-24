@@ -3,7 +3,7 @@ const config    = require('../config/index');
 const { sequelize }  = require('../database/index');
 
 // Connect to Sequelize and start Express server
-sequelize.sync()
+sequelize.authenticate()
 .then(() => { 
     console.log('Database connected...')    
 })

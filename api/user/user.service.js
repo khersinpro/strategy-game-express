@@ -1,6 +1,7 @@
 const NotFoundError = require('../../errors/not-found');
-const { User, Server } = require('../../database/index').models;
 const ServerService = require('../server/server.service');
+const User          = require('../../database/models/user');
+const Server        = require('../../database/models/server');
 
 class UserService {
     /**

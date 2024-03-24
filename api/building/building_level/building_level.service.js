@@ -1,8 +1,7 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Building_level } = require('../../../database').models;
+const NotFoundError  = require('../../../errors/not-found');
+const Building_level = require('../../../database/models/building_level');
 
 class BuildingLevelService {
-
     /**
      * return all building levels into promise
      * @returns {Promise<Building_level[]>}

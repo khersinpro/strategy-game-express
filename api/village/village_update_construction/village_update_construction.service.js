@@ -1,8 +1,7 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Village_update_construction } = require('../../../database/index').models;
+const NotFoundError                 = require('../../../errors/not-found');
+const Village_update_construction   = require('../../../database/models/village_update_construction');    
 
 class VillageUpdateConstructionService {
-
     /**
      * Returns unit of all village_update_construction
      * @returns {Promise<Village_update_construction>}

@@ -1,8 +1,7 @@
-const NotFoundError = require('../../../errors/not-found');
-const { Storage_building } = require('../../../database/index').models;
+const NotFoundError     = require('../../../errors/not-found');
+const Storage_building  = require('../../../database/models/storage_building');
 
 class StorageBuildingService {
-
     /**
      * return all buildings into promise
      * @returns {Promise<Storage_building[]>}

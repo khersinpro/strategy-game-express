@@ -1,15 +1,13 @@
-const { Op } = require('sequelize');
-const NotFoundError = require('../../../errors/not-found');
-const { sequelize } = require('../../../database/index');
-const { 
-    Village_building,
-    Village_construction_progress,
-    Village_new_construction,
-    Village_update_construction,
-    Building 
-} = require('../../../database/index').models;
-class VillageBuildingService {
+const { Op }                        = require('sequelize');
+const NotFoundError                 = require('../../../errors/not-found');
+const { sequelize }                 = require('../../../database/index');
+const Village_building              = require('../../../database/models/village_building');
+const Village_construction_progress = require('../../../database/models/village_construction_progress');
+const Village_new_construction      = require('../../../database/models/village_new_construction');
+const Village_update_construction   = require('../../../database/models/village_update_construction');
+const Building                      = require('../../../database/models/building');
 
+class VillageBuildingService {
     /**
      * Returns buildings of all villages
      * @returns {Promise<Village_building>}

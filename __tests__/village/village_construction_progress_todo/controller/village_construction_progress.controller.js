@@ -1,13 +1,17 @@
-const request   = require('supertest'); 
-const { app }   = require('../../../../server');
-const jwt       = require('jsonwebtoken');
-const config    = require('../../../../config');
+const request       = require('supertest'); 
+const { app }       = require('../../../../server');
+const jwt           = require('jsonwebtoken');
+const config        = require('../../../../config');
 const { sequelize } = require('../../../../database/index');
-const { User, Village_construction_progress, Village_new_construction, Village_update_construction, Building_level, Village_building, Village } = require('../../../../database/index').models;
-const VillageService = require('../../../../api/village/village.service');
-const BuildingService = require('../../../../api/building/building.service');
-const VillageBuildingService = require('../../../../api/village/village_building/village_building.service');
-const BuildingCostService = require('../../../../api/building/building_cost/building_cost.service');
+const User          =  require('../../../../database/models/user');
+const Village_construction_progress = require('../../../../database/models/village_construction_progress');
+const Village_new_construction      = require('../../../../database/models/village_new_construction');
+const Village_update_construction   = require('../../../../database/models/village_update_construction');
+const Building_level                = require('../../../../database/models/building_level');
+const Village_building              = require('../../../../database/models/village_building');
+const BuildingService               = require('../../../../api/building/building.service');
+const VillageBuildingService        = require('../../../../api/village/village_building/village_building.service');
+const BuildingCostService           = require('../../../../api/building/building_cost/building_cost.service');
 
 
 describe('Village Construction Progress Controller', () => {

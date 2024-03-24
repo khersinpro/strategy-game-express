@@ -1,5 +1,5 @@
-const { Supporting_unit } = require('../../../database/index').models;
-const NotFoundError = require('../../../errors/not-found');
+const Supporting_unit   = require('../../../database/models/supporting_unit');
+const NotFoundError     = require('../../../errors/not-found');
 
 class SupportingUnitService {
     /**

@@ -1,6 +1,5 @@
 const NotFoundError = require('../../errors/not-found');
-
-const { Unit_type } = require('../../database').models;
+const Unit_type = require('../../database/models/unit_type');
 
 class UnitTypeService {
     /**

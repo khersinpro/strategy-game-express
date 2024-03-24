@@ -1,5 +1,6 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
+const Map_position = require('./map_position');
 
 /**
  * Map model class
@@ -38,6 +39,23 @@ class Map extends Model {
                     fields: ['server_name']
                 }
             ]
+        });
+
+        this.setHooks();
+    }
+
+    /**
+     * Initializes hooks for the Map model
+     * @returns {void}
+     */
+    static setHooks() {
+        this.afterCreate(async (map, options) => {
+            try {
+                await map.generateMapPositions();
+            }
+            catch (error) {
+                throw error;
+            }
         });
     }
 
@@ -82,7 +100,7 @@ class Map extends Model {
                 }
             }
 
-            const Map_position = sequelize.models.Map_position;
+            const Map_position = Map_position;
             await Map_position.bulkCreate(positions);
         }
         catch (error) {
@@ -90,17 +108,5 @@ class Map extends Model {
         }
     }
 }
-
-/**
- * Add hooks here
- */
-Map.afterCreate(async (map, options) => {
-    try {
-        await map.generateMapPositions();
-    }
-    catch (error) {
-        throw error;
-    }
-});
 
 module.exports = Map;
