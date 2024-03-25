@@ -29,37 +29,37 @@ Make sure to obtain permission before using this project.
 
 1. Make sure Docker is installed and running on your system.
 
-2. Before launching the project, you need to create a Docker network to connect the database to the project. 
+<!-- 2. Before launching the project, you need to create a Docker network to connect the database to the project. 
     ```bash
     docker network create --driver=bridge --attachable mysql-database
-    ```
+    ``` -->
 
-3. Create the mysql database image and join it to the network
-    - **Ensure that the MySQL database container is named: `db` and connected to the network.**
+<!-- 3. Create the mysql database image and join it to the network
+    - **Ensure that the MySQL database container is named: `db` and connected to the network.** -->
 
-4. Clone this repository:
+2. Clone this repository:
     ```bash
     git clone https://github.com/khersinpro/strategy-game-express
     cd strategy-game-express
     ```
 
-5. Building the docker image for the backend game
+3. Building the docker image for the backend game
     ```bash
     docker build -t strategy-game -f dockerfile.dev .
     ```
 
-6. Start the containers using Docker Compose:
+4. Start the containers using Docker Compose:
     ```bash
-    docker-compose -f docker-compose.dev.yml up -d
+    docker-compose -f docker-compose.dev.postgres.yaml up -d
     ```
 
-7. Generate database with seeders
+5. Generate database with seeders
 To generate the database using seeders, execute the following command:
     ```bash
     ./script-db.sh
     ```
 
-8. Running unit tests
+6. Running unit tests
     ```bash
     npm run tests
     ```
