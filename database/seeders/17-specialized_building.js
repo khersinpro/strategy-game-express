@@ -6,6 +6,7 @@ const Civilization  = require('../models/civilization');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
+
     const civilizations = await Civilization.findAll();
 
     const infrastructure_building = await Building.findAll({
@@ -13,7 +14,7 @@ module.exports = {
         type: 'town_all_building'
       }
     });
-
+    
     const military_building = await Building.findAll({
       where: {
         type: 'military_building'
@@ -25,7 +26,7 @@ module.exports = {
         type: 'resource_building'
       }
     });
-    
+
     const wall_building = await Building.findAll({
       where: {
         type: 'wall_building'
@@ -37,7 +38,7 @@ module.exports = {
         type: 'special_building'
       }
     });
-
+    
     const storage_building = await Building.findAll({
       where: {
         type: 'storage_building'

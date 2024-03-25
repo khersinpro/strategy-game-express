@@ -1,0 +1,38 @@
+version: "3"
+services:
+  # Express API service
+  app:
+    image: strategy-game
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: strategy_game
+      DB_HOST: db_postgres
+      DB_PORT: 5432
+      DB_DIALECT: postgres
+    depends_on:
+      - db_postgres
+  # Postgres service
+  db_postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: express_api
+    ports:
+      - "5432:5432"
+  # pgAdmin service
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@root.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+    depends_on:
+      - db_postgres

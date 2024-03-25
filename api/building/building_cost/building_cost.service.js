@@ -180,7 +180,7 @@ class BuildingCostService {
             // Update the village resources
             await VillageResourceService.updateVillageResource(villageId);
 
-            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', { 
+            const villageResources = await sequelize.query('SELECT * FROM get_all_village_resources_by_village_id(:villageId)', { 
                 replacements: { villageId }
             });
 

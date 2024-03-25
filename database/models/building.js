@@ -1,8 +1,8 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../index');
+// const models = require('../index').models;
 
-/**
+/** 
  * Building model class
  */
 class Building extends Model {
@@ -87,13 +87,11 @@ class Building extends Model {
      */
     async getHeritedBuilding() {
         try {
-            if (this.is_common) {
-                return null;
-            }
+            if (this.is_common) { return null }
 
-            const buildingType = this.type.charAt(0).toUpperCase() + this.type.slice(1);
-
-            const heritedBuilding = await sequelize.models[buildingType].findOne({
+            const heritedBuildingModel = require(`../models/${this.type}`);
+            
+            const heritedBuilding = await heritedBuildingModel.findOne({
                 where: {
                     name: this.name
                 }

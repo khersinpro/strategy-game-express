@@ -1,6 +1,5 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
-const Map_position = require('./map_position');
 
 /**
  * Map model class
@@ -100,7 +99,8 @@ class Map extends Model {
                 }
             }
 
-            const Map_position = Map_position;
+            const Map_position = this.sequelize.models.Map_position
+
             await Map_position.bulkCreate(positions);
         }
         catch (error) {

@@ -542,7 +542,7 @@ class AttackService {
                 }
             });
             
-            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', {
+            const villageResources = await sequelize.query('SELECT * FROM get_all_village_resources_by_village_id(:villageId)', {
                 replacements: { villageId: attack.attacking_village_id }
             });
 

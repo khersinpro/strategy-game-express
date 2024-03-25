@@ -84,18 +84,22 @@ class VillageBuildingService {
         const transaction = await sequelize.transaction();
         try 
         {
-            const villageResources = await sequelize.query('CALL get_all_village_resources_by_village_id(:villageId)', {
-                replacements: { villageId }
+            const villageResources = await sequelize.query('SELECT * FROM get_all_village_resources_by_village_id(:villageId)', {
+                type: sequelize.QueryTypes.SELECT,
+                replacements: { villageId },
+
             });
-    
+
             const promises = []
-    
+
             const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
 
-            const lastBuildingsUpdates = await sequelize.query('CALL get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
-                replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: endDate }
+            // get all buildings updates since last village resource update
+            const lastBuildingsUpdates = await sequelize.query('SELECT * FROM get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
+                replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: endDate },
+                type: sequelize.QueryTypes.SELECT
             });
-            
+
             for (const villageResource of villageResources) 
             {
                 const generatedPromise = this.calculateUniqueVillageResourceProduction(villageResource, lastBuildingsUpdates, endDate, transaction);
@@ -126,7 +130,7 @@ class VillageBuildingService {
         const transaction = await sequelize.transaction();
         try 
         {
-            const allVillagesResources = await sequelize.query('CALL get_all_village_resources()');
+            const allVillagesResources = await sequelize.query('SELECT * FROM get_all_village_resources()');
 
             const promises = []
     
@@ -146,7 +150,7 @@ class VillageBuildingService {
                 if (!villageResources.length) continue;
     
                 const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
-                const lastBuildingsUpdates = await sequelize.query('CALL get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
+                const lastBuildingsUpdates = await sequelize.query('SELECT * FROM get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
                     replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: new Date() }
                 });
     
@@ -187,7 +191,7 @@ class VillageBuildingService {
             let totalResource         = villageResource.village_resource_quantity;
             let storageCapacity       = villageResource.village_resource_storage;
             let buildingProduction    = villageResource.production;
-    
+
             lastBuildingsUpdates.forEach(async (lastBuildingsUpdate) => {
                 const options = resourceTransaction ? { transaction: resourceTransaction } : {};
                 if (lastBuildingsUpdate.building_type === 'resource_building' && villageResource.production_village_building_id === lastBuildingsUpdate.village_building_id )
@@ -260,8 +264,8 @@ class VillageBuildingService {
                 return false;
             }
 
-            // await transaction.commit();
             const updatedQuantity = totalResource > storageCapacity ? storageCapacity : totalResource;
+            
             return this.update(villageResource.village_resource_id, 
                 { 
                     quantity: updatedQuantity, 
@@ -271,7 +275,6 @@ class VillageBuildingService {
         }
         catch (error)
         {
-            // await transaction.rollback();
             throw error;
         }
     }

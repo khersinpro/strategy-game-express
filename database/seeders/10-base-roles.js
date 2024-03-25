@@ -1,4 +1,5 @@
 'use strict';
+const sequelize = require('../index').sequelize;
 
 /** @type {import('sequelize-cli').Migration} */
 const roles = [

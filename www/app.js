@@ -1,9 +1,9 @@
-const { server }   = require('../server');
-const config    = require('../config/index');
-const { sequelize }  = require('../database/index');
+const { server }        = require('../server');
+const config            = require('../config/index');
+const { sequelize }     = require('../database/index');
 
 // Connect to Sequelize and start Express server
-sequelize.authenticate()
+sequelize.sync()
 .then(() => { 
     console.log('Database connected...')    
 })
