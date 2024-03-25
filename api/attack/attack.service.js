@@ -119,24 +119,11 @@ class AttackService {
         const transaction = await sequelize.transaction();
         try
         {
-            const attackedVillage  = await Village.findByPk(data.attackedVillageId, {
-                include: [
-                    {
-                        model: Map_position,
-                        required: true
-                    }
-                ]
-            });
-
-            const attackingVillage = await Village.findByPk(data.attackingVillageId, {
-                include: [
-                    {
-                        model: Map_position,
-                        required: true
-                    }
-                ]
-            });
-
+            const [attackedVillage, attackingVillage] = await Promise.all([
+                Village.findByPk(data.attackedVillageId, { include: [{ model: Map_position, required: true }] }),
+                Village.findByPk(data.attackingVillageId, { include: [{ model: Map_position, required: true }] })
+            ]);
+            
             attackingVillage.isAdminOrVillageOwner(currentUser);
 
             if (!attackedVillage || !attackingVillage) 
@@ -165,6 +152,7 @@ class AttackService {
                 arrival_date: new Date() 
             });
 
+            // Check if the attacker add the same units multiple time in the same attack
             const sameVillageUnits = data.villageUnits.reduce((total, unit) => {
                 if (total.key.includes(unit.id))
                 {
@@ -237,16 +225,11 @@ class AttackService {
             const euclideanCalculator       = new EuclideanDistanceCalculator(startingPointX, startingPointY, arrivalPointX, arrivalPointY);
             attack.arrival_date             = euclideanCalculator.getArrivalDate(new Date(attack.departure_date), slowestUnitSpeed);
             attack.attack_status            = 'attacking';
+
             await attack.save();
-            
-            // Control if the date is saved correctly
-            if (attack.arrival_date < new Date() || attack.arrival_date !== arrivalTime || attack.attack_status !== 'attacking')
-            {
-                await attack.destroy()
-                throw new Error('Invalid arrival date or attack status.');
-            }
-            
+    
             await transaction.commit();
+
             return attack;
         }
         catch (error)
