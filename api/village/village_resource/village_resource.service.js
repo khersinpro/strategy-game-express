@@ -86,8 +86,7 @@ class VillageBuildingService {
         {
             const villageResources = await sequelize.query('SELECT * FROM get_all_village_resources_by_village_id(:villageId)', {
                 type: sequelize.QueryTypes.SELECT,
-                replacements: { villageId },
-
+                replacements: { villageId }
             });
 
             const promises = []
@@ -130,7 +129,9 @@ class VillageBuildingService {
         const transaction = await sequelize.transaction();
         try 
         {
-            const allVillagesResources = await sequelize.query('SELECT * FROM get_all_village_resources()');
+            const allVillagesResources = await sequelize.query('SELECT * FROM get_all_village_resources()', {
+                type: sequelize.QueryTypes.SELECT
+            });
 
             const promises = []
     
@@ -151,7 +152,8 @@ class VillageBuildingService {
     
                 const lastVillageResourceUpdate = new Date(villageResources[0].village_last_update);
                 const lastBuildingsUpdates = await sequelize.query('SELECT * FROM get_village_buildings_update_by_id(:villageId, :startDate, :endDate)', {
-                    replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: new Date() }
+                    replacements: { villageId, startDate: lastVillageResourceUpdate, endDate: new Date() },
+                    type: sequelize.QueryTypes.SELECT
                 });
     
                 for (const villageResource of villageResources)

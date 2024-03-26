@@ -13,7 +13,7 @@ class Attack_stolen_resource extends Model {
     static initialize(sequelize) {
         this.init({
             quantity: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.FLOAT,
                 allowNull: false,
             },
             resource_name: {

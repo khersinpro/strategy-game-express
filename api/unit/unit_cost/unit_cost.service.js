@@ -209,7 +209,8 @@ class UnitCostService {
             
             // Get the village resources
             const villageResources = await sequelize.query('SELECT * FROM get_all_village_resources_by_village_id(:villageId)', { 
-                replacements: { villageId: villageId }
+                replacements: { villageId: villageId },
+                type: sequelize.QueryTypes.SELECT
             });
 
             if (!villageResources || villageResources.length === 0)

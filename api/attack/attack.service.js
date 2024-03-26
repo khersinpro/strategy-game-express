@@ -272,7 +272,6 @@ class AttackService {
         }
         catch (error)
         {
-            console.error(error);
             throw error;
         }
     }
@@ -285,26 +284,10 @@ class AttackService {
             // Winner of the attack
             let winner = null;
 
-            // Attacked village
-            const attackedVillage = await Village.findByPk(attack.attacked_village_id, {
-                include: [
-                    {
-                        model: Map_position,
-                        required: true
-                    }
-                ]
-            });
-
-            // Attacking village
-            const attackingVillage = await Village.findByPk(attack.attacking_village_id, {
-                include: [
-                    {
-                        model: Map_position,
-                        required: true
-                    }
-                ]
-            });
-
+            const [attackedVillage, attackingVillage] = await Promise.all([
+                Village.findByPk(attack.attacked_village_id, { include: [{ model: Map_position, required: true }] }),
+                Village.findByPk(attack.attacking_village_id, { include: [{ model: Map_position, required: true }] })
+            ]);
 
             // Check if the updated village is the attacker, then we update the defender's attacks before the date of the current attack
             if (offensiveAttack)
@@ -315,24 +298,22 @@ class AttackService {
             // Check this function problem
             await this.updateVillageBeforeAttack(attackedVillage.id, arrivalDate);
 
-            // Attackers units
-            const attackAttackerUnits = await this.getAttackerUnits(attack.id);
+            // Get the attacker units, defenser units, defenser support and wall defense percent
+            const [attackAttackerUnits, defenserVillageUnit, defenserSupportingUnit, wallAdittionalDefensePercent] = await Promise.all([
+                this.getAttackerUnits(attack.id),
+                this.getAttackedVillageUnits(attackedVillage.id),
+                this.getAttackedVillageSupportingUnits(attackedVillage.id),
+                this.getAttackedVillageWallDefensePercent(attackedVillage.id)
+            ]);
 
             // Attackers unit types
             const unitTypesInAttack = this.getTypeOfAttackUnits(attackAttackerUnits);
 
-            // Defenser units
-            const defenserVillageUnit = await this.getAttackedVillageUnits(attackedVillage.id);
-
-            // Defenser supporting units
-            const defenserSupportingUnit = await this.getAttackedVillageSupportingUnits(attackedVillage.id);
-
-            // Wall defense percent 
-            const wallAdittionalDefensePercent = await this.getAttackedVillageWallDefensePercent(attackedVillage.id);
-
             // Generate attack defenser units and support
-            const attackDefenserUnits   = await this.generateAttackDefenserUnits(attack.id, defenserVillageUnit);
-            const attackDefenserSupport = await this.generateAttackDefenserSupport(attack.id, defenserSupportingUnit);
+            const [attackDefenserUnits, attackDefenserSupport] = await Promise.all([
+                this.generateAttackDefenserUnits(attack.id, defenserVillageUnit),
+                this.generateAttackDefenserSupport(attack.id, defenserSupportingUnit)
+            ]);
 
             // Group all defenser units in one array
             const defenserUnits = attackDefenserUnits.concat(attackDefenserSupport);
@@ -407,11 +388,11 @@ class AttackService {
             attack.attack_status = winner === 'attacker' ? 'returning' : 'lost';
             await attack.save({ transaction });
 
-            // Sauvegarde des unités du village attaqué
-            await this.saveDefenserLosses(defenserUnits, defenserSupportingUnit, defenserVillageUnit, transaction);
-
-            // Save the attacker units
-            await this.saveAttackerLosses(attackAttackerUnits, attackingVillage.id, transaction);
+            // Save the losses for the attacker and defenser
+            await Promise.all([
+                this.saveDefenserLosses(defenserUnits, defenserSupportingUnit, defenserVillageUnit, transaction),
+                this.saveAttackerLosses(attackAttackerUnits, attackingVillage.id, transaction)
+            ]);
 
             await transaction.commit();
         }
@@ -526,7 +507,8 @@ class AttackService {
             });
             
             const villageResources = await sequelize.query('SELECT * FROM get_all_village_resources_by_village_id(:villageId)', {
-                replacements: { villageId: attack.attacking_village_id }
+                replacements: { villageId: attack.attacking_village_id },
+                type: sequelize.QueryTypes.SELECT,
             });
 
             const promiseArray = [];
