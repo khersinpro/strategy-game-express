@@ -1,4 +1,4 @@
-const { BuildingService } = require('./building.service');
+const BuildingService  = require('./building.service');
 
 class BuildingController {
 
