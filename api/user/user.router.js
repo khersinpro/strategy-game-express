@@ -1,13 +1,13 @@
 const express = require('express');
 const usersController = require('./user.controller');
 const router = express.Router();
-const { createSanitization, updateSanitization, idParamSanitization, serveurNameSanitization } = require('./user.sanitization');
+const { createSanitization, updateSanitization, idParamSanitization, serveurNameSanitization, getQuerySanitization } = require('./user.sanitization');
 const { isAdmin } = require('../../middlewares/auth');
 
 /**
  * Aurhenticaded routes
  */
-router.get('/', usersController.getAll);
+router.get('/', isAdmin, getQuerySanitization, usersController.getAll);
 router.get('/me', usersController.me);
 router.get('/:id', idParamSanitization, usersController.get);
 router.post('/', createSanitization, usersController.create);

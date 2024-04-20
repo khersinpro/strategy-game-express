@@ -1,4 +1,4 @@
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const validationHandler = require('../../utils/validationHandler'); 
 /**
  * Sanitization of user creation
@@ -37,5 +37,15 @@ exports.idParamSanitization = [
 
 exports.serveurNameSanitization = [
     body('server').trim().escape().isString().isLength({min: 3, max: 30}).withMessage('Server name must be between 3 and 30 characters.'),
+    validationHandler.errorhandler
+]
+
+exports.getQuerySanitization = [
+    query('page').trim().isInt().withMessage('Invalid page type.').optional(),
+    query('limit').trim().isInt().withMessage('Invalid limit type.').optional(),
+    query('id').trim().isInt().withMessage('Invalid id type.').optional(),
+    query('username').escape().isString().withMessage('Username must be a string.').optional(),  
+    query('email').escape().isString().withMessage('Email is incorrect.').optional(),
+    query('role').escape().isString().withMessage('Role is incorrect.').optional(),
     validationHandler.errorhandler
 ]

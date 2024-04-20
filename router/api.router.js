@@ -44,6 +44,7 @@ const attackStatusRouter = require('./../api/attack/attack_status/attack_status.
 const supportRouter = require('./../api/support/support.router');
 const supportStatusRouter = require('./../api/support/support_status/support_status.router');
 const villageSupportRouter = require('./../api/support/supporting_unit/supporting_unit.router');
+const resourceRouter = require('./../api/resource/resource.router');
 
 
 /**
@@ -91,5 +92,6 @@ router.use('/api/attack-status', auth, attackStatusRouter);
 router.use('/api/support', auth, supportRouter);
 router.use('/api/support-status', auth, supportStatusRouter);
 router.use('/api/village-support', auth, villageSupportRouter);
+router.use('/api/resource', auth, resourceRouter);
 
 module.exports = router;

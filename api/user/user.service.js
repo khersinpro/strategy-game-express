@@ -2,17 +2,45 @@ const NotFoundError = require('../../errors/not-found');
 const ServerService = require('../server/server.service');
 const User          = require('../../database/models/user');
 const Server        = require('../../database/models/server');
+const { Op } = require('sequelize');
 
 class UserService {
     /**
      * Returns all users
      * @returns {Promise<Array<User>>} - all users
      */
-    getAll() {
-        return User.findAll({
+    getAll(query) {
+        const { page = 1, limit = 20, username, email, id, role } = query;
+        const offset = (page - 1) * limit;
+        let whereClause = {};
+
+        if (username) {
+            whereClause.username = {
+                [Op.iLike]: `%${username}%`
+            };
+        }
+
+        if (email) {
+            whereClause.email = {
+                [Op.iLike]: `%${email}%`
+            };
+        }
+
+        if (id) {
+            whereClause.id = id;
+        }
+
+        if (role) {
+            whereClause.role_name = role;
+        }
+
+        return User.findAndCountAll({
             attributes: {
                 exclude: ['password']
-            }
+            },
+            where: whereClause,
+            limit,
+            offset
         });
     }
 

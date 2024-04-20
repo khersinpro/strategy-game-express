@@ -13,7 +13,8 @@ class UserController {
     {
         try 
         {
-            const users = await userService.getAll();
+            const query = req.query;
+            const users = await userService.getAll(query);
             res.status(200).json(users);
         }
         catch (error)
