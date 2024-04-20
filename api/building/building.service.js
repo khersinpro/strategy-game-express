@@ -5,10 +5,16 @@ class BuildingService {
 
     /**
      * Return all buildings into promise
+     * @param {number} limit
+     * @param {number} page
      * @returns {Promise<Building[]>}
      */
-    getAll() {
-        return Building.findAll();
+    getAll(limit = 20, page = 1) {
+        const offset = limit * (page - 1); 
+        return Building.findAndCountAll({
+            limit,
+            offset
+        });
     }
 
     /**

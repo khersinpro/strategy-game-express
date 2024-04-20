@@ -41,8 +41,8 @@ exports.serveurNameSanitization = [
 ]
 
 exports.getQuerySanitization = [
-    query('page').trim().isInt().withMessage('Invalid page type.').optional(),
-    query('limit').trim().isInt().withMessage('Invalid limit type.').optional(),
+    query('page').escape().trim().isInt().withMessage('Invalid page type.').optional(),
+    query('limit').escape().trim().isInt().withMessage('Invalid limit type.').optional(),
     query('id').trim().isInt().withMessage('Invalid id type.').optional(),
     query('username').escape().isString().withMessage('Username must be a string.').optional(),  
     query('email').escape().isString().withMessage('Email is incorrect.').optional(),

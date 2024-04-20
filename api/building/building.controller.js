@@ -8,7 +8,7 @@ class BuildingController {
     async getAll (req, res, next) {
         try
         {
-            const buildings = await BuildingService.getAll();
+            const buildings = await BuildingService.getAll(req.query.limit, req.query.page);
             res.status(200).json(buildings);
         }
         catch (error)
