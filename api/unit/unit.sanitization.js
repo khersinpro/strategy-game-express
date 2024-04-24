@@ -1,4 +1,4 @@
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const validationHandler = require('../../utils/validationHandler'); 
 
 exports.createSanitization = [
@@ -92,3 +92,8 @@ exports.nameParamSanitization = [
     validationHandler.errorhandler
 ]
 
+exports.getQuerySanitization = [
+    query('page').escape().trim().isInt().withMessage('Invalid page type.'),
+    query('limit').escape().trim().isInt().withMessage('Invalid limit type.'),
+    validationHandler.errorhandler
+]

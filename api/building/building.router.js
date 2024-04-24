@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const BuildingController = require('./building.controller');
 const { isAdmin } = require('../../middlewares/auth');
-const { nameParamSanitization, createSanitization, updateSanitization } = require('./building.sanitization')
+const { nameParamSanitization, createSanitization, updateSanitization, getQuerySanitization } = require('./building.sanitization')
 
 /**
  * Auth routes
  */
-router.get('/', BuildingController.getAll);
+router.get('/', getQuerySanitization, BuildingController.getAll);
 router.get('/:name', nameParamSanitization, BuildingController.get);
 
 /**

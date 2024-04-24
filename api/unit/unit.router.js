@@ -1,13 +1,13 @@
 const express = require('express')
 const router = express.Router()
 const unitController = require('./unit.controller')
-const { createSanitization, updateSanitization, nameParamSanitization } = require('./unit.sanitization')
+const { createSanitization, updateSanitization, nameParamSanitization, getQuerySanitization } = require('./unit.sanitization')
 const { isAdmin } = require('../../middlewares/auth')
 
 /**
  * Auth routes
  */
-router.get('/', unitController.getAll)
+router.get('/', getQuerySanitization, unitController.getAll)
 router.get('/:name', nameParamSanitization, unitController.get)
 
 /**

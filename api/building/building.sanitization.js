@@ -54,7 +54,7 @@ exports.nameParamSanitization = [
     validationHandler.errorhandler
 ]
 
-getQuerySanitization = [
+exports.getQuerySanitization = [
     query('page').escape().trim().isInt().withMessage('Invalid page type.'),
     query('limit').escape().trim().isInt().withMessage('Invalid limit type.'),
     validationHandler.errorhandler

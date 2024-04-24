@@ -9,7 +9,7 @@ class UnitController {
     async getAll(req, res, next) {
         try 
         {
-            const units = await UnitService.getAll();
+            const units = await UnitService.getAll(req.query.limit, req.query.page);
             res.status(200).json(units);
         }
         catch (error) 

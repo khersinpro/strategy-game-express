@@ -4,10 +4,16 @@ const Unit = require('../../database/models/unit.js');
 class UnitService {
     /**
      * Returns all unitTypes
+     * @param {number} limit
+     * @param {number} page
      * @returns {Promise<Unit[]>}
      */
-    getAll() {
-        return Unit.findAll();
+    getAll(limit = 20, page = 1) {
+        const offset = limit * (page - 1);
+        return Unit.findAndCountAll({
+            limit,
+            offset
+        });
     }
 
     /**
