@@ -1,5 +1,6 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
+const Map_position         = require('./map_position');
 
 /**
  * Map model class
@@ -68,7 +69,12 @@ class Map extends Model {
             foreignKey: {
                 name: 'server_name',
                 allowNull: false,
+                onDelete: 'CASCADE'
             }
+        })
+        this.hasMany(models.Map_position, {
+            foreignKey: 'map_id',
+            onDelete: 'CASCADE'
         })
     }
 
@@ -98,8 +104,6 @@ class Map extends Model {
                     positions.push(position);
                 }
             }
-
-            const Map_position = this.sequelize.models.Map_position
 
             await Map_position.bulkCreate(positions);
         }

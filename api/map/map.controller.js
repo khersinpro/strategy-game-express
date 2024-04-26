@@ -44,6 +44,7 @@ class MapController {
         }
         catch (error) 
         {
+            console.error(error)
             next(error);
         }
     }

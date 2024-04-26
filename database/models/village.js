@@ -1,14 +1,14 @@
 'use strict';
-const { Model, Op, DataTypes }  = require('sequelize');
-const ForbiddenError            = require('../../errors/forbidden');
-const NotFoundError             = require('../../errors/not-found');
-const Village_building          = require('./village_building');
+const { Model, Op, DataTypes } = require('sequelize');
+const ForbiddenError = require('../../errors/forbidden');
+const NotFoundError = require('../../errors/not-found');
+const Village_building = require('./village_building');
 const Village_training_progress = require('./village_training_progress');
-const Village_unit              = require('./village_unit');
-const Unit                      = require('./unit');
-const Map_position              = require('./map_position');
-const Map                       = require('./map');
-const Population_capacity       = require('./population_capacity');
+const Village_unit = require('./village_unit');
+const Unit = require('./unit');
+const Map_position = require('./map_position');
+const Map = require('./map');
+const Population_capacity = require('./population_capacity');
 
 /**
  * Village model class
@@ -54,11 +54,11 @@ class Village extends Model {
     /**
      * Initializes hooks for the Village model
      * @returns {void}
-     */ 
+     */
     static setHooks() {
         this.addHook('afterCreate', async (village, options) => {
             const models = require('../index').models;
-        
+
             // Create resources building level 1
             const recource_buildings = await models.Building.findAll({
                 include: [
@@ -74,7 +74,7 @@ class Village extends Model {
                     type: 'resource_building',
                 }
             })
-        
+
             for (const resource_building of recource_buildings) {
                 await models.Village_building.create({
                     village_id: village.id,
@@ -83,7 +83,7 @@ class Village extends Model {
                     type: resource_building.type
                 })
             }
-        
+
             // Create storage resource building level 1
             const storage_buildings = await models.Building.findAll({
                 include: [
@@ -107,7 +107,7 @@ class Village extends Model {
                     type: storage_building.type
                 })
             }
-        
+
             // Create village resources with starting quantity
             const resources = await models.Resource.findAll()
             for (const resource of resources) {
@@ -117,7 +117,7 @@ class Village extends Model {
                     quantity: 300,
                 })
             }
-        
+
             // Create town all building level 1
             const town_all_building = await models.Building.findOne({
                 include: [
@@ -134,15 +134,15 @@ class Village extends Model {
                     type: 'town_all_building'
                 }
             })
-        
+
             await models.Village_building.create({
                 village_id: village.id,
                 building_name: town_all_building.name,
                 building_level_id: town_all_building.levels[0].id,
                 type: town_all_building.type
             })
-        
-        
+
+
             // Create wall building
             const wall_building = await models.Building.findOne({
                 include: [
@@ -166,7 +166,7 @@ class Village extends Model {
                     type: 'wall_building'
                 }
             })
-        
+
             if (wall_building) {
                 await models.Village_building.create({
                     village_id: village.id,
@@ -175,15 +175,15 @@ class Village extends Model {
                     type: wall_building.type
                 })
             }
-        
-        
+
+
             // Create all units of village resource with quantity 0
             const units = await models.Unit.findAll({
                 where: {
                     civilization_name: village.civilization_name
                 }
             })
-        
+
             for (const unit of units) {
                 await models.Village_unit.create({
                     village_id: village.id,

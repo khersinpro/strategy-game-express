@@ -21,10 +21,10 @@ exports.createSanitization = [
     body('training_time')
         .escape()
         .isInt().withMessage('Training time must be an integer'),
-    body('civilization_type')
+    body('civilization_name')
         .escape()
-        .isString().withMessage('Unit type must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('Civilization type must be between 1 and 255 characters long'),
+        .isString().withMessage('Civilization name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('Civilization name must be between 1 and 255 characters long'),
     body('unit_type')
         .escape()
         .isString().withMessage('Unit type must be a string')
@@ -66,10 +66,10 @@ exports.updateSanitization = [
         .escape()
         .isInt().withMessage('Training time must be an integer')
         .optional(),
-    body('civilization_type')
+    body('civilization_name')
         .escape()
-        .isString().withMessage('Unit type must be a string')
-        .isLength({ min: 3, max: 50 }).withMessage('Civilization type must be between 1 and 255 characters long')
+        .isString().withMessage('Civilization name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('Civilization name must be between 1 and 255 characters long')
         .optional(),
     body('unit_type')
         .escape()

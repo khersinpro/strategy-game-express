@@ -43,9 +43,6 @@ class MapService {
         try
         {
             const newMap = await Map.create(data);
-
-            await newMap.generateMapPositions();
-
             return newMap;
         }
         catch (error)

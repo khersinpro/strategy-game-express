@@ -62,7 +62,8 @@ class Map_position extends Model {
     static associate(models) {
         this.belongsTo(models.Map, {
             foreignKey: 'map_id',
-            as: 'map'
+            as: 'map',
+            onDelete: 'CASCADE'
         });
         // polymorphic associations
         this.belongsTo(models.Village, {

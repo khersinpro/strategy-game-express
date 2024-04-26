@@ -1,5 +1,9 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
+const Resource = require('./resource');
+const Unit_cost = require('./unit_cost');
+const Unit_type = require('./unit_type');
+const Defense_type = require('./defense_type');
 
 /**
  * Unit model class
@@ -92,8 +96,65 @@ class Unit extends Model {
     }
 
     /**
+     * Initializes hooks for the Unit model
+     * @returns {void}
+     */
+    static setHooks() {
+        this.afterCreate(async (unit, options) => {
+            try {
+                await Promise.all([
+                    unit.#generateUnitCosts(),
+                    unit.#generateUnitDefenseTypes()
+                ])
+            } catch (error) {
+                throw error;
+            }
+        })
+    }
+
+    /**
      * Other methods
      */
+
+    /**
+     * Generates unit costs for the unit where the unit is created
+     * @private
+     * @returns {Promise<void>}
+     */
+    async #generateUnitCosts() {
+        try {
+            const resources = await Resource.findAll();
+            const promises = resources.map(async resource => {
+                return Unit_cost.create({
+                    unit_name: this.name,
+                    resource_name: resource.name,
+                    quantity: 0
+                });
+            });
+
+            await Promise.all(promises);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Generates defense types for the unit where the unit is created
+     * @private
+     * @returns {Promise<void>}
+     */
+    async #generateUnitDefenseTypes() {
+        const unitTypes = await Unit_type.findAll();
+        const promises = unitTypes.map(async unitType => {
+            return Defense_type.create({
+                unit_name: this.name,
+                type: unitType.type,
+                defense_value: 10
+            });
+        });
+
+        await Promise.all(promises);
+    }
 }
 
 module.exports = Unit;

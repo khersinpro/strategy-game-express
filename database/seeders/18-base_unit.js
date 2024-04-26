@@ -176,12 +176,14 @@ const norse_cavalries = [
 ];
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('unit', egiptian_infanteries, {});
-    await queryInterface.bulkInsert('unit', greek_infanteries, {});
-    await queryInterface.bulkInsert('unit', norse_infanteries, {});
-    await queryInterface.bulkInsert('unit', egiptian_cavalries, {});
-    await queryInterface.bulkInsert('unit', greek_cavalries, {});
-    await queryInterface.bulkInsert('unit', norse_cavalries, {});
+    await Promise.all([
+      queryInterface.bulkInsert('unit', egiptian_infanteries, { hooks: false }),
+      queryInterface.bulkInsert('unit', greek_infanteries, { hooks: false }),
+      queryInterface.bulkInsert('unit', norse_infanteries, { hooks: false }),
+      queryInterface.bulkInsert('unit', egiptian_cavalries, { hooks: false }),
+      queryInterface.bulkInsert('unit', greek_cavalries, { hooks: false }),
+      queryInterface.bulkInsert('unit', norse_cavalries, { hooks: false })
+    ])
   },
 
   async down (queryInterface, Sequelize) {
