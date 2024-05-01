@@ -4,14 +4,26 @@ class UnitCostController {
     /**
      * get all unit costs
      */
-    async getAll (req, res, next) {
-        try
-        {
+    async getAll(req, res, next) {
+        try {
             const unitCosts = await UnitCostService.getAll();
             res.status(200).json(unitCosts);
         }
-        catch (error)
-        {
+        catch (error) {
+            next(error)
+        }
+    }
+
+
+    /**
+     * get all unit costs by unit name
+     */ 
+    async getAllByUnitName(req, res, next) {
+        try {
+            const unitCost = await UnitCostService.getAllByUnitName(req.params.name);
+            res.status(200).json(unitCost);
+        }
+        catch (error) {
             next(error)
         }
     }
@@ -19,14 +31,12 @@ class UnitCostController {
     /**
      * get a unit cost by id
      */
-    async get (req, res, next) {
-        try
-        {
+    async get(req, res, next) {
+        try {
             const unitCost = await UnitCostService.getById(req.params.id);
             res.status(200).json(unitCost);
         }
-        catch (error)
-        {
+        catch (error) {
             next(error)
         }
     }
@@ -34,29 +44,25 @@ class UnitCostController {
     /**
      * create a unit cost
      */
-    async create (req, res, next) {
-        try
-        {
+    async create(req, res, next) {
+        try {
             const unitCost = await UnitCostService.create(req.body);
             res.status(201).json(unitCost);
         }
-        catch (error)
-        {
+        catch (error) {
             next(error)
         }
     }
 
     /**
      * update a unit cost
-     */ 
-    async update (req, res, next) {
-        try
-        {
+     */
+    async update(req, res, next) {
+        try {
             const unitCost = await UnitCostService.update(req.params.id, req.body);
             res.status(200).json(unitCost);
         }
-        catch (error)
-        {
+        catch (error) {
             next(error)
         }
     }
@@ -64,14 +70,12 @@ class UnitCostController {
     /**
      * delete a unit cost
      */
-    async delete (req, res, next) {
-        try
-        {
+    async delete(req, res, next) {
+        try {
             await UnitCostService.delete(req.params.id);
             res.status(204).end();
         }
-        catch (error)
-        {
+        catch (error) {
             next(error)
         }
     }

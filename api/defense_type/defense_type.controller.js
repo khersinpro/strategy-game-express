@@ -25,7 +25,6 @@ class DefenseTypeController {
         try
         {
             const defenseTypes = await DefenseTypeService.getByUnitName(req.params.unitname);
-
             if (!defenseTypes.length)
             {
                 throw new NotFoundError(`Defense types for unit ${req.params.unitname} not found`);

@@ -9,12 +9,14 @@ const {
     createSanitization, 
     updateSanitization 
 } = require('./unit_cost.sanitization')
+const { nameParamSanitization } = require('../unit.sanitization')
 
 /**
  * Auth routes
  */
 router.get('/', UnitCostController.getAll);
 router.get('/:id', idParamSanitization, UnitCostController.get);
+router.get('/unit/:name', nameParamSanitization, UnitCostController.getAllByUnitName);
 
 /**
  * Admin routes
