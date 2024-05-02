@@ -57,7 +57,6 @@ class BuildingService {
             return building;
         }
         catch (error) {
-            console.log(error);
             transaction.rollback();
             throw error;
         }
