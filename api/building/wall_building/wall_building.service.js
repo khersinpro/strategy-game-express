@@ -1,5 +1,7 @@
 const NotFoundError = require('../../../errors/not-found');
 const Wall_building = require('../../../database/models/wall_building');
+const { sequelize } = require('../../../database');
+const Building = require('../../../database/models/building');
 
 class WallBuildingService {
     /**
@@ -27,12 +29,36 @@ class WallBuildingService {
     }
 
     /**
-     * Create a building
-     * @param {Object} data
-     * @returns {Promise<Wall_building>}
+     * Create a wall building with his parent building  
+     * @param {Object} data - The building data
+     * @param {string} data.name - The building name
+     * @param {string} data.civilization_name - The civilization name
+     * @returns {Promise<Wall_building>} - The created building
      */
-    create(data) {
-        return Wall_building.create(data);
+    async create(data) {
+        const transaction = await sequelize.transaction();
+        try {
+            const building = await Building.create({
+                name: data.name,
+                type: 'wall_building',
+                is_common: false
+            }, { transaction });
+
+            const wallBuilding = await Wall_building.create({
+                name: building.name,
+                civilization_name: data.civilization_name
+            }, { transaction });
+
+            await transaction.commit();
+
+            building.setDataValue('wall_building', wallBuilding);
+
+            return building;
+        }
+        catch (error) {
+            transaction.rollback();
+            throw error;
+        }
     }
 
     /**

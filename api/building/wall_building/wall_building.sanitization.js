@@ -7,6 +7,11 @@ exports.createSanitization = [
         .trim()
         .isString().withMessage('name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('name must not be empty'),
+    body('civilization_name')
+        .escape()
+        .trim()
+        .isString().withMessage('civilization_name must be a string')
+        .isLength({ min: 3, max: 50 }).withMessage('civilization_name must not be empty'),
     validationHandler.errorhandler
 ] 
 
