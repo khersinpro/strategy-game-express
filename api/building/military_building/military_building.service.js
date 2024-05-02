@@ -1,5 +1,7 @@
-const NotFoundError     = require('../../../errors/not-found');
+const NotFoundError = require('../../../errors/not-found');
 const Military_building = require('../../../database/models/military_building');
+const { sequelize } = require('../../../database/index');
+const Building = require('../../../database/models/building');
 
 class MilitaryBuildingService {
     /**
@@ -17,8 +19,8 @@ class MilitaryBuildingService {
      * @returns {Promise<Military_building>}
      */
     async getByName(name) {
-       const militaryBuilding = await Military_building.findByPk(name);
-       
+        const militaryBuilding = await Military_building.findByPk(name);
+
         if (!militaryBuilding) {
             throw new NotFoundError('Military_building not found');
         }
@@ -27,12 +29,37 @@ class MilitaryBuildingService {
     }
 
     /**
-     * Create a building
-     * @param {Object} data
-     * @returns {Promise<Military_building>}
+     * Create a military building with his parent building
+     * @param {Object} data - The building data
+     * @param {string} data.name - The building name
+     * @param {string} data.unit_type - The unit type
+     * @returns {Promise<Military_building>} - The created building
      */
-    create(data) {
-        return Military_building.create(data);
+    async create(data) {
+        const transaction = await sequelize.transaction();
+        try {
+            const building = await Building.create({
+                name: data.name,
+                type: 'military_building',
+                is_common: true
+            }, { transaction });
+
+            const militaryBuilding = await Military_building.create({
+                name: building.name,
+                unit_type: data.unit_type
+            }, { transaction });
+
+            await transaction.commit();
+
+            building.setDataValue('military_building', militaryBuilding);
+
+            return building;
+        }
+        catch (error) {
+            console.log(error);
+            transaction.rollback();
+            throw error;
+        }
     }
 
     /**
