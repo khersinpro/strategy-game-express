@@ -15,6 +15,7 @@ module.exports = {
       civilization_name: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: true,
         references: {
           model: 'civilization',
           key: 'name'

@@ -24,9 +24,10 @@ class Military_building extends Model {
             unit_type: {
                 type: DataTypes.STRING,
                 allowNull: false,
+                unique: true,
                 references: {
                     model: 'unit_type',
-                    key: 'type'
+                    key: 'type',
                 }
             }
         }, {
@@ -49,7 +50,7 @@ class Military_building extends Model {
             foreignKey: 'military_building'
         })
         this.belongsTo(models.Unit_type, {
-            foreignKey: 'unit_type'
+            foreignKey: 'unit_type',
         })
     }
 

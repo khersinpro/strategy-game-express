@@ -1,5 +1,5 @@
 const NotFoundError = require('../../errors/not-found');
-const Building      = require('../../database/models/building');
+const Building = require('../../database/models/building');
 
 class BuildingService {
 
@@ -10,7 +10,7 @@ class BuildingService {
      * @returns {Promise<Building[]>}
      */
     getAll(limit = 20, page = 1) {
-        const offset = limit * (page - 1); 
+        const offset = limit * (page - 1);
         return Building.findAndCountAll({
             limit,
             offset
@@ -18,12 +18,29 @@ class BuildingService {
     }
 
     /**
-     * Return a building by name into promise
-     * @param {string} name
+     * Get a building by name
+     * 
+     * @param {string} name - The building name
+     * @throws {NotFoundError} - When the building is not found
      * @returns {Promise<Building>}
      */
-    getByName(name) {
-        return Building.findByPk(name);
+    async getByName(name) {
+        try {
+            const building = await Building.findOne({
+                where: {
+                    name
+                }
+            });
+
+            if (!building) {
+                throw new NotFoundError(`Building with name ${name} not found`);
+            }
+            
+            return building;
+        }
+        catch (error) {
+            throw error
+        }
     }
 
     /**

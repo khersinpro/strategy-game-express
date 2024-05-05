@@ -3,7 +3,7 @@ const BuildingLevelService = require('./building_level.service');
 class BuildingLevelController {
     
     /**
-     * get all Building levels
+     * Get all Building levels
      */
     async getAll (req, res, next) {
         try
@@ -18,7 +18,24 @@ class BuildingLevelController {
     }
 
     /**
-     * get a Building level by id
+     * Get all Building levels with their building costs
+     * 
+     * @param {params} req.params.name - The building name associated with the building levels
+     */
+    async getAllWithBuildingCosts (req, res, next) {
+        try {
+            const levelsAndCosts = await BuildingLevelService.getAllWithBuildingCosts(req.params.name);
+            res.status(200).json(levelsAndCosts);
+        }
+        catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * Get a Building level by id
+     * 
+     * @param {params} req.params.id - The building level id
      */
     async get (req, res, next) {
         try
@@ -33,7 +50,9 @@ class BuildingLevelController {
     }
 
     /**
-     * create a Building level
+     * Create a Building level
+     * 
+     * @param {Object} req.body - The building level data
      */
     async create (req, res, next) {
         try
@@ -49,6 +68,9 @@ class BuildingLevelController {
 
     /**
      * update a Building level
+     * 
+     * @param {params} req.params.id - The building level id
+     * @param {Object} req.body - The building level data
      */ 
     async update (req, res, next) {
         try
@@ -63,7 +85,9 @@ class BuildingLevelController {
     }
 
     /**
-     * delete a Building level
+     * Delete a Building level
+     * 
+     * @param {params} req.params.id - The building level id
      */
     async delete (req, res, next) {
         try

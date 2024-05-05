@@ -45,8 +45,8 @@ module.exports = {
       }
     });
 
-    await queryInterface.bulkInsert('special_building', special_building.map(building => { 
-      const civilization = civilizations[faker.number.int({ min: 0, max: civilizations.length - 1})];
+    await queryInterface.bulkInsert('special_building', special_building.map((building, index) => { 
+      const civilization = civilizations[index];
       return {
         name: building.name,
         civilization_name: civilization.name,

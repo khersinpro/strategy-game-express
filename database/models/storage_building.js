@@ -23,7 +23,8 @@ class Storage_building extends Model {
             },
             resource_name: {
                 type: DataTypes.STRING,
-                allowNUll: false,
+                allowNull: false,
+                unique: true,
                 references: {
                     model: 'resource',
                     key: 'name'

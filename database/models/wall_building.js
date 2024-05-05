@@ -24,6 +24,7 @@ class Wall_building extends Model {
             civilization_name: {
                 type: DataTypes.STRING,
                 allowNull: false,
+                unique: true,
                 references: {
                     model: 'civilization',
                     key: 'name'

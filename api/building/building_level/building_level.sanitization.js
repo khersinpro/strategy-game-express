@@ -7,10 +7,6 @@ exports.createSanitization = [
         .trim()
         .isString().withMessage('building_name must be a string')
         .isLength({ min: 3, max: 50 }).withMessage('building_name must not be empty'),
-    body('level')
-        .escape()
-        .trim()
-        .isInt().withMessage('level must be a number'),
     body('time')
         .escape()
         .trim()

@@ -6,6 +6,7 @@ module.exports = {
     await queryInterface.addColumn('resource_building', 'resource_name', {
       type: Sequelize.STRING,
       allowNull: false,
+      unique: true,
       references: {
         model: 'resource', 
         key: 'name'

@@ -24,6 +24,7 @@ class Resource_building extends Model {
             resource_name: {
                 type: DataTypes.STRING,
                 allowNull: false,
+                unique: true,
                 references: {
                     model: 'resource',
                     key: 'name'

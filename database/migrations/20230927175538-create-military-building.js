@@ -15,6 +15,7 @@ module.exports = {
       unit_type: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: true,
         references: {
           model: 'unit_type',
           key: 'type'
