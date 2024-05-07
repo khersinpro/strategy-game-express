@@ -18,6 +18,23 @@ class WallDefenseController {
     }
 
     /**
+     * get all wall defenses with included building level by building name
+     * 
+     * @param {string} name - The name of the building
+     */ 
+    async getAllWithLevelByBuildingName(req, res, next) {
+        try
+        {
+            const wallDefenses = await WallDefenseService.getAllWithLevelByBuildingName(req.params.name);
+            res.status(200).json(wallDefenses);
+        }
+        catch (error)
+        {
+            next(error)
+        }
+    }
+
+    /**
      * get a wall defense by id
      */
     async get (req, res, next) {

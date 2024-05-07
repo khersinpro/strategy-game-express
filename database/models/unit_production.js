@@ -55,7 +55,8 @@ class Unit_production extends Model {
             foreignKey: 'military_building_name'
         })
         this.belongsTo(models.Building_level, {
-            foreignKey: 'building_level_id'
+            foreignKey: 'building_level_id',
+            as: 'building_level'
         })
     }
 

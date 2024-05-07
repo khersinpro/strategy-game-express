@@ -19,10 +19,13 @@ class UnitProductionService {
      */
     getAllWithLevelByBuildingName(name) {
         return Unit_production.findAll({
-            where: { building_name: name },
-            include: Building_level,
+            where: { military_building_name: name },
+            include: {
+                model: Building_level,
+                as: 'building_level'
+            },
             order: [
-                [Building_level, 'level', 'ASC']
+                ['building_level', 'level', 'ASC']
             ]
         })
     }

@@ -18,6 +18,23 @@ class ResourceProductionController {
     }
 
     /**
+     * get all resource productions with included building level by building name
+     *
+     * @param {string} buildingName - The name of the building
+     */  
+    async getAllWithLevelByBuildingName(req, res, next) {
+        try
+        {
+            const resourceProductions = await ResourceProductionService.getAllWithLevelByBuildingName(req.params.name);
+            res.status(200).json(resourceProductions);
+        }
+        catch (error)
+        {
+            next(error)
+        }
+    }
+
+    /**
      * get a resource production by id
      */
     async get (req, res, next) {

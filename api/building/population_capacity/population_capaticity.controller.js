@@ -17,11 +17,11 @@ class PopulcationCapacityController {
     /**
      * Return all population capacities with included building level by building name
      * 
-     * @param {string} buildingName - The name of the building
+     * @param {string} name - The name of the building
      */
     async getAllWithLevelByBuildingName(req, res, next) {
         try {
-            const populationCapacities = await PopulcationCapacityService.getAllWithLevelByBuildingName(req.params.buildingName)
+            const populationCapacities = await PopulcationCapacityService.getAllWithLevelByBuildingName(req.params.name)
             res.status(200).json(populationCapacities)
         }
         catch (error) {

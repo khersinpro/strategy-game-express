@@ -17,11 +17,11 @@ class UnitProductionController {
     /**
      * Return all unit productions with included building level by building name
      * 
-     * @param {string} buildingName - The name of the building
+     * @param {string} name - The name of the building
      */
     async getAllWithLevelByBuildingName(req, res, next) {
         try {
-            const unitProductions = await UnitProductionService.getAllWithLevelByBuildingName(req.params.buildingName)
+            const unitProductions = await UnitProductionService.getAllWithLevelByBuildingName(req.params.name)
             res.status(200).json(unitProductions)
         }
         catch (error) {
@@ -68,7 +68,7 @@ class UnitProductionController {
     async update(req, res, next) {
         try {
             const unitProduction = await UnitProductionService.update(req.params.id, {
-                capacity: req.body.capacity
+                reduction_percent: req.body.reduction_percent
             })
             res.status(200).json(unitProduction)
         }

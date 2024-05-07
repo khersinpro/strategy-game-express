@@ -20,12 +20,15 @@ class PopulationCapacityService {
      */
     getAllWithLevelByBuildingName(buildingName) {
         return Population_capacity.findAll({
-            include: Building_level,
             where: {
                 town_all_building_name: buildingName
             },
+            include: {
+                model: Building_level,
+                as: 'building_level'
+            },
             order: [
-                [Building_level, 'level', 'ASC']
+                ['building_level', 'level', 'ASC']
             ]
         })
     }

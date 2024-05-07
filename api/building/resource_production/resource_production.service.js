@@ -1,5 +1,6 @@
 const NotFoundError       = require('../../../errors/not-found');
 const Resource_production = require('../../../database/models/resource_production');
+const Building_level = require('../../../database/models/building_level');
 
 class ResourceProductionService {
     /**
@@ -8,6 +9,25 @@ class ResourceProductionService {
      */
     getAll() {
         return Resource_production.findAll();
+    }
+
+    /**
+     * Return all resource productions with included building level by building name
+     * 
+     * @param {string} name - The name of the building
+     * @returns {Promise<Resource_production[]>}
+     */ 
+    getAllWithLevelByBuildingName(name) {
+        return Resource_production.findAll({
+            where: { resource_building_name: name },
+            include: {
+                model: Building_level,
+                as: 'building_level'
+            },
+            order: [
+                ['building_level', 'level', 'ASC']
+            ]
+        })
     }
 
     /**

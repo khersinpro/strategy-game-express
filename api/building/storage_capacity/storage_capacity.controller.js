@@ -17,6 +17,23 @@ class StorageCapacityController {
     }
 
     /**
+     * get all storage capacities with included building level by building name
+     * 
+     * @param {string} name - The name of the building
+     */ 
+    async getAllWithLevelByBuildingName(req, res, next) {
+        try
+        {
+            const storageCapacities = await StorageCapacityService.getAllWithLevelByBuildingName(req.params.name);
+            res.status(200).json(storageCapacities);
+        }
+        catch (error)
+        {
+            next(error)
+        }
+    }
+
+    /**
      * get a storage capacity by id
      */
     async get (req, res, next) {

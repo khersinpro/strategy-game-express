@@ -1,5 +1,6 @@
 const NotFoundError = require('../../../errors/not-found');
 const Wall_defense  = require('../../../database/models/wall_defense');
+const Building_level = require('../../../database/models/building_level');
 
 class WallDefenseService {
     /**
@@ -8,6 +9,25 @@ class WallDefenseService {
      */
     getAll() {
         return Wall_defense.findAll();
+    }
+
+    /**
+     * Return all wall defenses with included building level by building name
+     * 
+     * @param {string} name - The name of the building
+     * @returns {Promise<Wall_defense[]>}
+     */ 
+    getAllWithLevelByBuildingName(name) {
+        return Wall_defense.findAll({
+            where: { wall_building_name: name },
+            include: {
+                model: Building_level,
+                as: 'building_level'
+            },
+            order: [
+                ['building_level', 'level', 'ASC']
+            ]
+        })
     }
 
     /**

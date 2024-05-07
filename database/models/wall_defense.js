@@ -55,7 +55,8 @@ class Wall_defense extends Model {
             foreignKey: 'wall_building_name'
         })
         this.belongsTo(models.Building_level, {
-            foreignKey: 'building_level_id'
+            foreignKey: 'building_level_id',
+            as: 'building_level'
         })
     }
 

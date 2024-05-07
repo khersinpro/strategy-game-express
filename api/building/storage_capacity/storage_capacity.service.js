@@ -1,5 +1,6 @@
 const NotFoundError     = require('../../../errors/not-found');
 const Storage_capacity  = require('../../../database/models/storage_capacity');
+const Building_level = require('../../../database/models/building_level');
 
 class StorageCapacityService {
     /**
@@ -8,6 +9,25 @@ class StorageCapacityService {
      */
     getAll() {
         return Storage_capacity.findAll();
+    }
+
+    /**
+     * Return all storage capacities with included building level by building name
+     * 
+     * @param {string} name - The name of the building
+     * @returns {Promise<Storage_capacity[]>}
+     */ 
+    getAllWithLevelByBuildingName(name) {
+        return Storage_capacity.findAll({
+            where: { storage_building_name: name },
+            include: {
+                model: Building_level,
+                as: 'building_level'
+            },
+            order: [
+                ['building_level', 'level', 'ASC']
+            ]
+        })
     }
 
     /**
