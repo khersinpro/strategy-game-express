@@ -33,7 +33,8 @@ class BuildingLevelService {
             },
             include: Building_cost,
             order: [
-                ['level', 'ASC']
+                ['level', 'ASC'],
+                [Building_cost, 'resource_name', 'ASC']
             ]
         })
     }

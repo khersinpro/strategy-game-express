@@ -45,6 +45,8 @@ const supportRouter = require('./../api/support/support.router');
 const supportStatusRouter = require('./../api/support/support_status/support_status.router');
 const villageSupportRouter = require('./../api/support/supporting_unit/supporting_unit.router');
 const resourceRouter = require('./../api/resource/resource.router');
+const populationCapacityRouter = require('./../api/building/population_capacity/population_capaticity.router');
+const unitProduction = require('../api/building/unit_production/unit_production.router');
 
 
 /**
@@ -93,5 +95,7 @@ router.use('/api/support', auth, supportRouter);
 router.use('/api/support-status', auth, supportStatusRouter);
 router.use('/api/village-support', auth, villageSupportRouter);
 router.use('/api/resource', auth, resourceRouter);
+router.use('/api/population-capacity', auth, populationCapacityRouter);
+router.use('/api/unit-production', auth, unitProduction);
 
 module.exports = router;
